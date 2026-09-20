@@ -39,6 +39,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C05 — `docs(architecture)`: ADRs (usa template de C02 já conhecido; sem bloqueio) |
 | Perguntas | Respondidas: túnel **Cloudflare quick tunnel aprovado** (atualizar `homologation.md` no merge do PR #4); credenciais Asaas via `.env` local com ajuda posterior; Melhor Envio sandbox simplificado confirmado. Abertas: revisão dos PRs #2–#4; Q01 criativa (C03); licença/destino de releases |
 
+## Sessão 2026-09-20 — revisão PRs #2–#5, marco G0 fechado
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main` de `8584626` até `298f4d9`; 5 PRs revisados um a um com o usuário |
+| Tarefa | Revisão e merge de C02 (PR #2, `c74ba24`), C03 (PR #3, `87a05bd`), C04 (PR #4, `1911c83`), C05 (PR #5, `298f4d9`) — sem merge automático; cada merge autorizado |
+| Mudanças | Q01 resolvida: paleta/fontes/fotos aprovadas + regra anti-genérica; principal em loop ≤30 s sem legendas (D49 emendada); túnel Cloudflare registrado no PR #4. PR #4 exigiu sync via merge de `main` (`2c287a6`, sem rebase) após "base modified" |
+| Verificação | `git diff --check` limpo nas emendas; sem segredos; PRs CLEAN/MERGEABLE antes de cada merge; `gh pr list` confirma 5/5 MERGED; `git status` limpo |
+| Remoto | `main@298f4d9` enviada; sem CI ainda (C13) |
+| Próximo passo | C06 — `chore(backend)`: bootstrap Spring Boot (namespace `br.com.deladopara`); depois C07 Angular, C08 Compose. Credenciais sandbox via `.env` com ajuda posterior, no spike |
+| Perguntas | Abertas: curadoria das 7 fotos (C03); spike sandbox (contas do usuário); licença/destino de releases |
+
 ## Ambiente registrado (C00a)
 
 - Git 2.43.0; Docker Compose v5.5.1 (Docker 29.8.1); JDK 25.0.4 GraalVM CE; Node v22.23.2; npm 12.0.2 (versão a revalidar no bootstrap frontend C07, matriz Angular 22).
