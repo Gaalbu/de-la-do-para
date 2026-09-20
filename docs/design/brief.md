@@ -57,8 +57,22 @@ restante. Foco visível de teclado usa contorno terracota 2 px + offset.
    de ação por animação; respeito a `prefers-reduced-motion`; texto legível
    na gravação vista em celular.
 
-## Aberto para sua revisão (Q01)
+## Direção anti-genérica (revisão do usuário, 20/09/2026)
 
-1. Aprova os hexes e a restrição da terracota, ou quer alternativa?
-2. Aprova Fraunces + Inter, ou prefere outra dupla OFL?
-3. Estilo das fotos: fundo claro editorial vs. mercado/feira (ver `assets.md`)?
+Paleta, Fraunces + Inter e editorial fundo claro **aprovados**, com uma
+condição: não parecer "visual vibecodado"/AIslop. Regras concretas:
+
+- Fotos reais e específicas dos produtos mandam; nada de placeholders,
+  gradientes roxo-azulados, blobs ou vidro fosco decorativo.
+- Raio de borda e sombras contidos e consistentes; tipografia com hierarquia
+  real (tamanhos/pesos com função), não títulos gigantes genéricos.
+- Detalhes próprios da marca: terracota só onde o contraste permite,
+  divisórias e etiquetas com função, microcopy em pt-BR com voz da loja.
+- Todo componente novo passa pela pergunta: "isso poderia estar em qualquer
+  template?" — se sim, redesenhar com conteúdo real da loja.
+
+## Aberto para sua revisão (Q01) — respondido em 20/09/2026
+
+1. Paleta aprovada + condição anti-genérica acima. ✅
+2. Fraunces + Inter aprovadas; teste de acentos no bootstrap (C07). ✅
+3. Fotos: editorial fundo claro. ✅ (curadoria em `assets.md`)

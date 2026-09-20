@@ -58,7 +58,7 @@ respondidas em D01–D64.
 | D46 | Paleta: fundo marfim, texto verde profundo, detalhes terracota |
 | D47 | Tipografia: títulos com serifa, textos/botões sem serifa |
 | D48 | Tom de voz acolhedor e direto, com regionalismos pontuais |
-| D49 | Vídeo principal vertical 60–90 s + demonstração técnica horizontal |
+| D49 | Vídeo principal vertical em loop ≤30 s, sem legendas (revisto pelo usuário em 20/09/2026; antes 60–90 s legendado) + demonstração técnica horizontal |
 | D50 | Sequência: vitrine/origem → compra → falha breve → recuperação sem repetir a compra |
 | D51 | Fotos gratuitas com licença verificada e autoria registrada; sem pessoas reais como produtores fictícios |
 | D52 | Catálogo inicial: 8 produtos fictícios (4 alimentos + 4 artesanatos) |
