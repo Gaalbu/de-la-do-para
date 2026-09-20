@@ -1,0 +1,37 @@
+# Java / Maven
+target/
+backend/target/
+*.class
+backend/.flattened-pom.xml
+
+# Maven wrapper
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# Node / Angular
+node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+
+# Env e segredos locais (nunca commitar valores reais)
+.env
+.env.local
+*.pem
+*.key
+
+# Docker volumes e dados locais
+data/
+pgdata/
+kafka-data/
+
+# IDE e SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Evidências com dados sensíveis (sanitizar antes de versionar)
+docs/evidence/**/raw/
+*.har
