@@ -107,6 +107,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C10 — `build(frontend)`: lint, formato, runner, Playwright |
 | Perguntas | Nenhuma nova |
 
+## Sessão 2026-09-20 — C10 gates frontend (PR #10 merged, auto-merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `build/c10-frontend-gates` (`1a73d3f`); merge `707a26b` |
+| Tarefa | C10 — `build(frontend)`: lint, formato, runner, Playwright — concluída, validada e merged |
+| Mudanças | ESLint flat (angular 22.5 + tseslint 8.70 + a11y, `no-explicit-any` error); prettier `format`/`format:check`; `test:ci`; Playwright 1.63 + `e2e:local` (webServer :4200); `zoneless.spec.ts`; scripts F/E; ignores p/ test-results |
+| Verificação | F: lint 0 erros, format OK, `test:ci` 4 passed (inclui zoneless), build SSR OK. E: smoke 1 passed em 16,5 s. Correções: templateRecommended exigiu `files`+`extends`; scaffold formatado |
+| Remoto | PR #10 merged (`707a26b`); sem CI ainda |
+| Próximo passo | C11 — `build(contracts)`: OpenAPI/AsyncAPI + cliente gerado |
+| Perguntas | Nenhuma nova |
+
 ## Matriz de versões fixada (C06–C09)
 
 - JDK 25.0.4; Boot 4.1.1; Spring 7.0.9; Maven 3.9.16; Node v22.23.2; Angular 22.1.x; TS ~6.0.2; RxJS ~7.8; Vitest 4; Spotless 3.10.2/palantir 2.98; checkstyle-plugin 3.6; ArchUnit 1.5; TC BOM 2.0.5; PG 18.6; Kafka 4.3.1; Mailpit v1.31.2; WireMock 3.13.2.
