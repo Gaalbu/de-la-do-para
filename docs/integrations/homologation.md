@@ -8,8 +8,9 @@ sanitizados no relatório. Status: **pendente** (aguarda contas).
 
 - [ ] Conta Asaas sandbox + API key + segredo de webhook (32–255 chars)
 - [ ] Conta Melhor Envio sandbox + app OAuth2 + e-mail p/ `User-Agent`
-- [ ] Túnel escolhido: **Cloudflare quick tunnel** (proposta inicial, sem
-      cadastro) ou ngrok (exige conta) — expor **só** `/api/v1/webhooks/*`
+- [ ] Túnel **aprovado pelo usuário (20/09/2026)**: Cloudflare quick tunnel
+  (sem cadastro) — expor **só** `/api/v1/webhooks/*`; fallback ngrok
+  (exige conta) se o quick tunnel falhar
 - [ ] Dados de pagador/remetente de teste aceitos pelos sandboxes
 
 ## Passo a passo Asaas
