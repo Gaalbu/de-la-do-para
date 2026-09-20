@@ -12,6 +12,8 @@ backend/.flattened-pom.xml
 node_modules/
 frontend/dist/
 frontend/.angular/
+frontend/test-results/
+frontend/playwright-report/
 npm-debug.log*
 
 # Env e segredos locais (nunca commitar valores reais)
