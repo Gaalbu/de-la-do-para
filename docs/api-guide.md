@@ -18,6 +18,27 @@ python3 -m http.server 18080 --directory frontend/api-reference
 `frontend/api-reference/` é gerado e ignorado no Git; `contracts:lint`
 barra spec inválida antes de publicar.
 
+## Gates de contrato (C11b)
+
+Duas direções, ambas verdes no seed e ambas comprovadas com fixture
+divergente (falham pelo motivo esperado):
+
+- **Implementação → contrato** (`RouteContractCoverageTest`, backend):
+  toda rota HTTP implementada precisa existir no contrato canônico ou na
+  allowlist `contracts/openapi/route-allowlist.properties`. Só endpoints
+  de infraestrutura entram na allowlist, com justificativa em comentário;
+  regra de negócio sem contrato nunca. Exceção atual: `/error`
+  (`BasicErrorController` do Spring, sem regra comercial).
+- **Exemplos → schema** (`redocly.yaml` + `contracts:lint`): `extends:
+  recommended` (mantém os 3 warnings documentados em C11) com
+  `no-invalid-schema-examples: error` — exemplo fora do schema reprova.
+  O `--config ../redocly.yaml` explícito no script garante que a regra
+  vale quando o lint roda de `frontend/`.
+
+Cada endpoint futuro (C15+) amplia a cobertura no próprio PR
+(contract-first): caminho no `v1.yaml`, exemplos válido/inválido e teste
+HTTP, conforme `docs/spec-template.md` §8–§9.
+
 ## Convenções (resumo de API-E-TESTES.md)
 
 - Dinheiro em centavos inteiros + moeda nos contratos; exibição BRL.
