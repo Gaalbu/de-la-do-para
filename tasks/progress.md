@@ -51,6 +51,22 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C06 — `chore(backend)`: bootstrap Spring Boot (namespace `br.com.deladopara`); depois C07 Angular, C08 Compose. Credenciais sandbox via `.env` com ajuda posterior, no spike |
 | Perguntas | Abertas: curadoria das 7 fotos (C03); spike sandbox (contas do usuário); licença/destino de releases |
 
+## Sessão 2026-09-20 — C06 bootstrap backend (PR #6 merged)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `chore/c06-backend` (`40be312`) a partir de `main@f9bd6ac`; merge `b7354fe` |
+| Tarefa | C06 — `chore(backend)`: bootstrap Spring Boot — concluída, validada e merged |
+| Mudanças | `backend/pom.xml` (parent Boot 4.1.1, Java 25, `br.com.deladopara`), `mvnw`+wrapper Maven 3.9.16, `DeLaDoParaApplication`, `application.yml` mínimo, `contextLoads`. Sem negócio fictício; `target/` ignorado |
+| Verificação | Boot 4.1.1 confirmado no Central antes de fixar; `./mvnw -B verify` BUILD SUCCESS (Tests 1, 0 falhas); boot em 1,58 s exit 0; validação independente: sentido/aceite 4/4 OK, sem segredos reais, superfície mínima |
+| Remoto | PR #6 merged (`b7354fe`); sem CI ainda |
+| Próximo passo | C07 — `chore(frontend)`: bootstrap Angular standalone + SSR |
+| Perguntas | Nenhuma nova |
+
+## Matriz de versões fixada (C06)
+
+- JDK 25.0.4 GraalVM CE; Spring Boot 4.1.1; Spring Framework 7.0.9 (spring-core do BOM); Maven wrapper 3.9.16 (scripts 3.3.4); Node v22.23.2 / npm 12.0.2 a fixar em C07.
+
 ## Ambiente registrado (C00a)
 
 - Git 2.43.0; Docker Compose v5.5.1 (Docker 29.8.1); JDK 25.0.4 GraalVM CE; Node v22.23.2; npm 12.0.2 (versão a revalidar no bootstrap frontend C07, matriz Angular 22).
