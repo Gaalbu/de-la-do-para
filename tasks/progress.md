@@ -67,6 +67,22 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 - JDK 25.0.4 GraalVM CE; Spring Boot 4.1.1; Spring Framework 7.0.9 (spring-core do BOM); Maven wrapper 3.9.16 (scripts 3.3.4); Node v22.23.2 / npm 12.0.2 a fixar em C07.
 
+## Sessão 2026-09-20 — C07 bootstrap frontend (PR #7 merged, auto-merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `chore/c07-frontend` (`b549d68`); merge `13664fc` |
+| Tarefa | C07 — `chore(frontend)`: bootstrap Angular standalone + SSR — concluída, validada e merged (merge próprio autorizado pelo usuário quando aprovado) |
+| Mudanças | Workspace `frontend/` via CLI 22.1.8 (skip-git, npm): Angular 22.1.x, TS ~6.0.2, RxJS ~7.8, Vitest, SSR+prerender, routing, lockfile. Ajuste manual: `strict:true` + `strictTemplates:true` (scaffold não trazia os masters) |
+| Verificação | `ng test` 2 passed; `ng build` SSR + `/` prerenderizada (21 KB HTML real c/ `ng-server-context`); sem zone.js; latin-ext confirmado p/ Fraunces+Inter (css2 API). Obs: 1 core-dump transitório no 1º build, verde nas 2 compilações seguintes; SSR rejeita Host externo por SSRF protection padrão |
+| Remoto | PR #7 merged (`13664fc`); sem CI ainda |
+| Próximo passo | C08 — `chore(dev)`: Compose local (PostgreSQL, Kafka KRaft, Mailpit, simuladores) + `.env` + guia |
+| Perguntas | Nenhuma nova |
+
+## Matriz de versões fixada (C06–C07)
+
+- JDK 25.0.4 GraalVM CE; Spring Boot 4.1.1; Spring Framework 7.0.9; Maven wrapper 3.9.16; Node v22.23.2; Angular 22.1.x; TypeScript ~6.0.2; RxJS ~7.8; Vitest 4; packageManager npm@12.0.2 (lockfile v-compatível, installs OK).
+
 ## Ambiente registrado (C00a)
 
 - Git 2.43.0; Docker Compose v5.5.1 (Docker 29.8.1); JDK 25.0.4 GraalVM CE; Node v22.23.2; npm 12.0.2 (versão a revalidar no bootstrap frontend C07, matriz Angular 22).
