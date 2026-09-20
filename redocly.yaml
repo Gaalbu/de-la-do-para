@@ -1,0 +1,8 @@
+# Gate de contratos (C11b): parte do recommended (que gerava os 3 warnings
+# documentados em C11: licença pendente, localhost, operação sem 4xx no
+# seed) e escala só o drift de exemplos para erro: exemplos fora do schema
+# reprovam, em vez de só avisar.
+extends:
+  - recommended
+rules:
+  no-invalid-schema-examples: error
