@@ -26,8 +26,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PR #1 merged (`b9e70f8`); `main` atualizada via fast-forward; sem CI ainda |
 | Próximo passo | C02 — `docs(sdd)`: convenções de spec/ADR e matriz de rastreio |
 | Perguntas | Nenhuma nova; licença/destino de releases seguem pendentes para etapa própria |
-| Próximo passo | C01 — `docs(scope)`: transcrever escopo aprovado e mapa de capacidades (D01–D64) sem inferência; depois C02 convenções SDD/ADR |
-| Perguntas | Namespace Java proposto `br.com.deladopara` confirmado pelo usuário; licença do código público e destino de releases seguem pendentes para a etapa de preparação de repo/release (não bloqueiam C01) |
+
+## Sessão 2026-09-20 — C02/C03/C04 (PRs #2–#4 abertos; respostas do usuário)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@fab0fd3`; branches `docs/c02-sdd` (`3b0824f`, PR #2), `docs/c03-design` (`e966f58`, PR #3), `docs/c04-integrations` (`9e61fe5`, PR #4) |
+| Tarefa | C02 (convenções SDD), C03 (design, Q01 segue aberta), C04 parcial (docs revalidados; spike pendente) — PRs abertos, merges com o usuário |
+| Mudanças | `docs/contributing.md`, `spec-template.md`, `adr-template.md`, `traceability.md`, `spec-example.md`; `docs/design/{brief,storyboard,assets}.md`; `docs/integrations/{asaas,melhor-envio,homologation}.md`. Nenhuma integração alegada como comprovada |
+| Verificação | `git diff --check` limpo nos 3 branches; sem segredos; links internos/externos conferidos (fontes OFL, 4 docs de provedores, Commons); contrastes WCAG medidos; fidelidade C01 100% |
+| Remoto | PRs #2, #3, #4 abertos; `main` só com C00a/C00b/C01; sem CI ainda |
+| Próximo passo | C05 — `docs(architecture)`: ADRs (usa template de C02 já conhecido; sem bloqueio) |
+| Perguntas | Respondidas: túnel **Cloudflare quick tunnel aprovado** (atualizar `homologation.md` no merge do PR #4); credenciais Asaas via `.env` local com ajuda posterior; Melhor Envio sandbox simplificado confirmado. Abertas: revisão dos PRs #2–#4; Q01 criativa (C03); licença/destino de releases |
 
 ## Ambiente registrado (C00a)
 
