@@ -131,6 +131,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C11a — `docs(api)`: referência interativa + exemplos executáveis |
 | Perguntas | Nenhuma nova |
 
+## Sessão 2026-09-20 — C11a referência e exemplos (PR #12 merged, auto-merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `docs/c11a-api-reference` (`d257320`); merge `0cac71d` |
+| Tarefa | C11a — `docs(api)`: referência + exemplos — concluída, validada e merged |
+| Mudanças | `docs/api-guide.md`; `status.http` (executável + futuro comentado); stub WireMock `/api/v1/status`; checklist API-E-TESTES no spec-template §8 |
+| Verificação | Stub 200 com seed; Redoc 40 KB HTTP 200 com título; futuros marcados não-funcionais. Incidentes: bind WireMock estagnado (recreate, sem dados em jogo); redocly 2.x sem `preview-docs` (guia usa `build-docs`+http.server, verificado) |
+| Remoto | PR #12 merged (`0cac71d`); sem CI ainda |
+| Próximo passo | C11b — `test(contracts)`: detectar rotas sem contrato e schema drift |
+| Perguntas | Nenhuma nova |
+
 ## Matriz de versões fixada (C06–C09)
 
 - JDK 25.0.4; Boot 4.1.1; Spring 7.0.9; Maven 3.9.16; Node v22.23.2; Angular 22.1.x; TS ~6.0.2; RxJS ~7.8; Vitest 4; Spotless 3.10.2/palantir 2.98; checkstyle-plugin 3.6; ArchUnit 1.5; TC BOM 2.0.5; PG 18.6; Kafka 4.3.1; Mailpit v1.31.2; WireMock 3.13.2.
