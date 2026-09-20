@@ -1,0 +1,10 @@
+{
+  "eventId": "not-a-uuid",
+  "eventType": "pedido.criado",
+  "schemaVersion": 1,
+  "aggregateId": "ord_01JABCDEF",
+  "occurredAt": "20/09/2026",
+  "correlationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "causationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "payload": { "pedidoId": "ord_01JABCDEF" }
+}
