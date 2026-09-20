@@ -83,6 +83,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 - JDK 25.0.4 GraalVM CE; Spring Boot 4.1.1; Spring Framework 7.0.9; Maven wrapper 3.9.16; Node v22.23.2; Angular 22.1.x; TypeScript ~6.0.2; RxJS ~7.8; Vitest 4; packageManager npm@12.0.2 (lockfile v-compatível, installs OK).
 
+## Sessão 2026-09-20 — C08 infra local (PR #8 merged, auto-merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `chore/c08-local-infra` (`a861f81`); merge `150630a` |
+| Tarefa | C08 — `chore(dev)`: Compose local + proxy + guia — concluída, validada e merged |
+| Mudanças | `compose.yml` (postgres 18.6-bookworm, kafka 4.3.1 KRaft, mailpit v1.31.2, wiremock 3.13.2-alpine; portas próprias; healthchecks); `frontend/proxy.conf.json` (/api→8080); `.env.example` com portas; `docs/local-guide.md`; mappings vazios. `.env` local criado e ignorado |
+| Verificação | `config` OK; 4/4 `healthy`; PG write/read; Kafka produce→consume; Mailpit/WireMock via host; `down` preserva volumes; `up` restaura dados; sondas removidas. Falhas reais corrigidas: PGDATA no parent (guia oficial 18+), `KAFKA_CONTROLLER_LISTENER_NAMES`, healthcheck com path absoluto |
+| Remoto | PR #8 merged (`150630a`); sem CI ainda |
+| Próximo passo | C09 — `build(backend)`: formatter, Testcontainers, arquitetura e análise Java |
+| Perguntas | Nenhuma nova |
+
 ## Ambiente registrado (C00a)
 
 - Git 2.43.0; Docker Compose v5.5.1 (Docker 29.8.1); JDK 25.0.4 GraalVM CE; Node v22.23.2; npm 12.0.2 (versão a revalidar no bootstrap frontend C07, matriz Angular 22).
