@@ -119,6 +119,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C11 — `build(contracts)`: OpenAPI/AsyncAPI + cliente gerado |
 | Perguntas | Nenhuma nova |
 
+## Sessão 2026-09-20 — C11 contratos (PR #11 merged, auto-merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `build/c11-contracts` (`b52619b`); merge `d7b1afd` |
+| Tarefa | C11 — `build(contracts)`: schemas + cliente gerado — concluída, validada e merged |
+| Mudanças | `contracts/openapi/v1.yaml` seed (status, ProblemDetail, security); envelope JSON Schema + exemplos; redocly 2.53, hey-api 0.99, ajv 8.20; `contracts:check` encadeado; gerado em `src/generated` (ignorado) |
+| Verificação | Cadeia verde (lint válido + 3 warnings documentados, exemplos ok/ok, 4 arquivos gerados, tsc limpo); spec inválida falha com 2 erros (fixture removida); gerado isento de lint/format. Decisões: hey-api (openapi-typescript exige TS5); warnings mantidos; AsyncAPI em C45 |
+| Remoto | PR #11 merged (`d7b1afd`); sem CI ainda |
+| Próximo passo | C11a — `docs(api)`: referência interativa + exemplos executáveis |
+| Perguntas | Nenhuma nova |
+
 ## Matriz de versões fixada (C06–C09)
 
 - JDK 25.0.4; Boot 4.1.1; Spring 7.0.9; Maven 3.9.16; Node v22.23.2; Angular 22.1.x; TS ~6.0.2; RxJS ~7.8; Vitest 4; Spotless 3.10.2/palantir 2.98; checkstyle-plugin 3.6; ArchUnit 1.5; TC BOM 2.0.5; PG 18.6; Kafka 4.3.1; Mailpit v1.31.2; WireMock 3.13.2.
