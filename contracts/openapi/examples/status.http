@@ -1,0 +1,21 @@
+// Exemplos executáveis da API (C11a). Formato REST Client (VS Code/IntelliJ).
+// Variáveis: ajuste baseUrl para o seu ambiente. Sem segredos aqui.
+// Estado: só /status responde (via stub de contrato no WireMock); as demais
+// operações chegam com as specs e NÃO são funcionais ainda.
+
+@baseUrl = http://localhost:18443
+
+### Saúde — stub de contrato (a API real responde em C15+)
+GET {{baseUrl}}/api/v1/status
+Accept: application/json
+
+### Checkout idempotente — FUTURO (C58a; exemplo ilustrativo, não executar)
+# POST {{baseUrl}}/api/v1/checkouts
+# Content-Type: application/json
+# Idempotency-Key: {{$uuid}}
+#
+# {
+#   "carrinhoId": "cart_01JABCDEF",
+#   "cotacaoId": "quote_01JABCDEF",
+#   "modalidade": "ENTREGA"
+# }
