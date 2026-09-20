@@ -3,3 +3,4 @@ coverage
 .angular
 test-results
 playwright-report
+src/generated

@@ -3,7 +3,11 @@ import angular from 'angular-eslint';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**'] },
+  {
+    // Gerado de contracts/ via contracts:generate: nunca editado nem
+    // auditado como código manual; a garantia é regenerar do zero.
+    ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**', 'src/generated/**'],
+  },
   {
     files: ['**/*.ts'],
     extends: [...tseslint.configs.recommended, ...angular.configs.tsRecommended],

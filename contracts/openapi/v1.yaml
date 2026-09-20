@@ -1,0 +1,72 @@
+openapi: 3.1.0
+info:
+  title: De Lá do Pará API
+  version: 0.0.1
+  description: >
+    Contrato canônico da API (C11). Toda operação HTTP implementada precisa
+    estar aqui antes do código; o cliente Angular é gerado deste arquivo e
+    nunca editado manualmente. Endpoints de negócio chegam com as specs
+    (C15+); este seed prova o gate.
+servers:
+  - url: http://localhost:8080
+    description: API local
+security:
+  - sessionCookie: []
+paths:
+  /api/v1/status:
+    get:
+      operationId: getStatus
+      summary: Saúde pública da API
+      # Endpoint público: sem sessão (exceção explícita ao padrão).
+      security: []
+      responses:
+        '200':
+          description: API disponível
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        '500':
+          description: Indisponibilidade transitória
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: DLSESSION
+      description: >
+        Sessão Spring Security persistida no PostgreSQL (D64). Nome do
+        cookie provisório; definitivo em SPEC-identity (C14).
+  schemas:
+    Status:
+      type: object
+      required: [status, version]
+      properties:
+        status:
+          type: string
+          example: ok
+        version:
+          type: string
+          example: 0.0.1
+    ProblemDetail:
+      description: Erro padronizado (RFC 9457 + código comercial estável)
+      type: object
+      required: [title, status, codigo]
+      properties:
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        codigo:
+          type: string
+          description: Código comercial estável (ex. CHECKOUT_CONFLITO)
+          example: RECURSO_NAO_ENCONTRADO
+        correlationId:
+          type: string
+          format: uuid
