@@ -95,6 +95,22 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C09 — `build(backend)`: formatter, Testcontainers, arquitetura e análise Java |
 | Perguntas | Nenhuma nova |
 
+## Sessão 2026-09-20 — C09 gates backend (PR #9 merged, auto-merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `build/c09-backend-gates` (`e69b73d`); merge `ff5097c` |
+| Tarefa | C09 — `build(backend)`: formatter, Testcontainers, arquitetura e análise — concluída, validada e merged |
+| Mudanças | Spotless 3.10.2+palantir 2.98 + checkstyle 3.6 (regras mínimas) + failsafe explícito; TC BOM 2.0.5 (módulos renomeados `testcontainers-*`); `ArchitectureRulesTest` (3 regras); `InfrastructureIT` (PG 18.6 + Kafka 4.3.1); deps kafka-clients + postgresql driver |
+| Verificação | `verify` verde: unit 4/4, IT 2/2 (PG+Kafka reais), spotless+checkstyle passam; violação `@Autowired` temporária → gate vermelho com mensagem da regra → removida (só o arquivo experimental) → verde de novo |
+| Remoto | PR #9 merged (`ff5097c`); sem CI ainda |
+| Próximo passo | C10 — `build(frontend)`: lint, formato, runner, Playwright |
+| Perguntas | Nenhuma nova |
+
+## Matriz de versões fixada (C06–C09)
+
+- JDK 25.0.4; Boot 4.1.1; Spring 7.0.9; Maven 3.9.16; Node v22.23.2; Angular 22.1.x; TS ~6.0.2; RxJS ~7.8; Vitest 4; Spotless 3.10.2/palantir 2.98; checkstyle-plugin 3.6; ArchUnit 1.5; TC BOM 2.0.5; PG 18.6; Kafka 4.3.1; Mailpit v1.31.2; WireMock 3.13.2.
+
 ## Ambiente registrado (C00a)
 
 - Git 2.43.0; Docker Compose v5.5.1 (Docker 29.8.1); JDK 25.0.4 GraalVM CE; Node v22.23.2; npm 12.0.2 (versão a revalidar no bootstrap frontend C07, matriz Angular 22).
