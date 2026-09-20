@@ -143,6 +143,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Próximo passo | C11b — `test(contracts)`: detectar rotas sem contrato e schema drift |
 | Perguntas | Nenhuma nova |
 
+## Sessão 2026-09-20 — C11b harness de contrato (PR #13 merged, merge autorizado)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `build/c11b-contract-harness` (`edca8cc`) retomado com trabalho não-commitado da sessão anterior; merge `37f86ec` |
+| Tarefa | C11b — `test(contracts)`: rotas sem contrato + schema drift — concluída, validada e merged |
+| Mudanças | `RouteContractCoverageTest` (implementação→contrato; allowlist só p/ infra, `/error` única exceção); `redocly.yaml` (`extends: recommended` + `no-invalid-schema-examples: error`); `--config` explícito no `contracts:lint`; seção Gates em `docs/api-guide.md`; `spring-boot-starter-web` escopo test (web de produção chega em C15+) |
+| Verificação | `verify` verde: unit 2/2, arch 3/3, IT 2/2 (PG+Kafka reais), spotless+checkstyle OK; `contracts:check` verde (lint válido + 3 warnings de C11, events, generate, tsc); fixtures divergentes falham pelo motivo esperado (allowlist vazia → `rotas sem contrato: [/error ...]`; exemplo inválido → erro redocly exit 1); `diff --check` limpo; sem segredos. Incidentes: field injection violou `noFieldInjection` (→ construtor); spotless aplicado; config sem `extends` zerava warnings de C11 e sem `--config` a regra não carregava de `frontend/` |
+| Remoto | PR #13 merged (`37f86ec`); sem CI ainda |
+| Próximo passo | C12 — `feat(observability)`: correlação HTTP, logs estruturados, health/readiness, teste de redaction |
+| Perguntas | Nenhuma nova |
+
 ## Matriz de versões fixada (C06–C09)
 
 - JDK 25.0.4; Boot 4.1.1; Spring 7.0.9; Maven 3.9.16; Node v22.23.2; Angular 22.1.x; TS ~6.0.2; RxJS ~7.8; Vitest 4; Spotless 3.10.2/palantir 2.98; checkstyle-plugin 3.6; ArchUnit 1.5; TC BOM 2.0.5; PG 18.6; Kafka 4.3.1; Mailpit v1.31.2; WireMock 3.13.2.
