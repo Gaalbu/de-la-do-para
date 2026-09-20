@@ -15,6 +15,7 @@ frontend/.angular/
 frontend/test-results/
 frontend/playwright-report/
 frontend/src/generated/
+frontend/api-reference/
 npm-debug.log*
 
 # Env e segredos locais (nunca commitar valores reais)

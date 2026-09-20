@@ -1,0 +1,18 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "STUB DE CONTRATO — GET /api/v1/status (NÃO é a API real; só para exercitar os exemplos de C11a)",
+  "request": {
+    "method": "GET",
+    "url": "/api/v1/status"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "status": "ok",
+      "version": "0.0.1"
+    }
+  }
+}

@@ -61,6 +61,15 @@ Operações HTTP (método/caminho/permissão/schemas/exemplos de sucesso e erro)
 (producer/consumidor/versão/payload/correlação/dedup/retry/quarentena/replay).
 Toda rota implementada tem contrato; contrato inválido falha no gate.
 
+Checklist API-E-TESTES (D63) herdado por cada operação: propósito,
+permissões, parâmetros com obrigatoriedade e limites, schemas, exemplos
+executáveis de requisição e de **todas** as respostas de erro aplicáveis,
+status, cabeçalhos (incluindo `Idempotency-Key` quando aplicável),
+convenções de dinheiro/datas/paginação, erros Problem Details com `codigo` e
+`correlationId`, e documentação de sessão/cookie/CSRF com exemplos por papel
+(convidado/cliente/admin) e 401/403. Justificar por escrito quando uma
+categoria de erro não se aplicar.
+
 ## 9. Critérios de aceite
 
 | ID | Critério | Teste(s) | Evidência |
