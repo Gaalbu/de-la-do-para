@@ -244,3 +244,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | https://github.com/Gaalbu/de-la-do-para/pull/27 — MERGED `be93aab` |
 | Próximo passo | C16 `feat(identity-ui): add accessible login and admin navigation` — depende C10+C15, F/identity + guarda de rota |
 | Perguntas | Nenhuma nova; verificação/recuperação single-use e rate-limit (IDN-003..012) ficam para C76/C77 |
+
+## Sessão 2026-09-21 — auditoria C00–C15 (branch `review/audit-c00-c15`)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@cb0acce`; worktree isolado, sem tocar `feat/c16-identity-ui` |
+| Tarefa | Revisão de qualidade do que foi mergeado (PRs #1–#27) contra o plano; correções sem antecipar tarefas futuras |
+| Achados corrigidos | (1) C15 entregue **sem nenhum teste de identity** (`BI(SessionSecurity)`, IDN-001/002/005/006/007/008/009 ausentes). (2) Sessão real era `JSESSIONID` em memória: `spring.session.*` de cookie/store era ignorado no Boot 4 e faltava `spring-boot-starter-session-jdbc`; não havia `DLSESSION`, `Secure`, `SameSite` nem linha em `SPRING_SESSION`, contrariando D64 e a linha "cookie DLSESSION" do registro de C15. (3) Cadastro concorrente do mesmo e-mail dava 500 (violação de unicidade sem tratamento). (4) Contrato documentava `verify`/`recovery`/`reset`, ainda não implementados. (5) Código morto em `AccountService` (token com comentário de rascunho, hash, `findByEmail`), campos não usados em `IdentityProperties`, perfis `local`/`test` duplicados, exceções embrulhadas duas vezes, `findAll()` para checar admin |
+| Verificação | Testes novos falham antes da correção (cookie e 500 reproduzidos) e passam depois: `SessionSecurityIT` 11, `AccountRegistrationIT` 1; `mvnw verify` 12 unit + 14 IT verdes; `contracts:check`, `docs:check`, `check-secrets` verdes; frontend na `main` (lint, format, test:ci, build) verde |
+| Pendente / fora do escopo | Rate limit e bloqueio (IDN-012), verificação/recuperação (C76/C77), CSRF no login só quando há sessão (I-03), timeout absoluto de 12 h só via `max-age` do cookie, sem validação no servidor; `status` no contrato ainda é stub WireMock |
