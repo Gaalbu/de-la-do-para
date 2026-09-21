@@ -175,6 +175,20 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Commits | `07b469a` observabilidade; `679c3bc` correção lint; `6c7556d` CI. C12 inclui contrato, documentação e testes no mesmo commit (9 arquivos, acoplamento necessário para gate coerente) |
 | Verificação | Teste de correlação vermelho por classe ausente → 4 testes verdes; health vermelho 404 → 3 testes HTTP verdes; `verify` Temurin 25.0.4: 12 unitários/HTTP/arquitetura + 2 IT reais PostgreSQL/Kafka, formatter/checkstyle verdes. F: lint/formato, 4 testes e build SSR verdes; E: 1 smoke Playwright verde. Contratos verdes, warnings Redocly registrados no output. JAR real: JSON/correlação conferidos, query/cookie/token de teste ausentes; RSS 232.596 KiB após uma sonda, sem carga. Shell inválido retorna 2; YAML/pinagem/permissões conferidos; diff check limpo |
 | Incidentes | Baseline GraalVM CE sofreu SIGSEGV em `libjvmcicompiler.so` (SHA implCompress0); ArchUnit e suíte completa passam no Temurin já instalado, selecionado por comando, sem mudar Java global. Lint preexistente falhava no HTML Redoc gerado (ICU); ignorado apenas artefato. Aislop/actionlint indisponíveis; revisão manual e gates existentes executados |
-| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/14 — aberto. Run inicial `35546978418`: contratos passou; backend/frontend em execução no momento deste registro. Conferir checks do HEAD antes de merge; não afirmar main atualizada |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/14 — MERGED `a631ef8` (run `35547099486` success 4/4). https://github.com/Gaalbu/de-la-do-para/pull/15 — MERGED `d2fb069` (run `35547722865` docs success). Verificado `statusCheckRollup` verde antes de cada merge |
 | Próximo passo | Confirmar CI do HEAD e revisão/merge conforme autorização; depois C13a documentação, C13b segurança, C13c política/agenda/proteção. G1 externo continua dependente de C04 real, não de mocks |
 | Perguntas | Nenhuma nova nesta entrega. Credenciais/spike C04, fotos restantes e licença/destino de releases continuam na etapa correspondente. Preservada decisão posterior: principal em loop de até 30 s sem legendas |
+
+## Sessão 2026-09-20 — C13a gate documental (PR #15)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@a631ef8`; branch `ci/c13a-docs` |
+| Tarefa | C13a — `ci(docs): enforce documentation and API example checks` — concluída, verificada localmente e na CI, merged |
+| Mudanças | `frontend/scripts/check-docs.mjs` (links internos Markdown), `docs:check` em `frontend/package.json`, `scripts/verify.sh` com caso `docs` (check-docs + contracts:check), job `docs` no `ci.yml` + `docs` no `quality-gate`, `docs/ci.md` atualizada (C13 → C13+C13a, docs:check reproduzível) |
+| Commits | `5c099a6` ci(docs) |
+| Verificação | `npm run docs:check` OK 24 arquivos; fixture quebrado `nao-existe-xyz.md` falha com ERRO documentado → restaurado verde; `scripts/verify.sh docs` OK (6 warnings Redocly documentados + generate + tsc); `lint` 0, `format:check` OK (após `prettier --write`), `test:ci` 4 passed, `build` SSR OK; `spotless:check` OK, `diff --check` limpo. CI `35547722865` success: backend/frontend/contracts/docs/quality-gate 5/5 |
+| Incidentes | `format:check` falhou no novo mjs até `prettier --write`; eslint ok (gerado ignorado) |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/15 — MERGED `d2fb069` |
+| Próximo passo | C13b `ci(security): enforce scoped permissions and dependency checks` (pinagem, scans, dependabot) — depois C13c `ci(quality): require healthy PRs and scheduled checks` (agregador docs-only, proteção de main) |
+| Perguntas | Nenhuma nova |
