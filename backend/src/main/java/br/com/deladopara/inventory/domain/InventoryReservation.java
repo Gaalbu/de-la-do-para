@@ -31,6 +31,23 @@ public record InventoryReservation(UUID id, String reference, Instant createdAt,
         return !now.isBefore(expiresAt);
     }
 
+    public InventoryReservation commit(Instant now) {
+        if (status != Status.ACTIVE) {
+            return this;
+        }
+        if (isExpiredAt(now)) {
+            throw new IllegalStateException("Reservation has expired");
+        }
+        return new InventoryReservation(id, reference, createdAt, expiresAt, Status.COMMITTED);
+    }
+
+    public InventoryReservation release() {
+        if (status != Status.ACTIVE) {
+            return this;
+        }
+        return new InventoryReservation(id, reference, createdAt, expiresAt, Status.RELEASED);
+    }
+
     public enum Status {
         ACTIVE,
         COMMITTED,

@@ -27,4 +27,14 @@ class InventoryReservationTest {
         var reservation = InventoryReservation.create(UUID.randomUUID(), "checkout-1", CREATED);
         assertThatThrownBy(() -> reservation.isExpiredAt(null)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void commitsBeforeExpiryAndDoesNotResurrectLatePayment() {
+        var reservation = InventoryReservation.create(UUID.randomUUID(), "checkout-1", CREATED);
+
+        assertThat(reservation.commit(CREATED.plusSeconds(899)).status())
+                .isEqualTo(InventoryReservation.Status.COMMITTED);
+        assertThatThrownBy(() -> reservation.commit(reservation.expiresAt())).isInstanceOf(IllegalStateException.class);
+        assertThat(reservation.release().release().status()).isEqualTo(InventoryReservation.Status.RELEASED);
+    }
 }
