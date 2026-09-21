@@ -220,3 +220,27 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 ## G1 — verificação
 
 - CI com 7 jobs obrigatórios, proteção de `main` verificada via `gh api repos/Gaalbu/de-la-do-para/branches/main/protection`; docs-only não bypassa gates; sandbox C04 continua pendente opt-in (não comprovado por mocks).
+
+## Sessão 2026-09-21 — C14 spec identity (PR #26 merged)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@4f592b0`; branch `docs/c14-identity` (`4b82a3f`) |
+| Tarefa | C14 — `docs(identity): specify sessions and optional customer accounts` — concluída, verificada e merged após revisão humana |
+| Mudanças | `specs/SPEC-identity.md` (9 seções: objetivo, comandos, estrutura B/identity + migrations V10-V12, convenções BCrypt12/cookie/CSRF, estratégia 12 testes, limites OAuth/2FA fora de v1, regras papéis/invariantes/transições R01-R08, contratos I-01..I-08, critérios IDN-001..013) |
+| Verificação | `docs:check` OK 24 arquivos; `verify.sh docs` OK (6 warnings Redocly pré-existentes); `verify.sh security` OK (0 high runtime); `diff --check` limpo; CI `35548577157` success 7/7 (backend/frontend/contracts/docs/security/commit-policy/quality-gate) |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/26 — MERGED `2edd714` |
+| Próximo passo | C15 `feat(identity): authenticate administrators with protected sessions` — B/identity, migrations, T/identity; dividir persistência/API se >5 arquivos |
+| Perguntas | Nenhuma nova; OAuth/2FA, remetente de e-mail e durações exatas confirmadas como propostas a validar em C15 |
+
+## Sessão 2026-09-21 — C15 identity backend (PR #27 merged)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@2edd714`; branch `feat/c15-identity` (`b8342b9`) |
+| Tarefa | C15 — `feat(identity): authenticate administrators with protected sessions` — concluída, verificada e merged |
+| Mudanças | B/identity: `Account`/`VerificationToken`, `AccountRepository`/`VerificationTokenRepository`, migrations V10-V12 (accounts, verification_tokens, SPRING_SESSION), `ClockConfig`, BCrypt12, cookie `DLSESSION` (HttpOnly/Secure/SameSite=Lax), CSRF `CookieCsrfTokenRepository`, `SecurityConfig` (permitAll health/status/csrf/accounts/sessions + `/error`+`/actuator/**`, `changeSessionId`, 401/403 ProblemDetail), `AccountController` (201/409), `SessionController` (200/401/204), `CsrfController`, `IdentityExceptionHandler`, `AdminSeeder` (senha aleatória logada), `IdentityProperties`/`IdentityConfig`/`IdentityUserDetailsService`; `pom` `spring-boot-starter-flyway`, `application.yml` datasource/jpa/flyway/session/mail, profile test sem URL fixa, `PostgresTestContainer` + `HealthEndpointTest` `@Import`; `contracts/openapi/v1.yaml` I-01..I-08 + schemas; `docs/traceability.md` atualizado |
+| Verificação | `verify` Temurin 25.0.4: `mvnw verify` BUILD SUCCESS (Tests 13, spotless 0, checkstyle 0, Flyway V10-V12 aplicadas, PG real via Testcontainers); `contracts:check` valid 10 warnings + generate+tsc OK; `docs:check` 24 OK; `security` OK; fix: starter flyway ausente, mail health 503, env 401 via `/error` permitAll. CI `35552149863` success 7/7 (backend/frontend/contracts/docs/security/commit-policy/quality-gate) |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/27 — MERGED `be93aab` |
+| Próximo passo | C16 `feat(identity-ui): add accessible login and admin navigation` — depende C10+C15, F/identity + guarda de rota |
+| Perguntas | Nenhuma nova; verificação/recuperação single-use e rate-limit (IDN-003..012) ficam para C76/C77 |
