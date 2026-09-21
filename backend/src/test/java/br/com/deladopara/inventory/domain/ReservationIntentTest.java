@@ -26,4 +26,14 @@ class ReservationIntentTest {
                         " ", LocalDate.of(2026, 10, 1), List.of(new ReservationIntent.Line("FARINHA", 1))))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void reportsTotalUnitsWithoutChangingTheIndividualLines() {
+        var intent = new ReservationIntent(
+                "checkout-1",
+                LocalDate.of(2026, 10, 1),
+                List.of(new ReservationIntent.Line("FARINHA", 2), new ReservationIntent.Line("CUIA", 3)));
+
+        org.assertj.core.api.Assertions.assertThat(intent.totalUnits()).isEqualTo(5);
+    }
 }

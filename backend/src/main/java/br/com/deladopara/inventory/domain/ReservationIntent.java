@@ -24,4 +24,12 @@ public record ReservationIntent(String reference, LocalDate arrivalDate, List<Li
     }
 
     public record Line(String skuCode, int quantity) {}
+
+    public int totalUnits() {
+        long total = 0;
+        for (Line line : lines) {
+            total = Math.addExact(total, line.quantity());
+        }
+        return Math.toIntExact(total);
+    }
 }
