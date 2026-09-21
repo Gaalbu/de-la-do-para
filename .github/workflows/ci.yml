@@ -5,6 +5,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 9 * * 1' # seg 09:17 UTC — semanal, custo zero (C13c)
 
 permissions:
   contents: read
@@ -110,9 +112,18 @@ jobs:
       - run: npm ci --prefix frontend
       - run: scripts/verify.sh security
 
+  commit-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - run: scripts/check-commits.sh origin/main HEAD
+
   quality-gate:
     if: always()
-    needs: [backend, frontend, contracts, docs, security]
+    needs: [backend, frontend, contracts, docs, security, commit-policy]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
@@ -123,9 +134,11 @@ jobs:
           CONTRACTS_RESULT: ${{ needs.contracts.result }}
           DOCS_RESULT: ${{ needs.docs.result }}
           SECURITY_RESULT: ${{ needs.security.result }}
+          COMMIT_POLICY_RESULT: ${{ needs.commit-policy.result }}
         run: |
           test "$BACKEND_RESULT" = success
           test "$FRONTEND_RESULT" = success
           test "$CONTRACTS_RESULT" = success
           test "$DOCS_RESULT" = success
           test "$SECURITY_RESULT" = success
+          test "$COMMIT_POLICY_RESULT" = success

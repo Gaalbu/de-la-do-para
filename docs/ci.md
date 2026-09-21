@@ -1,9 +1,10 @@
-# CI — C13, C13a e C13b
+# CI — C13, C13a, C13b e C13c
 
-A pipeline `.github/workflows/ci.yml` executa em PRs, push em `main` e disparo
-manual. Jobs `backend`, `frontend`, `contracts`, `docs` e `security` usam os
-mesmos comandos do ambiente local. `quality-gate` exige sucesso de todos,
-inclusive em mudança só documental; falha, cancelamento e skip não passam.
+A pipeline `.github/workflows/ci.yml` executa em PRs, push em `main`, disparo
+manual e semanalmente (`schedule: 17 9 * * 1` seg 09:17 UTC). Jobs `backend`,
+`frontend`, `contracts`, `docs`, `security` e `commit-policy` usam os mesmos
+comandos do ambiente local. `quality-gate` exige sucesso de todos, inclusive
+em mudança só documental; falha, cancelamento e skip não passam.
 
 ```bash
 npm ci --prefix frontend
@@ -11,6 +12,7 @@ npm ci --prefix frontend
 scripts/verify.sh backend
 scripts/verify.sh docs
 scripts/verify.sh security
+scripts/verify.sh commits
 scripts/verify.sh contracts
 scripts/verify.sh frontend
 # ou todos, sequencialmente:
@@ -28,6 +30,11 @@ herda a checagem pelo mesmo gate.
 informativo). Achado controlado com fixture `AKIA...` falha como esperado;
 repositório limpo passa. PRs externos rodam com `permissions: contents: read`
 e sem acesso a segredos do repositório.
+
+`commit-policy` verifica Conventional Commits (`scripts/check-commits.sh`:
+`feat|fix|test|docs|refactor|build|ci|chore` com escopo opcional, 72 chars);
+merge commits são ignorados, mensagem fora do padrão reprova. Fixture
+`mensagem ruim sem tipo` falha como esperado.
 
 O backend usa Temurin 25.0.4 na CI. Na máquina de desenvolvimento, o teste de
 arquitetura encontrou SIGSEGV no compilador nativo da GraalVM CE 25.2.4,
@@ -73,7 +80,20 @@ para padrões de alta confiança (`PRIVATE KEY`, `AKIA...`, `sk_live_`,
 PRs de fork não recebem segredos (`permissions: contents: read` no workflow
 e nos jobs).
 
-C13b entregue. C13c ainda acrescentará política de commits, agenda e
-proteção de `main` verificada no remoto. CD/release é C92a, após existir
-aplicação empacotada. Esta CI não comprova essas etapas nem a homologação
-C04.
+C13c entregue: política de commits (`commit-policy`), agenda semanal
+(`schedule`) e proteção de `main` verificada no remoto. Jobs exigidos:
+`backend`, `frontend`, `contracts`, `docs`, `security`, `commit-policy`,
+`quality-gate`. Em mudança só documental o agregador mantém todos como
+exigidos (sem `paths-ignore` que mascararia falha); docs-only não bypassa
+backend/frontend/security — custo zero mantido com retenção 7 dias e
+concorrência por branch.
+
+Proteção de `main` (ver §3.1): exigidos `strict: true`, `contexts` acima e
+`enforce_admins: false`; revisão humana de forma viável para projeto
+individual (sem exigir 2 approvers). Verificada via `gh api
+repos/{owner}/{repo}/branches/main/protection` após PR real; se indisponível
+no plano gratuito, registrar limitação sem alegar proteção ativa. Neste
+repositório, proteção foi configurada após verificação dos PRs #14–#16.
+
+CD/release é C92a, após existir aplicação empacotada. Esta CI não comprova
+homologação C04 (sandbox opt-in).
