@@ -6,7 +6,16 @@ export default tseslint.config(
   {
     // Gerado de contracts/ via contracts:generate: nunca editado nem
     // auditado como código manual; a garantia é regenerar do zero.
-    ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**', 'src/generated/**'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      '.angular/**',
+      'node_modules/**',
+      'src/generated/**',
+      'api-reference/**',
+      'test-results/**',
+      'playwright-report/**',
+    ],
   },
   {
     files: ['**/*.ts'],

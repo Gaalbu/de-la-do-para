@@ -56,7 +56,8 @@ HTTP, conforme `docs/spec-template.md` §8–§9.
 
 | Exemplo | Arquivo | Estado |
 |---|---|---|
-| Saúde | `contracts/openapi/examples/status.http` | Executável agora via **stub de contrato** no WireMock (`:18443`); a API real responde em C15+ |
+| Saúde do processo e probes | `docs/observability.md` | API real em C12 (`/actuator/health`, `/liveness`, `/readiness`) |
+| Seed de saúde | `contracts/openapi/examples/status.http` | Executável agora via **stub de contrato** no WireMock (`:18443`); não implementado na API real; usar os endpoints Actuator de C12 |
 | Checkout idempotente | mesmo arquivo (comentado) | Futuro — ilustrativo, não executar |
 
 Equivalente curl do exemplo executável:
@@ -71,3 +72,5 @@ curl -s http://localhost:18443/api/v1/status
 Método, caminho, propósito, permissões, parâmetros, schemas, exemplos de
 sucesso **e** erro, status e cabeçalhos — no mesmo commit do comportamento,
 com teste HTTP e contrato (ver `docs/spec-template.md` §8–§9).
+
+C12: o harness percorre todos os mapeamentos MVC, inclusive os adicionados pelo Actuator. Probes são verificados também por HTTP real em `HealthEndpointTest`; convenções e correlação em [observability.md](observability.md).

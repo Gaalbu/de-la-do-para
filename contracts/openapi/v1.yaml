@@ -13,6 +13,36 @@ servers:
 security:
   - sessionCookie: []
 paths:
+  /actuator/health:
+    get:
+      operationId: getHealth
+      summary: Saúde do processo
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthUp'
+        '503':
+          $ref: '#/components/responses/HealthUnavailable'
+  /actuator/health/liveness:
+    get:
+      operationId: getLiveness
+      summary: Processo está vivo
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthUp'
+        '503':
+          $ref: '#/components/responses/HealthUnavailable'
+  /actuator/health/readiness:
+    get:
+      operationId: getReadiness
+      summary: Processo aceita requisições
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthUp'
+        '503':
+          $ref: '#/components/responses/HealthUnavailable'
   /api/v1/status:
     get:
       operationId: getStatus
@@ -33,6 +63,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
 components:
+  responses:
+    HealthUp:
+      description: Processo disponível; não comprova integrações sandbox.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Health'
+          example: {status: UP}
+        application/vnd.spring-boot.actuator.v3+json:
+          schema:
+            $ref: '#/components/schemas/Health'
+          example: {status: UP}
+    HealthUnavailable:
+      description: Processo indisponível ou recusando tráfego.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Health'
+          example: {status: OUT_OF_SERVICE}
+        application/vnd.spring-boot.actuator.v3+json:
+          schema:
+            $ref: '#/components/schemas/Health'
+          example: {status: OUT_OF_SERVICE}
+  headers:
+    RequestId:
+      description: UUID de correlação; X-Request-ID válido recebido é preservado, caso contrário gerado.
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -42,6 +107,20 @@ components:
         Sessão Spring Security persistida no PostgreSQL (D64). Nome do
         cookie provisório; definitivo em SPEC-identity (C14).
   schemas:
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        groups:
+          type: array
+          description: Nomes públicos dos grupos, presentes na raiz de health.
+          items:
+            type: string
+            enum: [liveness, readiness]
+        status:
+          type: string
+          enum: [UP, DOWN, OUT_OF_SERVICE, UNKNOWN]
     Status:
       type: object
       required: [status, version]
