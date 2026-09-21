@@ -1,0 +1,2 @@
+ALTER TABLE product_skus
+    ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;

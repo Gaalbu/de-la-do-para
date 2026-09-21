@@ -118,9 +118,10 @@ preserva referências, e snapshots independentes ficam para pedidos.
 
 ## 7. Regras e invariantes
 
-1. Todo produto publicado tem identificador estável, nome, descrição,
+1. Todo produto ativo disponível publicamente tem identificador estável, nome, descrição,
    categoria, ao menos um SKU vendável, indicação de conteúdo fictício quando
-   for item da demonstração e política de publicação.
+   for item da demonstração. A oferta pública exige produto e produtor ativos
+   e ao menos um SKU ativo; não há estado de publicação separado na v1.
 2. SKU é a unidade de venda. Não vender fração de unidade física; quantidade
    do carrinho representa múltiplas unidades do SKU (D17–D18).
 3. Categorias comerciais iniciais: quatro alimentos que não exigem
@@ -161,9 +162,9 @@ preserva referências, e snapshots independentes ficam para pedidos.
 Todos os caminhos de produtor abaixo estão versionados no contrato OpenAPI
 em C19. Os caminhos de produto permanecem propostos para suas etapas próprias.
 
-As operações de produtor abaixo são aprovadas para C19. As rotas de produto
-seguem propostas e exigem especificação própria antes de implementação; não
-criar rotas paralelas se a convenção existente cobrir o mesmo caso.
+As operações de produtor foram aprovadas em C19. O conjunto de rotas de
+produto abaixo é o contrato de C22; não criar rotas paralelas se a convenção
+existente cobrir o mesmo caso.
 
 | Operação proposta | Acesso | Resultado/erros a documentar |
 |---|---|---|
@@ -172,11 +173,16 @@ criar rotas paralelas se a convenção existente cobrir o mesmo caso.
 | `GET /api/v1/admin/producers/{id}` | admin | 200; 401, 403, 404 |
 | `PATCH /api/v1/admin/producers/{id}` | admin + sessão/CSRF | 200; 400, 401, 403, 404, 409 |
 | `DELETE /api/v1/admin/producers/{id}` | não existe | produtor referenciado não é apagado; desativar pelo PATCH |
-| `GET /api/v1/admin/products` | admin | página incluindo rascunhos; erros de paginação |
-| `POST /api/v1/admin/products` | admin + sessão/CSRF | 201; 400, 401, 403, 409 SKU duplicado |
-| `PATCH /api/v1/admin/products/{id}` | admin + sessão/CSRF | 200; 400, 401, 403, 404, 409 versão/SKU |
-| `POST /api/v1/admin/products/{id}/publication` | admin + sessão/CSRF | publicar/despublicar; 400 critérios não satisfeitos, 401, 403, 404, 409 |
-| `GET /api/v1/products/{slug}` | público | apenas produto publicado; 404 para indisponível/rascunho |
+| `GET /api/v1/admin/products` | admin | página de ativos/inativos; tamanho máximo 50; erros de paginação |
+| `POST /api/v1/admin/products` | admin + sessão/CSRF | 201; cria produto e SKUs atomicamente; 400 validação/vínculo, 401, 403, 404 produtor inexistente, 409 slug/SKU duplicado |
+| `GET /api/v1/admin/products/{id}` | admin | 200 incluindo SKUs inativos; 401, 403, 404 |
+| `PATCH /api/v1/admin/products/{id}` | admin + sessão/CSRF | corpo integral; SKU omitido é desativado, nunca apagado; 400 validação, 401, 403, 404, 409 slug/SKU duplicado |
+| `DELETE /api/v1/admin/products/{id}` | não existe | manter produto e SKUs; desativar pelo PATCH |
+| `GET /api/v1/products/{slug}` | público | ativo somente se produto, produtor e algum SKU estiverem ativos; 404 caso contrário; DTO editorial não expõe endereço/coordenadas |
+
+Produto ativo define disponibilidade pública neste corte. Não há rota de
+publicação separada: ausência de SKU ativo ou produtor ativo também oculta o
+produto, e toda alteração administrativa continua exclusiva do admin.
 
 Sem endpoints de upload no primeiro corte: referências de mídia curadas são
 configuração/fixture. Cada endpoint deve ter exemplos executáveis para
@@ -194,8 +200,8 @@ contrato serão especificados separadamente.
 | CAT-002 | Oito produtos D52–D60 transcritos sem arredondar/unificar categorias | fixture validada contra `docs/decisions.md` |
 | CAT-003 | Procedência e todas as imagens respeitam o limite de ficção/licença | revisão CAT-Q03 e registro de assets C03 |
 | CAT-004 | Regras de alimentos/artesanato, retirada, fragilidade e embalagem são explícitas | CAT-009 + `contracts:check` |
-| CAT-005 | Contratos administrativos/públicos cobrem autorização, erros e CSRF | OpenAPI + exemplos + cobertura de rotas C19/C20 |
-| CAT-006 | Política de remoção preserva referências/snapshots | D65 + constraints/testes C21 e cobertura de API C22 |
+| CAT-005 | Contratos administrativos/públicos cobrem autorização, erros e CSRF | OpenAPI + exemplos + cobertura de rotas C19/C20/C22 |
+| CAT-006 | Política de remoção preserva referências/snapshots | D65 + constraints/testes C21/C22; snapshots independentes na capacidade de pedidos |
 | CAT-007 | Spec revisada pelo usuário antes de C18 | revisão humana registrada no PR |
 
 ## 10. Rastreabilidade
