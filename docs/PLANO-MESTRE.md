@@ -1430,6 +1430,9 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C15, C26. **Alvos:** aplicação/API/DTOs de estoque e testes; M.
 - **Aceite:** consulta de saldo e ajuste versionado; conflito concorrente sinalizado; papel e motivo obrigatórios.
 - **Verificar:** BI(StockAdjustmentApi), C e duas alterações concorrentes.
+- **Estado atual:** endpoint administrativo de consulta por SKU e ajuste físico por
+  lote implementado no PR #39, com ator, motivo, versão esperada e resposta 409
+  para conflito otimista; o histórico de ajuste usa movimento `ADMIN_ADJUSTMENT`.
 
 ### C28 — `feat(inventory-ui): manage lots and inspect stock history`
 
