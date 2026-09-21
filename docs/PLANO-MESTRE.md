@@ -1420,6 +1420,10 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C21, C25. **Alvos:** modelo/repositório de estoque, migration e testes; M.
 - **Aceite:** entrada/ajuste com motivo e histórico; lote vencido/bloqueado distinguido; constraint evita saldo impossível.
 - **Verificar:** BI(StockLedger); ajustar duas vezes não apaga movimento anterior.
+- **Estado atual:** migration V17, entidades JPA e repositórios de lotes/movimentações
+  implementados no PR #39; invariantes de construção têm testes unitários. O verify
+  local chegou à fase de integração, mas uma execução falhou por indisponibilidade
+  transitória do container PostgreSQL; CI remoto do PR confirmou 7/7 checks verdes.
 
 ### C27 — `feat(inventory): expose authorized stock adjustments`
 
