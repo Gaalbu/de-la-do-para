@@ -1412,7 +1412,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C17, C24a. **Alvos:** `specs/SPEC-inventory.md`, matriz de estoque; S.
 - **Aceite:** saldo físico/reservado/disponível; reserva de 15 minutos; lotes, validade na chegada, bloqueio e ajuste administrativo definidos.
 - **Verificar:** DOC; D27/D54 definem as margens e D67 aprova a fixture sintética com limite e um dia abaixo; não reabrir Q04. Conferir calendário oficial de feriados antes de usar datas concretas.
-- **Estado atual:** `specs/SPEC-inventory.md` preparada com vocabulário, invariantes, fronteira de validade, fixture D67 e critérios INV-001–008. FEFO, comportamento de lote bloqueado com reserva ativa e calendário anual continuam propostas/pendências para revisão; C25 ainda não está concluída.
+- **Estado atual:** `specs/SPEC-inventory.md` preparada com vocabulário, invariantes, fronteira de validade, fixture D67 e critérios INV-001–008. FEFO, comportamento de lote bloqueado com reserva ativa e calendário anual continuam propostas/pendências para revisão; C25 ainda não está concluída. PR #37 aberta, MERGEABLE/CLEAN; CI inicial `35658857246` 7/7 verde.
 
 ### C26 — `feat(inventory): persist lots and stock movements`
 

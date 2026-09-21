@@ -372,5 +372,5 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | C25 — especificar lotes, saldos, reservas e invariantes; spec preparada, não concluída |
 | Mudanças | Criado `specs/SPEC-inventory.md`: saldo físico/reservado/livre, reserva de 15 minutos, pagamento tardio D13, elegibilidade `arrivalDate`/validade, fixture D67, alocação all-or-nothing, ledger/auditoria, handoff por pacote e critérios INV-001–008. FEFO, bloqueio com reserva ativa, calendário anual e validade em retirada tardia ficaram explicitamente abertos |
 | Verificação | Ainda executar após esta edição: `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json`. Nenhum código ou migration foi criado |
-| Remoto | Sem commit/PR desta spec; PR #36 permanece aberta/mergeável com CI 7/7 verde |
-| Próximo passo | Validar gate documental; depois perguntar a regra de despacho parcial e obter revisão da spec antes de marcar C25 concluída |
+| Remoto | Commit `a819ffd` publicado na PR #37: https://github.com/Gaalbu/de-la-do-para/pull/37, base `feat/c24-media`; PR aberta/MERGEABLE; CI inicial `35658857246` 7/7 verde. Nenhum merge automático |
+| Próximo passo | Acompanhar CI do commit de progresso; depois perguntar a regra de despacho parcial e obter revisão da spec antes de marcar C25 concluída |
