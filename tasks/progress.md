@@ -244,3 +244,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | https://github.com/Gaalbu/de-la-do-para/pull/27 — MERGED `be93aab` |
 | Próximo passo | C16 `feat(identity-ui): add accessible login and admin navigation` — depende C10+C15, F/identity + guarda de rota |
 | Perguntas | Nenhuma nova; verificação/recuperação single-use e rate-limit (IDN-003..012) ficam para C76/C77 |
+
+## Sessão 2026-09-21 — C16 identity-ui (PR #28 merged)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@be93aab`; branch `feat/c16-identity-ui` (`549221d`) |
+| Tarefa | C16 — `feat(identity-ui): add accessible login and admin navigation` — concluída, verificada e merged |
+| Mudanças | `core/interceptors/csrf.interceptor.ts` (XSRF-TOKEN→X-XSRF-TOKEN), `IdentityService` (signals, login/logout/fetchCurrent, withCredentials), `LoginComponent` (form_validado, preserva valores, redirect por papel, a11y alert), `AdminComponent`+`adminGuard` (fetchCurrent se necessário), `HomeComponent`, `App` header com navegação por sessão + `isPlatformBrowser` para SSR, `app.config` HttpClient withFetch+csrf, rotas lazy, `app.routes.server` (prerender login, server ''/admin/**), `app.spec` atualizado, `angular.json` allowedHosts `[localhost:4200]`, `playwright.config` com `node ../dist/...` + PORT env e fallback `python`→`serve`→`node` |
+| Verificação | `lint` 0, `format:check` OK, `test:ci` 4 passed, `build` SSR OK (prerender 1, lazy chunks), `contracts:check` OK, `docs:check` 24 OK; `mvnw verify` OK; fix: `ng serve` vite timeout (300s→30s com `serve`/`python`→`node` SSR, allowedHosts 400, `''` redirect loop); CI `3555...` success 7/7 (backend/frontend/contracts/docs/security/commit-policy/quality-gate) |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/28 — MERGED `0de79a9` |
+| Próximo passo | C17 `docs(catalog): specify provenance products and packaging` — depende C01/C02/C03, spec catálogo |
+| Perguntas | Nenhuma nova |
