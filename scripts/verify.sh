@@ -8,6 +8,10 @@ case "${1:-all}" in
   contracts)
     npm --prefix frontend run contracts:check
     ;;
+  docs)
+    npm --prefix frontend run docs:check
+    npm --prefix frontend run contracts:check
+    ;;
   frontend)
     npm --prefix frontend run lint
     npm --prefix frontend run format:check
@@ -17,7 +21,7 @@ case "${1:-all}" in
     ;;
   all)
     "$0" backend
-    "$0" contracts
+    "$0" docs
     "$0" frontend
     ;;
   *)

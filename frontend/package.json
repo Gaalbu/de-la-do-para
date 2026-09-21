@@ -16,6 +16,7 @@
     "contracts:generate": "openapi-ts",
     "contracts:check-events": "node scripts/check-events.mjs",
     "contracts:check": "npm run contracts:lint && npm run contracts:check-events && npm run contracts:generate && npx tsc --noEmit -p tsconfig.app.json",
+    "docs:check": "node scripts/check-docs.mjs",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
   },
   "private": true,
