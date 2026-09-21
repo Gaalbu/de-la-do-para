@@ -7,7 +7,6 @@ import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-import org.junit.jupiter.api.Assertions;
 
 /**
  * Fronteiras estruturais mínimas do monólito (C09). Regras por módulo e
@@ -37,6 +36,5 @@ class ArchitectureRulesTest {
                 .beFreeOfCycles()
                 .because("módulos formam um grafo acíclico verificável");
         slices.check(classes);
-        Assertions.assertNotNull(slices);
     }
 }

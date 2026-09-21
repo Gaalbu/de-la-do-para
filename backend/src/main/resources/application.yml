@@ -21,18 +21,9 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
   session:
-    store-type: jdbc
     jdbc:
       initialize-schema: never
-      table-name: SPRING_SESSION
     timeout: 30m
-    cookie:
-      name: DLSESSION
-      http-only: true
-      secure: true
-      same-site: lax
-      path: /
-      max-age: 43200
   mail:
     host: localhost
     port: 11025
@@ -43,19 +34,17 @@ spring:
 app:
   identity:
     bcrypt-strength: 12
-    verification-token-ttl: 30m
-    recovery-token-ttl: 15m
-    session:
-      idle-timeout: 30m
-      absolute-timeout: 12h
-    mail-from: no-reply@deladopara.local
-    mail-base-url: ${APP_BASE_URL:http://localhost:8080}
-  base-url: ${APP_BASE_URL:http://localhost:8080}
 
-logging:
-  structured:
-    format:
-      console: logstash
+server:
+  servlet:
+    session:
+      cookie:
+        name: DLSESSION
+        http-only: true
+        secure: true
+        same-site: lax
+        path: /
+        max-age: 12h
 
 management:
   endpoints:
@@ -75,31 +64,3 @@ management:
       enabled: false
     db:
       enabled: true
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:55432}/${POSTGRES_DB:deladopara}
-    username: ${POSTGRES_USER:deladopara}
-    password: ${POSTGRES_PASSWORD:deladopara}
-  mail:
-    host: localhost
-    port: 11025
-
----
-spring:
-  config:
-    activate:
-      on-profile: test
-  flyway:
-    enabled: true
-  mail:
-    host: localhost
-    port: 3025
-  session:
-    store-type: jdbc
-    jdbc:
-      initialize-schema: never

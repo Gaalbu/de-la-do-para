@@ -89,7 +89,7 @@ Geral em `docs/contributing.md`. Específico de `identity`:
 - DTOs imutáveis (`record` Java) nas bordas; Bean Validation (`@Email`, `@NotBlank`, `@Size`); entidade JPA não vaza em HTTP.
 - Erros: Problem Details (`application/problem+json`) com `codigo` comercial (`IDENTITY_001`…), `correlationId` de `docs/observability.md`; sem stack trace; sem enumerar existência de e-mail em fluxos públicos quando isso vazaria enumeração (ver §7).
 - Dinheiro/datas: não aplicável aqui; datas em UTC (`Instant`), `Clock` injetável para testes; expiração de tokens em minutos configuráveis.
-- Cookie de sessão: nome `SESSION`, `HttpOnly=true`, `Secure=true` (exige HTTPS local em C08 — `docs/local-guide.md`), `SameSite=Lax`, `Path=/`, `Max-Age` alinhado à expiração server-side; rotação de ID no login (`changeSessionId`).
+- Cookie de sessão: nome `DLSESSION`, `HttpOnly=true`, `Secure=true` (exige HTTPS local em C08 — `docs/local-guide.md`), `SameSite=Lax`, `Path=/`, `Max-Age` alinhado à expiração server-side; rotação de ID no login (`changeSessionId`).
 - CSRF: `CookieCsrfTokenRepository` com header `X-XSRF-TOKEN`; GET/HEAD/OPTIONS isentos; POST/PUT/PATCH/DELETE exigem token; webhook (`/api/v1/payments/webhooks/*`) isento com auth própria (fora desta spec).
 
 ## 5. Estratégia de testes ◆
@@ -170,7 +170,7 @@ Sessão: `ANONYMOUS` → `AUTHENTICATED` no `POST /api/v1/sessions` (rotação d
 
 ## 8. Contratos
 
-Prefixo: `/api/v1`. Auth: `cookie SESSION + X-XSRF-TOKEN` quando indicado. Todos os erros em `application/problem+json` com `codigo`, `mensagem`, `correlationId` (ver `docs/observability.md`). Exemplos completos em `contracts/openapi/v1.yaml` e `contracts/examples/` (mesmo commit da implementação, C15).
+Prefixo: `/api/v1`. Auth: `cookie DLSESSION + X-XSRF-TOKEN` quando indicado. Todos os erros em `application/problem+json` com `codigo`, `mensagem`, `correlationId` (ver `docs/observability.md`). Exemplos completos em `contracts/openapi/v1.yaml` e `contracts/examples/` (mesmo commit da implementação, C15).
 
 ### 8.1 HTTP
 
@@ -178,9 +178,9 @@ Prefixo: `/api/v1`. Auth: `cookie SESSION + X-XSRF-TOKEN` quando indicado. Todos
 |---|---|---|---|---|---|---|
 | I-01 | POST | `/api/v1/accounts` | público + CSRF se sessão existe | `{email, password}` | 201 Created + `Location: /api/v1/accounts/{id}` + `{id,email,emailVerified:false}` | 400 (validação), 409 IDENTITY_002 duplicado (case-insensitive), 403 CSRF, 429 |
 | I-02 | POST | `/api/v1/accounts/verify` | público | `{token}` ou `GET /verify?token` com redirect 303 para frontend | 200 `{emailVerified:true}` | 400 token ausente, 410 expirado/usado |
-| I-03 | POST | `/api/v1/sessions` | público (login) | `{email,password}` + CSRF se já há sessão | 200 `{id,email,role,emailVerified}` + `Set-Cookie: SESSION=…` + `X-XSRF-TOKEN` | 400 validação, 401 IDENTITY_005 credenciais, 423 locked, 403 CSRF, 429 |
+| I-03 | POST | `/api/v1/sessions` | público (login) | `{email,password}` + CSRF se já há sessão | 200 `{id,email,role,emailVerified}` + `Set-Cookie: DLSESSION=…` + `X-XSRF-TOKEN` | 400 validação, 401 IDENTITY_005 credenciais, 423 locked, 403 CSRF, 429 |
 | I-04 | GET | `/api/v1/sessions/current` | autenticado | — | 200 `{id,email,role,emailVerified}` | 401 |
-| I-05 | DELETE | `/api/v1/sessions/current` | autenticado + CSRF | — | 204 + `Set-Cookie: SESSION=; Max-Age=0` | 401, 403 CSRF |
+| I-05 | DELETE | `/api/v1/sessions/current` | autenticado + CSRF | — | 204 + `Set-Cookie: DLSESSION=; Max-Age=0` | 401, 403 CSRF |
 | I-06 | POST | `/api/v1/accounts/recovery` | público | `{email}` | 202 (sempre) | 400 validação, 403 CSRF (se sessão), 429 |
 | I-07 | POST | `/api/v1/accounts/reset` | público | `{token,newPassword}` | 200 | 400 validação, 410 token, 403 CSRF, 429 |
 | I-08 | GET | `/api/v1/csrf` | público | — | 200 `{token}` + `Set-Cookie: XSRF-TOKEN=…` (se usar CookieCsrfTokenRepository) | — |

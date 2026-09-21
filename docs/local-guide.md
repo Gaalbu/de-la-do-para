@@ -43,6 +43,13 @@ quando a API existir — nunca banco, broker, Mailpit ou métricas.
 (uso com `ng serve --proxy-config proxy.conf.json`; origem única
 navegador→Angular, sem expor a API ao browser em dev).
 
+## Administrador inicial
+
+Na primeira subida sem nenhum administrador, a API cria
+`admin@deladopara.local` com senha aleatória e a registra **uma única vez**
+no log de inicialização (`Admin inicial criado`). Nenhuma senha fica no
+repositório. Para regerar, apague a conta no banco local e reinicie.
+
 ## Solução de problemas
 
 - Health `starting` por >2 min: `docker compose --profile local logs <serviço>`.

@@ -12,10 +12,6 @@ public class IdentityConfig {
 
     @Bean
     PasswordEncoder passwordEncoder(IdentityProperties props) {
-        int strength = props.bcryptStrength();
-        if (strength < 4 || strength > 31) {
-            strength = 12;
-        }
-        return new BCryptPasswordEncoder(strength);
+        return new BCryptPasswordEncoder(props.bcryptStrength());
     }
 }

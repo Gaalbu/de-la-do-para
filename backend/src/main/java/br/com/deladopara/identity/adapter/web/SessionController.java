@@ -4,8 +4,8 @@ import br.com.deladopara.identity.adapter.persistence.AccountRepository;
 import br.com.deladopara.identity.adapter.web.dto.AccountResponse;
 import br.com.deladopara.identity.adapter.web.dto.LoginRequest;
 import br.com.deladopara.identity.application.AccountService;
+import br.com.deladopara.identity.domain.Account;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,27 +38,17 @@ public class SessionController {
     @PostMapping
     public ResponseEntity<AccountResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest httpRequest) {
         var email = AccountService.normalize(req.email());
-        try {
-            Authentication auth =
-                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, req.password()));
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(auth);
-            SecurityContextHolder.setContext(context);
-
-            HttpSession session = httpRequest.getSession(true);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-
-            var account =
-                    accounts.findByEmailIgnoreCase(email).orElseThrow(() -> new BadCredentialsException("not found"));
-            var body = new AccountResponse(
-                    account.getId(),
-                    account.getEmail(),
-                    account.isEmailVerified(),
-                    account.getRole().name());
-            return ResponseEntity.ok(body);
-        } catch (BadCredentialsException e) {
-            throw new BadCredentialsProblem();
-        }
+        Authentication auth =
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, req.password()));
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        httpRequest
+                .getSession(true)
+                .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        return accounts.findByEmailIgnoreCase(email)
+                .map(SessionController::toResponse)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new BadCredentialsException("not found"));
     }
 
     @GetMapping("/current")
@@ -71,11 +61,7 @@ public class SessionController {
         if (account == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(new AccountResponse(
-                account.getId(),
-                account.getEmail(),
-                account.isEmailVerified(),
-                account.getRole().name()));
+        return ResponseEntity.ok(toResponse(account));
     }
 
     @DeleteMapping("/current")
@@ -88,5 +74,8 @@ public class SessionController {
         return ResponseEntity.noContent().build();
     }
 
-    static class BadCredentialsProblem extends RuntimeException {}
+    private static AccountResponse toResponse(Account a) {
+        return new AccountResponse(
+                a.getId(), a.getEmail(), a.isEmailVerified(), a.getRole().name());
+    }
 }
