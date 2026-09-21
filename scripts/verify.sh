@@ -17,6 +17,9 @@ case "${1:-all}" in
     npm --prefix frontend audit --omit=dev --audit-level=high
     echo "Nota: audit completo (dev incluso) apresenta 4 high em js-yaml via @hey-api/openapi-ts (GHSA-52cp, GHSA-5p4m, GHSA-2883); dev-only, sem runtime, triagem em docs/ci.md"
     ;;
+  commits)
+    ./scripts/check-commits.sh origin/main HEAD
+    ;;
   frontend)
     npm --prefix frontend run lint
     npm --prefix frontend run format:check
@@ -28,6 +31,8 @@ case "${1:-all}" in
     "$0" backend
     "$0" docs
     "$0" security
+    "$0" commits
+    "$0" contracts
     "$0" frontend
     ;;
   *)
