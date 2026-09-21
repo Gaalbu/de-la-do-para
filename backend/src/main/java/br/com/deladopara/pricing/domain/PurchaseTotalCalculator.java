@@ -13,8 +13,8 @@ public final class PurchaseTotalCalculator {
         if (request.lines() == null || request.lines().isEmpty()) {
             throw new IllegalArgumentException("At least one purchase line is required");
         }
-        if (request.shippingCents() < 0) {
-            throw new IllegalArgumentException("Shipping cannot be negative");
+        if (request.shipping() == null || request.shipping().currency() != Currency.BRL) {
+            throw new IllegalArgumentException("Only BRL is supported");
         }
 
         long subtotal = 0;
@@ -43,8 +43,8 @@ public final class PurchaseTotalCalculator {
         if (line == null || line.skuCode() == null || line.skuCode().isBlank()) {
             throw new IllegalArgumentException("Purchase line SKU is required");
         }
-        if (line.unitPriceCents() < 0) {
-            throw new IllegalArgumentException("Unit price cannot be negative");
+        if (line.unitPrice() == null || line.unitPrice().currency() != Currency.BRL) {
+            throw new IllegalArgumentException("Only BRL is supported");
         }
         if (line.quantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
@@ -57,6 +57,9 @@ public final class PurchaseTotalCalculator {
         }
         if (discount.value() < 0) {
             throw new IllegalArgumentException("Coupon value cannot be negative");
+        }
+        if (subtotal < discount.minimumCents()) {
+            throw new IllegalArgumentException("Coupon minimum is not met");
         }
         long requested =
                 switch (discount.type()) {

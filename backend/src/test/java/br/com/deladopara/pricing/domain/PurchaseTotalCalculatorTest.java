@@ -46,4 +46,14 @@ class PurchaseTotalCalculatorTest {
                         new PurchaseTotalRequest(List.of(new PurchaseLine("ITEM", 100, 1)), -1, null)))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void rejectsForeignCurrencyAndUnmetCouponMinimum() {
+        assertThatThrownBy(() -> calculator.calculate(new PurchaseTotalRequest(
+                        List.of(new PurchaseLine("ITEM", new Money(Currency.USD, 100), 1)), 0, null)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> calculator.calculate(new PurchaseTotalRequest(
+                        List.of(new PurchaseLine("ITEM", 1800, 1)), 0, CouponDiscount.percentage(10, 2000))))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
