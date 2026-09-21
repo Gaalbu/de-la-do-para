@@ -374,3 +374,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | Ainda executar após esta edição: `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json`. Nenhum código ou migration foi criado |
 | Remoto | Commit `a819ffd` publicado na PR #37: https://github.com/Gaalbu/de-la-do-para/pull/37, base `feat/c24-media`; PR aberta/MERGEABLE; CI inicial `35658857246` 7/7 verde. Nenhum merge automático |
 | Próximo passo | Acompanhar CI do commit de progresso; depois perguntar a regra de despacho parcial e obter revisão da spec antes de marcar C25 concluída |
+
+## Sessão 2026-09-21 — C29 preço e cupons (spec em revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@a6e5915`; PR #37 aberta, sem merge |
+| Tarefa | C29 — especificar cálculo monetário, descontos e elegibilidade de cupons; proposta documental, não concluída |
+| Mudanças | Ampliada `specs/SPEC-pricing.md` com centavos inteiros, ordem de subtotal/frete/desconto, arredondamento half-up proposto, limite de desconto, mínimo/validade/e-mail verificado, snapshots e casos de fronteira. Combinações e contador global permanecem decisões abertas |
+| Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json` após a edição; sem código ou migration |
+| Remoto | PR #37 cobre a spec-base; nova alteração ainda local |
+| Próximo passo | Validar documentação; pedir revisão das regras propostas antes de C30/C31 |

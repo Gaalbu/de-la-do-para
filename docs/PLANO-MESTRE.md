@@ -1437,6 +1437,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C02, C17, C24a. **Alvos:** `specs/SPEC-pricing.md`, exemplos de cálculo; S.
 - **Aceite:** arredondamento e soma de frete/desconto; cupons por percentual/valor com mínimo/validade; política de convidado e reembolso definida.
 - **Verificar:** DOC; resolver Q06; exemplos incluem centavos, limite e desconto que excederia subtotal.
+- **Estado atual:** `SPEC-pricing.md` contém modelo em centavos, ordem proposta de cálculo, exemplos de fronteira, elegibilidade e estados de reembolso. Combinações de cupons e reserva/liberação do contador global continuam propostas para revisão; C29 ainda não está concluída.
 
 ### C30 — `feat(pricing): calculate canonical purchase totals`
 
