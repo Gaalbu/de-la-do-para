@@ -9,7 +9,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'python3 -m http.server 4200 --directory ../dist/frontend/browser',
+    command: 'npx --yes serve -s ../dist/frontend/browser -l 4200',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env['CI'],
     timeout: 30_000,
