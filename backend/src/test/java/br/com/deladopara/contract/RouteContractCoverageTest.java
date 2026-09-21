@@ -41,23 +41,19 @@ class RouteContractCoverageTest {
         Assertions.assertFalse(specPaths.isEmpty(), "contrato canônico precisa declarar paths");
 
         var undocumented = new HashSet<String>();
-        var handler = mappings.getIfAvailable();
-        if (handler == null) {
-            // Sem camada web no classpath ainda (C15+): zero rotas, nada a cobrir.
-            return;
-        }
-        handler.getHandlerMethods().forEach((info, method) -> {
-            var patterns = info.getPathPatternsCondition();
-            if (patterns == null) {
-                return;
-            }
-            patterns.getPatterns().forEach(pattern -> {
-                var route = normalize(pattern.getPatternString());
-                if (!specPaths.contains(route) && !allowlist.contains(route)) {
-                    undocumented.add(route + " <- " + method.getShortLogMessage());
-                }
-            });
-        });
+        mappings.orderedStream()
+                .forEach(handler -> handler.getHandlerMethods().forEach((info, method) -> {
+                    var patterns = info.getPathPatternsCondition();
+                    if (patterns == null) {
+                        return;
+                    }
+                    patterns.getPatterns().forEach(pattern -> {
+                        var route = normalize(pattern.getPatternString());
+                        if (!specPaths.contains(route) && !allowlist.contains(route)) {
+                            undocumented.add(route + " <- " + method.getShortLogMessage());
+                        }
+                    });
+                }));
         Assertions.assertTrue(undocumented.isEmpty(), () -> "rotas sem contrato: " + undocumented);
     }
 
