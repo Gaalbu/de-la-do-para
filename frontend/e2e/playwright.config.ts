@@ -9,12 +9,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'node ../dist/frontend/server/server.mjs',
+    command: 'python3 -m http.server 4200 --directory ../dist/frontend/browser',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env['CI'],
     timeout: 30_000,
-    env: {
-      PORT: '4200',
-    },
   },
 });
