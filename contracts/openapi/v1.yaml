@@ -171,6 +171,152 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CsrfResponse'
+  /api/v1/admin/producers:
+    get:
+      operationId: listAdminProducers
+      summary: Listar produtores para gestão administrativa
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 0, default: 0}
+        - in: query
+          name: size
+          schema: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        '200':
+          description: Página de produtores, incluindo inativos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProducerPage'}
+        '400':
+          description: Paginação inválida
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    post:
+      operationId: createAdminProducer
+      summary: Criar produtor de demonstração
+      description: Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProducerWrite'}
+      responses:
+        '201':
+          description: Produtor criado
+          headers:
+            Location: {schema: {type: string, format: uri-reference}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Producer'}
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Slug já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/producers/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getAdminProducer
+      summary: Consultar produtor
+      responses:
+        '200':
+          description: Produtor encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Producer'}
+        '400':
+          description: UUID inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    patch:
+      operationId: updateAdminProducer
+      summary: Atualizar dados ou desativar produtor
+      description: Corpo completo dos campos editáveis. Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProducerUpdate'}
+      responses:
+        '200':
+          description: Produtor atualizado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Producer'}
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Slug já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/accounts/verify:
     post:
       operationId: verifyEmail
@@ -272,6 +418,12 @@ components:
       description: Erro padronizado (RFC 9457 + código comercial estável)
       type: object
       required: [title, status, codigo]
+      example:
+        title: Erro
+        status: 409
+        detail: identificador já cadastrado
+        codigo: CATALOG_002
+        correlationId: 4b1e7c69-628c-4c81-92f7-f30d6821d30a
       properties:
         title:
           type: string
@@ -328,3 +480,83 @@ components:
       properties:
         token:
           type: string
+    ProducerWrite:
+      type: object
+      additionalProperties: false
+      required: [slug, displayName, originLabel, description]
+      example:
+        slug: produto-demo
+        displayName: Produtor de demonstração
+        originLabel: Localidade ampla fictícia — demonstração
+        description: Texto editorial fictício para demonstração.
+      properties:
+        slug: {type: string, minLength: 1, maxLength: 80, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'}
+        displayName: {type: string, minLength: 1, maxLength: 120}
+        originLabel: {type: string, minLength: 1, maxLength: 300, description: 'Localidade ampla fictícia, rotulada como demonstração.'}
+        description: {type: string, minLength: 1, maxLength: 2000, description: 'Texto editorial fictício, rotulado como demonstração.'}
+    ProducerUpdate:
+      type: object
+      additionalProperties: false
+      required: [slug, displayName, originLabel, description, active]
+      example:
+        slug: produto-demo
+        displayName: Produtor de demonstração
+        originLabel: Localidade ampla fictícia — demonstração
+        description: Texto editorial fictício para demonstração.
+        active: false
+      properties:
+        slug: {type: string, minLength: 1, maxLength: 80, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'}
+        displayName: {type: string, minLength: 1, maxLength: 120}
+        originLabel: {type: string, minLength: 1, maxLength: 300, description: 'Localidade ampla fictícia, rotulada como demonstração.'}
+        description: {type: string, minLength: 1, maxLength: 2000, description: 'Texto editorial fictício, rotulado como demonstração.'}
+        active: {type: boolean}
+    Producer:
+      type: object
+      additionalProperties: false
+      required: [id, slug, displayName, originLabel, description, demonstration, active, createdAt, updatedAt]
+      example:
+        id: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+        slug: produto-demo
+        displayName: Produtor de demonstração
+        originLabel: Localidade ampla fictícia — demonstração
+        description: Texto editorial fictício para demonstração.
+        demonstration: true
+        active: true
+        createdAt: '2026-09-21T12:00:00Z'
+        updatedAt: '2026-09-21T12:00:00Z'
+      properties:
+        id: {type: string, format: uuid}
+        slug: {type: string}
+        displayName: {type: string}
+        originLabel: {type: string, description: 'Localidade ampla fictícia, rotulada como demonstração.'}
+        description: {type: string, description: 'Texto editorial fictício, rotulado como demonstração.'}
+        demonstration: {type: boolean, const: true}
+        active: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    ProducerPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      example:
+        content:
+          - id: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+            slug: produto-demo
+            displayName: Produtor de demonstração
+            originLabel: Localidade ampla fictícia — demonstração
+            description: Texto editorial fictício para demonstração.
+            demonstration: true
+            active: true
+            createdAt: '2026-09-21T12:00:00Z'
+            updatedAt: '2026-09-21T12:00:00Z'
+        page: 0
+        size: 20
+        totalElements: 1
+        totalPages: 1
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/Producer'}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1, maximum: 50}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}

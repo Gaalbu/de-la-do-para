@@ -2,7 +2,7 @@
 
 Documento autossuficiente para um executor de código com contexto limitado. Data de consolidação: 20/09/2026. Contém todas as decisões e os oito documentos de planejamento, com referências internas e complementos de execução/CI/CD.
 
-**Estado atual:** planejamento documental. Nenhum backend, frontend, workflow executável, repositório novo ou commit de implementação foi criado nesta entrega. A criação deste arquivo não é autorização para começar a codificação. Quando o usuário pedir a execução, seguir este roteiro. Não repetir perguntas já respondidas em D01–D64.
+**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D65.
 
 ## Índice de leitura
 
@@ -32,7 +32,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 
 - Este arquivo é suficiente para retomar o projeto: não depender do histórico do chat, de memória do modelo ou da existência da pasta de documentos original.
 - Requisitos adicionais desta consolidação: clone do **novo** repositório em `/home/gaalbu/codigos`, pipeline CI/CD obrigatória, documentação verificada, commits limpos e código enxuto. Eles atualizam trechos anteriores que chamavam CI de opcional.
-- As decisões D01–D64 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes e D64 autenticação.
+- As decisões D01–D65 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
 - A01/A03/A05/A06/A07/A10 são propostas técnicas detalhadas. Validar compatibilidade e registrar em ADR nas etapas indicadas; não apresentá-las como respostas explícitas do usuário. Decisões comerciais ou arquitetônicas ainda ambíguas devem ser perguntadas, uma de cada vez, com opções e recomendação. Não transformar silêncio em aprovação.
 - Dados de preços, produtores, lotes, embalagens e origem da demonstração são fictícios ou referências de teste identificadas. Não alegar proteção física de embalagem, segurança alimentar, operação em produção ou disponibilidade de marca.
 - Não copiar código, identidade, namespace, dados pessoais, credenciais ou histórico Git do LAPES Commerce. Usar apenas os aprendizados funcionais descritos neste documento.
@@ -43,7 +43,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 1. Ler esta seção, o registro de progresso e apenas a spec/módulo/tarefa relevante. Não reler todo o documento a cada pequena mudança.
 2. Conferir `git status --short`, branch, remoto e último SHA antes de editar. Preservar mudanças do usuário. Não usar reset/clean/force-push para resolver dúvidas.
 3. Selecionar o primeiro ID pendente com dependências concluídas. Trabalhar em uma intenção por vez, em branch curta.
-4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D64.
+4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D65.
 5. Definir contrato e exemplos. Para comportamento, escrever teste que falha pelo motivo esperado; implementar o mínimo e refatorar com o teste passando.
 6. Atualizar documentação e exemplos no mesmo conjunto da mudança. Cada endpoint deve ter teste HTTP e contrato; cada regra crítica deve ter teste de limite/falha.
 7. Rodar os gates previstos e revisar o diff. Não pular testes para economizar tempo; não alegar aprovação se Docker, navegador, sandbox ou ferramenta não executou.
@@ -282,6 +282,7 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D62 | Um único repositório público (monorepo) com backend/, frontend/, contracts/, infra/, docs/, specs/ e tasks/. Backend e frontend mantêm builds próprios; specs, contratos, código e evidências versionados juntos. Nenhuma criação de repositório ou codificação nesta etapa |
 | D63 | Documentação da API e testes são prioridades explícitas, corrigindo a deficiência relatada pelo usuário no projeto anterior. Cada funcionalidade exige contratos, exemplos, erros, testes e evidências atualizados antes de ser considerada concluída |
 | D64 | Autenticação aprovada: e-mail e senha para contas opcionais e administradores, Spring Security com sessões persistidas no PostgreSQL, cookie protegido e CSRF. Compra convidada preservada; confirmação de e-mail e recuperação de senha demonstradas no Mailpit |
+| D65 | Produtor referenciado não pode ser removido fisicamente; pode ser desativado. Procedência apresentada apenas como localidade ampla e texto editorial fictício, rotulados como demonstração; sem coordenadas, endereço ou alegações verificáveis |
 
 D11–D13 são as regras adotadas no planejamento por resposta expressa do usuário. O marco de expedição foi definido em D29. O despacho parcial segue D30. O limite de cancelamento de retirada e a proteção contra conclusão simultânea seguem D31.
 
@@ -1350,15 +1351,17 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C18 — `feat(catalog): persist producers and provenance`
 
-- [ ] **Depende:** C09, C17. **Alvos:** produtor, repositório, migration e teste de persistência; M.
-- **Aceite:** origem e descrição persistidas; constraints garantem identidade; alteração preserva relações existentes.
-- **Verificar:** BI(ProducerPersistence) com PostgreSQL e migration.
+- [x] **Depende:** C09, C17. **Alvos:** produtor, repositório, migration e teste de persistência; M.
+- **Divisão operacional:** C18a persiste entidade/migration com teste de esquema e integridade; C18b adiciona o repositório com teste de leitura/atualização. Cada fatia deve respeitar o limite de arquivos manuais do ciclo SDD.
+- **Aceite:** origem e descrição persistidas; constraints garantem identidade; atualização conserva o UUID estável que serve de alvo às relações de produtos adicionadas em C21.
+- **Verificar:** BI(ProducerPersistence) com PostgreSQL real, aplicação da migration, unicidade e identidade estável após atualização — C18a/C18b verificadas localmente.
 
 ### C19 — `feat(catalog): expose authorized producer management`
 
-- [ ] **Depende:** C15, C18. **Alvos:** API/aplicação/DTOs de produtor e testes; M.
-- **Aceite:** criar/editar/consultar produtor; validação de dados; somente admin modifica.
-- **Verificar:** BI(ProducerApi), C e isolamento de papéis.
+- [x] **Depende:** C15, C18. **Alvos:** API/aplicação/DTOs de produtor e testes; M.
+- **Contrato:** `GET/POST /api/v1/admin/producers`, `GET/PATCH /api/v1/admin/producers/{id}`; paginação 0–50, corpo integral no PATCH, sem DELETE; respostas sempre rotulam a procedência fictícia (`demonstration: true`).
+- **Aceite:** criar/editar/consultar e desativar produtor; validação de dados; somente admin modifica; referências históricas não são removidas.
+- **Verificar:** BI(ProducerAdminApi) com PostgreSQL/Testcontainers, contrato OpenAPI e geração Angular; isolamento de papéis, CSRF, erros e ausência de DELETE — aprovado localmente.
 
 ### C20 — `feat(catalog-ui): edit producers and provenance`
 

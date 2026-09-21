@@ -28,14 +28,14 @@ conservação, certificação alimentar ou proteção de transporte validada.
 
 ```bash
 git diff --check
-npm run docs:check --prefix frontend
+./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT,ProducerAdminApiIT verify
 npm run contracts:check --prefix frontend
+npm run docs:check --prefix frontend
 ```
 
-São gates documentais/de contrato do repositório, não testes de uma
-implementação de catálogo. Na fase de implementação, adicionar os comandos
-do backend e frontend com nomes exatos, testes PostgreSQL/HTTP e journeys
-conforme C18 em diante; não declarar esta seção como validação executada.
+O comando Maven executa os testes de persistência e HTTP com PostgreSQL real
+via Testcontainers. Os gates de contrato e documentação verificam OpenAPI,
+geração TypeScript e links. A jornada browser administrativa pertence a C20.
 
 ## 3. Estrutura ◆
 
@@ -48,7 +48,8 @@ conforme C18 em diante; não declarar esta seção como validação executada.
 - `specs/SPEC-catalog.md`: regras e critérios desta capacidade.
 - Dados comerciais e embalagens de demonstração permanecem referenciados em
   `docs/decisions.md` (D52–D60); fixture executável só será criada em C21/C26.
-  Não inventar produtores concretos antes da CAT-Q03.
+  Não inventar produtores concretos sem fixture aprovada; API C19 usa dados
+  sintéticos identificados como demonstração em seus testes.
 - Não criar lotes/saldo no catálogo, repositório genérico compartilhado,
   abstrações de mídia sem necessidade demonstrada, nem cópias do catálogo em
   `storefront`.
@@ -78,7 +79,7 @@ conforme C18 em diante; não declarar esta seção como validação executada.
 | CAT-003 | `FoodProductRequirementsTest` | alimento exige unidade/porção e dias mínimos de validade positivos; artesanato não recebe validade alimentar | unitário |
 | CAT-004 | `PackagingDimensionsTest` | dimensões/peso ausentes, zero ou negativos são recusados; encaixe não reduz medida por arredondamento | unitário |
 | CAT-005 | `ProductImageLicenseTest` | imagem sem fonte, licença ou autoria verificável não pode ser publicada | unitário/validação de fixture |
-| CAT-006 | `CatalogAdminHttpTest` | visitante recebe 401/403 ao alterar; admin cria/edita e recebe Problem Details documentado | integração HTTP + PostgreSQL |
+| CAT-006 | `ProducerAdminApiIT` | sessão/papel/CSRF; admin cria, lista, consulta, edita e desativa produtor; respostas Problem Details correlacionadas | integração HTTP + PostgreSQL |
 | CAT-007 | `CatalogPublicContractTest` | produto público não inclui campos administrativos/segredos; resposta corresponde ao schema e exemplos | contrato/HTTP |
 | CAT-008 | `CatalogRemovalPolicyTest` | remover/despublicar produto com referências preserva snapshots e integridade; política escolhida antes de implementar exclusão | unitário + PostgreSQL |
 | CAT-009 | `CatalogDemoFixtureTest` | os oito SKUs e valores conferem com D52–D60 e todos são marcados como fictícios | teste de fixture |
@@ -101,19 +102,17 @@ geração de cliente no mesmo PR.
 - CAT-Q01 (respondida pelo usuário em 2026-09-21): produtor é entidade
   administrativa sem conta/acesso próprio na primeira versão; somente admin
   gerencia produtores. Não criar portal ou credenciais para produtores na v1.
-- Pergunta CAT-Q02 (C19, antes da API de produto): exclusão deve ser somente
-  despublicação/soft delete quando houver pedidos ou referências? Recomendo
-  preservar snapshots e relações históricas e bloquear hard delete de item
-  referenciado; definir sem apagar dados históricos. Confirmar a regra antes
-  de implementar.
-- Pergunta CAT-Q03 (C19, antes de fechar campos de procedência): quais campos
-  opcionais de origem podem ser exibidos sem alegar rastreabilidade
-  comprovada? Recomendação: localidade ampla e texto editorial fictício,
-  ambos rotulados como demonstração, sem coordenadas, endereço ou alegação
-  verificável sobre pessoa real.
+- CAT-Q02 (respondida pelo usuário em 2026-09-21; D65): produtor referenciado
+  não pode ser excluído fisicamente; pode ser desativado para impedir novos
+  vínculos/publicações. Produtos referenciados não serão fisicamente removidos;
+  sua política detalhada será definida na capacidade de produtos antes de
+  expor a operação correspondente. Snapshots e relações históricas persistem.
+- CAT-Q03 (respondida pelo usuário em 2026-09-21; D65): exibir apenas
+  localidade ampla e texto editorial fictício, ambos claramente rotulados
+  como demonstração; não expor coordenadas, endereço ou alegações verificáveis.
 
-CAT-Q02 e CAT-Q03 permanecem abertas e bloqueiam somente as regras
-dependentes, nos pontos indicados. Silêncio não aprova recomendações.
+As respostas CAT-Q02/Q03 liberam gestão administrativa de produtores. A
+política de remoção de produto continua definida na especificação de produtos.
 
 ## 7. Regras e invariantes
 
@@ -151,20 +150,20 @@ dependentes, nos pontos indicados. Silêncio não aprova recomendações.
 
 ## 8. Contratos
 
-Todos os caminhos abaixo são propostos para C19/C20, ainda não
-implementados. A forma final deve ser versionada em `contracts/openapi/v1.yaml`
-antes da API correspondente.
+Todos os caminhos de produtor abaixo estão versionados no contrato OpenAPI
+em C19. Os caminhos de produto permanecem propostos para suas etapas próprias.
 
-Os nomes de operações são sugestões de recurso, não caminhos aprovados: C19
-deve ajustar métodos, paths, paginação e concorrência ao estilo já usado no
-contrato OpenAPI e apresentar o contrato final para revisão antes de expor a
-API. Não criar rotas paralelas se a convenção existente cobrir o mesmo caso.
+As operações de produtor abaixo são aprovadas para C19. As rotas de produto
+seguem propostas e exigem especificação própria antes de implementação; não
+criar rotas paralelas se a convenção existente cobrir o mesmo caso.
 
 | Operação proposta | Acesso | Resultado/erros a documentar |
 |---|---|---|
 | `GET /api/v1/admin/producers` | admin | página; 401 sessão ausente, 403 papel insuficiente, 400 query inválida |
 | `POST /api/v1/admin/producers` | admin + sessão/CSRF | 201; 400 validação, 401, 403, 409 identidade duplicada |
+| `GET /api/v1/admin/producers/{id}` | admin | 200; 401, 403, 404 |
 | `PATCH /api/v1/admin/producers/{id}` | admin + sessão/CSRF | 200; 400, 401, 403, 404, 409 |
+| `DELETE /api/v1/admin/producers/{id}` | não existe | produtor referenciado não é apagado; desativar pelo PATCH |
 | `GET /api/v1/admin/products` | admin | página incluindo rascunhos; erros de paginação |
 | `POST /api/v1/admin/products` | admin + sessão/CSRF | 201; 400, 401, 403, 409 SKU duplicado |
 | `PATCH /api/v1/admin/products/{id}` | admin + sessão/CSRF | 200; 400, 401, 403, 404, 409 versão/SKU |
@@ -199,5 +198,5 @@ contrato serão especificados separadamente.
 | Dados alimentares | D02, D27–D28, D54 | C21, C26+ | CAT-003/009 |
 | Dimensões, fragilidade e caixas | D35–D37, D55–D60 | C21, C41+ | CAT-004/009 |
 | Imagens licenciadas e produtores fictícios | D51, C03/assets | C03/C20+ | CAT-003 |
-| API e autorização | D63–D64 | C19–C23 | CAT-005 |
+| API e autorização | D63–D65 | C19–C23 | CAT-005 |
 | Preservação de histórico | D30–D31, D34, escopo orders | C19/C20/C50+ | CAT-006 |
