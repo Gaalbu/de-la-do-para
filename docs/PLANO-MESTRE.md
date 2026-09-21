@@ -1365,9 +1365,9 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C20 — `feat(catalog-ui): edit producers and provenance`
 
-- [ ] **Depende:** C16, C19. **Alvos:** `F/admin/producers`, formulário e teste; M.
-- **Aceite:** admin cadastra e altera produtor; erros por campo; mudança visível depois de recarregar.
-- **Verificar:** F/E; um produtor de demonstração aparece com origem correta.
+- [x] **Depende:** C16, C19. **Alvos:** `F/admin/producers`, formulário e teste; M.
+- **Aceite:** admin cadastra e altera produtor; validação nativa por campo; mudança visível depois de recarregar.
+- **Verificar:** testes Angular e Playwright; produtor demonstração aparece com origem ampla correta, pode ser desativado/restaurado e não tem exclusão física — aprovado localmente.
 
 ### C21 — `feat(catalog): persist products and shippable SKUs`
 
