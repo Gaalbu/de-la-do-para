@@ -168,7 +168,7 @@ Não criar uma nova sequência interminável de perguntas sobre preferências j�
 | Capacidade real das integrações e idempotência de provedores | C04/C53/C65 | Verificar docs oficiais e sandbox, registrar limitação, não inventar garantias |
 | Calendário concreto de feriados, lotes/estoque inicial e regras de datas | Specs inventory/shipping | Propor fixtures reproduzíveis e calendário com fonte; confirmar o que muda a regra comercial |
 | Prazo de guarda da retirada, não comparecimento, validade na retirada tardia | Specs orders/shipping | Formular pergunta antes de implementar expiração/descarte/reembolso automático |
-| Decisões administrativas após despacho parcial | Specs checkout/payments/shipping | Solicitação sem reembolso automático já aprovada; critérios para conclusão ainda precisam da spec |
+| Decisões administrativas após despacho parcial | Specs checkout/payments/shipping | Após um pacote ser entregue à transportadora, os demais continuam por padrão; pausar exige decisão administrativa, sem cancelamento ou reembolso automático ou parcial (D68) |
 | Política de reserva/liberação do contador global de cupons | Spec pricing | Reutilização por e-mail após reembolso já aprovada; documentar sem inferir reset ilimitado global |
 | Licença do código público, destino final de releases e publicação | Preparação do repositório/release | Perguntar; repo público não implica licença escolhida, marca livre ou publicação de vídeo autorizada |
 
@@ -285,6 +285,7 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D65 | Produtor referenciado não pode ser removido fisicamente; pode ser desativado. Procedência apresentada apenas como localidade ampla e texto editorial fictício, rotulados como demonstração; sem coordenadas, endereço ou alegações verificáveis |
 | D66 | Pedido pronto para retirada fica guardado por 3 dias úteis. Depois, abrir análise administrativa sem cancelar, descartar ou reembolsar automaticamente; manter estoque comprometido até resolução explícita |
 | D67 | Fixture C25 usa lotes explicitamente sintéticos e relógio fixo: por alimento, um lote atende exatamente à margem D54 na chegada prevista e outro fica um dia abaixo. A fixture não representa estoque real |
+| D68 | Após qualquer pacote ser entregue à transportadora, os demais continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
 
 D11–D13 são as regras adotadas no planejamento por resposta expressa do usuário. O marco de expedição foi definido em D29. O despacho parcial segue D30. O limite de cancelamento de retirada e a proteção contra conclusão simultânea seguem D31.
 
@@ -1403,7 +1404,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C01, C17, C24. **Alvos:** `specs/SPEC-logistics.md`, base de preço/cupons em `specs/SPEC-pricing.md`, decisões e rastreio; M.
 - **Aceite:** transcrever as respostas já aprovadas de Q03a–Q06b e as decisões D21–D60 aplicáveis a logística, cancelamento, cupons e exemplos comerciais (D21–D31, D33–D37, D54–D60) nas specs correspondentes, sem repeti-las ao usuário. Design, metas e catálogo de D32/D38–D53 permanecem em seus documentos proprietários. Apresentar separadamente apenas lacunas reais listadas na seção de pendências, com proposta concreta e recomendação.
 - **Verificar:** DOC e revisão com o usuário. Resolver também restrições Q10 quando discutir embalagens. Resposta pendente bloqueia a regra dependente, não autoriza escolher um padrão silenciosamente.
-- **Estado atual:** propostas documentais preparadas em `SPEC-logistics.md` e `SPEC-pricing.md`; Q03–Q06/Q10 e D21–D60 permanecem conforme respostas registradas; D66/D67 registram duas respostas desta revisão. Calendário, despacho parcial e contador global têm recomendações explícitas, ainda sujeitas à confirmação individual na etapa correspondente. A revisão do usuário continua necessária antes de marcar C24a concluída ou liberar trabalho dependente.
+- **Estado atual:** propostas documentais preparadas em `SPEC-logistics.md` e `SPEC-pricing.md`; Q03–Q06/Q10 e D21–D60 permanecem conforme respostas registradas; D66–D68 registram três respostas desta revisão. A regra de despacho parcial está aprovada em D68; calendário e contador global ainda aguardam confirmação individual. A revisão do usuário continua necessária antes de marcar C24a concluída ou liberar trabalho dependente.
 
 ## Fase 3 — estoque, preço e vitrine
 

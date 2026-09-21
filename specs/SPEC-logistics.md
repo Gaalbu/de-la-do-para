@@ -4,7 +4,7 @@
 
 - Módulo: `shipping` (políticas aprovadas antecipadas; contratos detalhados em C41)
 - Status: proposta consolidada para revisão do usuário; sem implementação
-- Decisões base: D17–D18, D19–D20, D21–D31, D35–D37, D54–D60, D66–D67
+- Decisões base: D17–D18, D19–D20, D21–D31, D35–D37, D54–D60, D66–D68
 - Dependências: catálogo (`catalog`), inventário (`inventory`), pedidos (`orders`), preço (`pricing`); integração externa permanece em `integrations`
 
 ## 1. Objetivo
@@ -90,7 +90,7 @@ vez antes da implementação que dependa dela.
 | Datas do calendário operacional | C25/C41 | Arquivo local versionado por ano, composto por feriados nacionais, estaduais do Pará e municipais de Belém confirmados em fontes oficiais. Ponto facultativo entra somente por cadastro explícito, como D26 já determina. | Reproduzível sem API paga e separado do calendário da transportadora |
 | Quantidades e datas de lotes demonstrativos | C25 | **Aprovado em D67:** fixture marcada como sintética, com relógio fixo; por alimento, um lote exatamente na margem D54 e outro um dia abaixo. Não representa estoque inicial real. | Testa a fronteira comercial sem inventar procedência ou disponibilidade real |
 | Guarda e não comparecimento na retirada | Respondida em C24a (D66) | **Aprovado:** três dias úteis após ficar pronto; depois, análise administrativa, sem ação automática e com estoque comprometido até resolução. | Dá prazo claro ao cliente e evita efeito financeiro/estoque irreversível por ausência presumida |
-| Pedido com despacho parcial | Specs de checkout/pagamentos/expedição | Manter o pedido em análise administrativa, sem estorno ou liberação automática; registrar a decisão manual e não criar cancelamento/reembolso parcial na v1. | Preserva D30 e evita tratar pacote ainda não enviado como cancelamento do pedido inteiro |
+| Pedido com despacho parcial | Specs de checkout/pagamentos/expedição | Após um pacote ser entregue à transportadora, os demais continuam o fluxo normal por padrão. Pausar os ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial. | Preserva D30 e explicita a continuidade operacional aprovada em D68 |
 
 ### Referências oficiais consultadas para calendário
 
