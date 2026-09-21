@@ -9,10 +9,12 @@ public record PublicProductResponse(
         String description,
         Product.Category category,
         boolean demonstration,
+        ProductImageResponse image,
         PublicProducer producer,
         List<PublicProductSku> skus) {
 
-    public static PublicProductResponse from(Product product, List<ProductSkuResponse> skus) {
+    public static PublicProductResponse from(
+            Product product, List<ProductSkuResponse> skus, ProductImageResponse image) {
         var producer = product.getProducer();
         return new PublicProductResponse(
                 product.getSlug(),
@@ -20,6 +22,7 @@ public record PublicProductResponse(
                 product.getDescription(),
                 product.getCategory(),
                 true,
+                image,
                 new PublicProducer(
                         producer.getDisplayName(), producer.getOriginLabel(), producer.getDescription(), true),
                 skus.stream()

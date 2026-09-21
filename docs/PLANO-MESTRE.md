@@ -1389,9 +1389,12 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C24 — `feat(media): store validated product images locally`
 
-- [ ] **Depende:** C22, C23. **Alvos:** adapter de arquivo do catálogo, API e controle de imagem; M.
-- **Aceite:** upload autenticado com limite de tamanho/tipo e nome interno seguro; imagens persistem em volume; conteúdo acessível com descrição alternativa.
-- **Verificar:** testes de upload inválido/traversal, F/E e reinício preservando imagens. Não buscar URLs arbitrárias no servidor.
+- [x] **Depende:** C22, C23. **Alvos:** adapter de arquivo do catálogo, API e controle de imagem; M.
+- **Aceite:** upload autenticado com limite de tamanho/tipo e nome interno seguro; imagem opcional por produto persiste em diretório local configurável; conteúdo acessível com descrição alternativa.
+- **Verificar:** `CatalogMediaApiIT`, testes de validação/armazenamento, contrato, build/UI, Playwright e gates de segurança/docs. Um adapter novo lê o arquivo persistido. Não buscar URLs arbitrárias no servidor.
+- **Decisões C24:** uma imagem principal por produto; JPEG/PNG até 5 MiB, escolhidos pelo usuário em 21/09/2026. A spec define limites técnicos de decodificação e metadados de licença/atribuição.
+- **Verificado localmente:** processamento JPEG/PNG com limite 5 MiB, metadados e migration V16; rotas admin/pública com sessão/CSRF e verificação de estado; formulário de upload/prévia/remoção; `APP_MEDIA_DIRECTORY` padrão `./data/media`. Backend completo (31 testes unitários, 18 integrações, PostgreSQL 18.6, Spotless e Checkstyle), frontend (11 Angular, SSR e Playwright 3/3), contrato, docs, segurança e `aislop` passaram; CI remoto pendente de publicar PR.
+- **Divisão operacional:** C24a validação/armazenamento e metadados; C24b API/contratos; C24c administração e acessibilidade; C24d persistência local, documentação e gates. Cada fatia mantém o build executável.
 
 ### C24a — `docs(logistics): record individual delivery and coupon policy decisions`
 

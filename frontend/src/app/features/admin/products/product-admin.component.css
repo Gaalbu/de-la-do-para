@@ -231,6 +231,19 @@ button.secondary {
   padding: 0 0.35rem;
   font-weight: 700;
 }
+.image-editor {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e3d9ce;
+}
+.image-preview {
+  display: block;
+  max-width: min(100%, 24rem);
+  max-height: 18rem;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: #f8f6f3;
+}
 .food-fields,
 .measure-grid {
   display: grid;

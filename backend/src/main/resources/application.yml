@@ -8,6 +8,10 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   jpa:
     hibernate:
       ddl-auto: validate
@@ -41,6 +45,8 @@ spring:
       mail.smtp.starttls.enable: false
 
 app:
+  media:
+    directory: ${APP_MEDIA_DIRECTORY:./data/media}
   identity:
     bcrypt-strength: 12
     verification-token-ttl: 30m

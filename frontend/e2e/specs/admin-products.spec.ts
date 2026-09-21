@@ -69,6 +69,7 @@ test('admin creates and edits food and craft products with confirmation before d
         id: `product-${nextId++}`,
         demonstration: true,
         active: true,
+        image: null,
         skus: (body['skus'] as Array<Record<string, unknown>>).map((variant) => ({
           ...variant,
           id: variant['id'] ?? `sku-created-${nextId}`,
@@ -107,6 +108,27 @@ test('admin creates and edits food and craft products with confirmation before d
     await route.fulfill({ status: 405 });
   });
 
+  await page.route('**/api/v1/admin/products/*/image', async (route) => {
+    if (route.request().method() !== 'PUT') {
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    await route.fulfill({
+      status: 201,
+      json: {
+        id: 'media-1',
+        url: '/api/v1/product-images/media-1',
+        altText: 'Chocolate em fundo claro',
+      },
+    });
+  });
+  await page.route('**/api/v1/product-images/**', async (route) => {
+    await route.fulfill({
+      contentType: 'image/png',
+      body: Buffer.from('image-test-fixture'),
+    });
+  });
+
   await page.goto('/admin/products');
   await expect(page.getByRole('heading', { name: 'Produtos' })).toBeVisible();
   await expect(page.getByLabel('Produtor')).toContainText(producer.displayName);
@@ -126,7 +148,19 @@ test('admin creates and edits food and craft products with confirmation before d
   await page.getByLabel('Identificador').fill('chocolate-demo-corrigido');
   await page.getByRole('button', { name: 'Criar produto' }).click();
   await expect(page.getByText('Chocolate de demonstração')).toBeVisible();
-  await expect(page.getByText('Produto criado.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Agora você pode adicionar a imagem principal.')).toBeVisible();
+  await page.getByLabel('Arquivo JPEG ou PNG').setInputFiles({
+    name: 'chocolate.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('png-demonstracao'),
+  });
+  await page.getByLabel('Texto alternativo').fill('Chocolate em fundo claro');
+  await page.getByLabel('Origem / URL de referência').fill('https://example.test/chocolate');
+  await page.getByLabel('Licença').fill('CC0 de demonstração');
+  await page.getByLabel('Revisei os direitos de uso desta imagem').check();
+  await page.getByRole('button', { name: 'Salvar imagem principal' }).click();
+  await expect(page.getByRole('status')).toContainText('Imagem principal salva.');
+  await expect(page.getByAltText('Chocolate em fundo claro')).toBeVisible();
 
   await page.getByRole('button', { name: 'Editar' }).first().click();
   await page.getByLabel('Nome de exibição').fill('Chocolate atualizado de demonstração');

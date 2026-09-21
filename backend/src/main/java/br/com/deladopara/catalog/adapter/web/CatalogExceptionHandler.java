@@ -1,8 +1,13 @@
 package br.com.deladopara.catalog.adapter.web;
 
+import br.com.deladopara.catalog.adapter.storage.ImageContentProcessor.ImageTooLargeException;
+import br.com.deladopara.catalog.adapter.storage.ImageContentProcessor.InvalidImageException;
 import br.com.deladopara.catalog.application.ProducerService.InvalidProducerInputException;
 import br.com.deladopara.catalog.application.ProducerService.ProducerNotFoundException;
 import br.com.deladopara.catalog.application.ProducerService.ProducerSlugConflictException;
+import br.com.deladopara.catalog.application.ProductImageService.ImageNotFoundException;
+import br.com.deladopara.catalog.application.ProductImageService.ImageStorageException;
+import br.com.deladopara.catalog.application.ProductImageService.InvalidImageMetadataException;
 import br.com.deladopara.catalog.application.ProductService.InvalidProductInputException;
 import br.com.deladopara.catalog.application.ProductService.ProductConflictException;
 import br.com.deladopara.catalog.application.ProductService.ProductNotFoundException;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class CatalogExceptionHandler {
@@ -37,6 +43,31 @@ public class CatalogExceptionHandler {
     @ExceptionHandler(ProductNotFoundException.class)
     ResponseEntity<Problem> productNotFound(ProductNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, "CATALOG_003", "produto não encontrado");
+    }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    ResponseEntity<Problem> imageNotFound(ImageNotFoundException exception) {
+        return problem(HttpStatus.NOT_FOUND, "CATALOG_003", "imagem não encontrada");
+    }
+
+    @ExceptionHandler({InvalidImageException.class, InvalidImageMetadataException.class})
+    ResponseEntity<Problem> invalidImage(RuntimeException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "CATALOG_001", "imagem ou metadados inválidos");
+    }
+
+    @ExceptionHandler(ImageTooLargeException.class)
+    ResponseEntity<Problem> imageTooLarge(ImageTooLargeException exception) {
+        return problem(HttpStatus.PAYLOAD_TOO_LARGE, "CATALOG_004", "imagem excede os limites permitidos");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<Problem> requestTooLarge(MaxUploadSizeExceededException exception) {
+        return problem(HttpStatus.PAYLOAD_TOO_LARGE, "CATALOG_004", "imagem excede os limites permitidos");
+    }
+
+    @ExceptionHandler(ImageStorageException.class)
+    ResponseEntity<Problem> imageStorage(ImageStorageException exception) {
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "CATALOG_005", "não foi possível armazenar a imagem");
     }
 
     @ExceptionHandler(InvalidProducerInputException.class)

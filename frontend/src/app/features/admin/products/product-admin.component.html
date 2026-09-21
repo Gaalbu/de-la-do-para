@@ -280,6 +280,86 @@
           </fieldset>
         }
 
+        @if (editing(); as product) {
+          <section class="image-editor" aria-labelledby="image-editor-title">
+            <h3 id="image-editor-title">Imagem principal</h3>
+            @if (product.image) {
+              <img class="image-preview" [src]="product.image.url" [alt]="product.image.altText" />
+              <button
+                type="button"
+                class="text-button"
+                (click)="removeImage()"
+                [disabled]="imageSaving()"
+              >
+                Remover imagem
+              </button>
+            } @else if (imagePreview()) {
+              <img class="image-preview" [src]="imagePreview()" alt="Prévia da imagem escolhida" />
+            }
+            <label for="product-image-file">Arquivo JPEG ou PNG</label>
+            <input
+              id="product-image-file"
+              type="file"
+              accept="image/jpeg,image/png"
+              (change)="selectImage($event)"
+            />
+            <small>Uma imagem por produto, até 5 MiB.</small>
+            <label for="image-alt-text">Texto alternativo</label>
+            <input
+              id="image-alt-text"
+              name="altText"
+              [(ngModel)]="imageAltText"
+              maxlength="250"
+              required
+            />
+            <label for="image-source">Origem / URL de referência</label>
+            <input
+              id="image-source"
+              name="source"
+              [(ngModel)]="imageSource"
+              maxlength="1500"
+              required
+            />
+            <label for="image-license">Licença</label>
+            <input
+              id="image-license"
+              name="license"
+              [(ngModel)]="imageLicense"
+              maxlength="200"
+              required
+            />
+            <label for="image-creator">Autoria (opcional)</label>
+            <input id="image-creator" name="creator" [(ngModel)]="imageCreator" maxlength="200" />
+            <label for="image-attribution">Atribuição (opcional)</label>
+            <input
+              id="image-attribution"
+              name="attribution"
+              [(ngModel)]="imageAttribution"
+              maxlength="500"
+            />
+            <label class="active-control" for="image-rights-reviewed">
+              <input
+                id="image-rights-reviewed"
+                name="rightsReviewed"
+                type="checkbox"
+                [(ngModel)]="imageRightsReviewed"
+              />
+              Revisei os direitos de uso desta imagem
+            </label>
+            <button
+              type="button"
+              class="secondary"
+              (click)="uploadImage()"
+              [disabled]="imageSaving() || !imageFile()"
+            >
+              {{ imageSaving() ? 'Salvando imagem…' : 'Salvar imagem principal' }}
+            </button>
+            @if (imageError()) {
+              <p role="alert" class="error">{{ imageError() }}</p>
+            }
+          </section>
+        }
+
         @if (editing()) {
           <p class="form-intro">
             Omissão de uma variante na edição a desativa; produtos e referências permanecem

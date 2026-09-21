@@ -14,11 +14,12 @@ public record ProductResponse(
         UUID producerId,
         boolean demonstration,
         boolean active,
+        ProductImageResponse image,
         List<ProductSkuResponse> skus,
         Instant createdAt,
         Instant updatedAt) {
 
-    public static ProductResponse from(Product product, List<ProductSkuResponse> skus) {
+    public static ProductResponse from(Product product, List<ProductSkuResponse> skus, ProductImageResponse image) {
         return new ProductResponse(
                 product.getId(),
                 product.getSlug(),
@@ -28,6 +29,7 @@ public record ProductResponse(
                 product.getProducer().getId(),
                 true,
                 product.isActive(),
+                image,
                 List.copyOf(skus),
                 product.getCreatedAt(),
                 product.getUpdatedAt());
