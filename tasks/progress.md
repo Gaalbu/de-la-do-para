@@ -385,3 +385,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json` após a edição; sem código ou migration |
 | Remoto | PR #37 cobre a spec-base; nova alteração ainda local |
 | Próximo passo | Validar documentação; pedir revisão das regras propostas antes de C30/C31 |
+
+## Sessão 2026-09-21 — plano executável C30/C31
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@7259c35`; PR #37 aberta, 7/7 verde |
+| Tarefa | Preparar ordem de implementação sem aprovar silenciosamente o contador global |
+| Mudanças | Criado `tasks/plan.md` com fatias C30 (totais canônicos + BT) e C31 (reserva atômica + BI), dependências, gates e bloqueios; rastreio atualizado |
+| Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop` após edição; sem código funcional |
+| Próximo passo | Revisão das specs C25/C29 e decisão do ciclo global de cupons; depois iniciar C30 |
