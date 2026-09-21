@@ -1373,7 +1373,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 - [ ] **Depende:** C18. **Alvos:** produto/SKU, repositório, migration e teste; M.
 - **Aceite:** SKU identificável, embalagem e vínculo ao produtor; dados inválidos rejeitados; remoção lógica não quebra snapshots futuros.
-- **Verificar:** BI(ProductPersistence), incluindo SKU repetido e dimensão inválida.
+- **Verificar:** `ProductRepositoryIT` com PostgreSQL/Testcontainers, testes de categoria/embalagem; SKU repetido e dimensão inválida rejeitados, múltiplas variantes e IDs preservados ao editar/desativar.
 
 ### C22 — `feat(catalog): add product administration contracts`
 
