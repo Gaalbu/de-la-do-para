@@ -2,6 +2,7 @@ package br.com.deladopara.observability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import br.com.deladopara.support.PostgresTestContainer;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -14,8 +15,10 @@ import org.springframework.boot.availability.AvailabilityChangeEvent;
 import org.springframework.boot.availability.ReadinessState;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Import;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(PostgresTestContainer.class)
 class HealthEndpointTest {
     private final int port;
     private final ConfigurableApplicationContext context;

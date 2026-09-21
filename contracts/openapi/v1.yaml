@@ -62,6 +62,143 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/accounts:
+    post:
+      operationId: registerAccount
+      summary: Criar conta opcional
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Conta criada
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI da conta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: E-mail já cadastrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/sessions:
+    post:
+      operationId: login
+      summary: Autenticar e criar sessão
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sessão criada
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: DLSESSION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/sessions/current:
+    get:
+      operationId: getCurrentSession
+      summary: Consultar sessão atual
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Sessão válida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '401':
+          description: Não autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    delete:
+      operationId: logout
+      summary: Encerrar sessão
+      security:
+        - sessionCookie: []
+      responses:
+        '204':
+          description: Sessão encerrada
+        '401':
+          description: Não autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/csrf:
+    get:
+      operationId: getCsrf
+      summary: Obter token CSRF
+      security: []
+      responses:
+        '200':
+          description: Token CSRF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfResponse'
+  /api/v1/accounts/verify:
+    post:
+      operationId: verifyEmail
+      summary: Verificar e-mail (placeholder C15 — verifica via token)
+      security: []
+      responses:
+        '200':
+          description: Verificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+  /api/v1/accounts/recovery:
+    post:
+      operationId: requestRecovery
+      summary: Solicitar recuperação (sempre 202)
+      security: []
+      responses:
+        '202':
+          description: Solicitação aceita
+  /api/v1/accounts/reset:
+    post:
+      operationId: resetPassword
+      summary: Redefinir senha
+      security: []
+      responses:
+        '200':
+          description: Senha redefinida
 components:
   responses:
     HealthUp:
@@ -149,3 +286,45 @@ components:
         correlationId:
           type: string
           format: uuid
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AccountResponse:
+      type: object
+      required: [id, email, emailVerified, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        emailVerified:
+          type: boolean
+        role:
+          type: string
+          enum: [CUSTOMER, ADMIN]
+    CsrfResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
