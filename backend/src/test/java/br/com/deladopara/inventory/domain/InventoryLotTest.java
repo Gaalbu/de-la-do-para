@@ -45,4 +45,34 @@ class InventoryLotTest {
         assertThatThrownBy(() -> new InventoryLot("FARINHA", 1, 0, false, null, 30).availableFor(null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void appliesReservationLifecycleWithoutChangingPhysicalUnitsUntilHandoff() {
+        var lot = new InventoryLot("FARINHA", 10, 0, false, LocalDate.of(2026, 10, 31), 30);
+
+        var reserved = lot.reserve(4);
+        var released = reserved.release(1);
+        var handedOff = released.handoff(2);
+
+        assertThat(lot.physicalUnits()).isEqualTo(10);
+        assertThat(reserved)
+                .extracting(InventoryLot::physicalUnits, InventoryLot::reservedUnits)
+                .containsExactly(10, 4);
+        assertThat(released)
+                .extracting(InventoryLot::physicalUnits, InventoryLot::reservedUnits)
+                .containsExactly(10, 3);
+        assertThat(handedOff)
+                .extracting(InventoryLot::physicalUnits, InventoryLot::reservedUnits)
+                .containsExactly(8, 1);
+    }
+
+    @Test
+    void rejectsLifecycleOperationsBeyondAvailableBalances() {
+        var lot = new InventoryLot("FARINHA", 2, 1, false, LocalDate.of(2026, 10, 31), 30);
+
+        assertThatThrownBy(() -> lot.reserve(2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> lot.release(2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> lot.handoff(2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> lot.receive(0)).isInstanceOf(IllegalArgumentException.class);
+    }
 }

@@ -37,4 +37,43 @@ public record InventoryLot(
         }
         return freeUnits();
     }
+
+    public InventoryLot receive(int units) {
+        requirePositive(units);
+        return new InventoryLot(
+                skuCode, Math.addExact(physicalUnits, units), reservedUnits, blocked, expiresOn, minimumShelfLifeDays);
+    }
+
+    public InventoryLot reserve(int units) {
+        requirePositive(units);
+        if (units > freeUnits()) {
+            throw new IllegalArgumentException("Insufficient free inventory");
+        }
+        return new InventoryLot(
+                skuCode, physicalUnits, Math.addExact(reservedUnits, units), blocked, expiresOn, minimumShelfLifeDays);
+    }
+
+    public InventoryLot release(int units) {
+        requirePositive(units);
+        if (units > reservedUnits) {
+            throw new IllegalArgumentException("Cannot release more than reserved inventory");
+        }
+        return new InventoryLot(
+                skuCode, physicalUnits, reservedUnits - units, blocked, expiresOn, minimumShelfLifeDays);
+    }
+
+    public InventoryLot handoff(int units) {
+        requirePositive(units);
+        if (units > reservedUnits) {
+            throw new IllegalArgumentException("Cannot handoff more than reserved inventory");
+        }
+        return new InventoryLot(
+                skuCode, physicalUnits - units, reservedUnits - units, blocked, expiresOn, minimumShelfLifeDays);
+    }
+
+    private static void requirePositive(int units) {
+        if (units <= 0) {
+            throw new IllegalArgumentException("Units must be positive");
+        }
+    }
 }
