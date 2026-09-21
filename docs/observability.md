@@ -39,3 +39,12 @@ porta aleatória para validar health e a ausência de endpoints administrativos.
 
 Fontes: [logging estruturado](https://docs.spring.io/spring-boot/reference/features/logging.html)
 e [probes](https://docs.spring.io/spring-boot/reference/actuator/endpoints.html).
+
+## Evidência local de C12
+
+Em 20/09/2026, o JAR empacotado executou em Temurin 25.0.4 na porta 18080.
+Uma requisição com UUID conhecido retornou o mesmo `X-Request-ID`; o evento
+JSON foi parseado e conferido sem token, cookie ou query enviados na sonda.
+RSS observado: 232.596 KiB (aproximadamente 227 MiB), após a primeira sonda,
+sem carga; é uma amostra local, não orçamento de produção ou benchmark.
+Readiness recusando tráfego retorna 503 sem derrubar liveness, coberto por teste.

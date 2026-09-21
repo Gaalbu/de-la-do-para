@@ -13,3 +13,7 @@ ou payloads pessoais.
 
 Evidências por release vivem em `docs/evidence/<marco-ou-release>/`
 (criado quando houver a primeira entrega executável).
+
+| C12 / OBS-001–003 | `docs/observability.md` | `RequestCorrelationFilterTest`, `HealthEndpointTest`, verify + JAR/JSON reais | `07b469a` | `tasks/progress.md` sessão C12/C13 |
+| Correção de lint após C11a | Gates C10/C11a | Lint com `api-reference/index.html` existente; F/E verdes | `679c3bc` | Falha ICU antes da exclusão; não exclui templates da aplicação |
+| C13 — CI inicial | `docs/ci.md` | `scripts/verify.sh`, jobs backend/frontend/contracts/quality-gate | `6c7556d` | PR de C12/C13; estado remoto registrado no progresso |

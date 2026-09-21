@@ -164,3 +164,17 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Git 2.43.0; Docker Compose v5.5.1 (Docker 29.8.1); JDK 25.0.4 GraalVM CE; Node v22.23.2; npm 12.0.2 (versão a revalidar no bootstrap frontend C07, matriz Angular 22).
 - RAM ~15 Gi disponível; portas locais em uso observadas: 5432 (PostgreSQL), 6379 (Redis), 8080 — o profile `local` do Compose usará portas/volumes próprios do projeto (C08).
 - `/home/gaalbu/codigos` não é repo git (pasta de projetos); nenhum reset/clean/force executado; pasta `tasks/` pré-existente em `/home/gaalbu/codigos` não foi tocada.
+
+## Sessão 2026-09-20 — C12 e CI inicial C13 (PR #14)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@281ee74`; branch `feat/c12-observability`, sem mudanças locais prévias |
+| Tarefa | C12 implementada e verificada localmente; C13 inicial implementada, execução remota acompanhada no PR #14. C13a–C13c permanecem pendentes |
+| Mudanças | Correlação HTTP/JSON, Actuator com probes, OpenAPI e testes; harness suporta múltiplos mapeamentos; exclusão de HTML gerado do lint; workflow CI + entrada local de gates; README atualizado |
+| Commits | `07b469a` observabilidade; `679c3bc` correção lint; `6c7556d` CI. C12 inclui contrato, documentação e testes no mesmo commit (9 arquivos, acoplamento necessário para gate coerente) |
+| Verificação | Teste de correlação vermelho por classe ausente → 4 testes verdes; health vermelho 404 → 3 testes HTTP verdes; `verify` Temurin 25.0.4: 12 unitários/HTTP/arquitetura + 2 IT reais PostgreSQL/Kafka, formatter/checkstyle verdes. F: lint/formato, 4 testes e build SSR verdes; E: 1 smoke Playwright verde. Contratos verdes, warnings Redocly registrados no output. JAR real: JSON/correlação conferidos, query/cookie/token de teste ausentes; RSS 232.596 KiB após uma sonda, sem carga. Shell inválido retorna 2; YAML/pinagem/permissões conferidos; diff check limpo |
+| Incidentes | Baseline GraalVM CE sofreu SIGSEGV em `libjvmcicompiler.so` (SHA implCompress0); ArchUnit e suíte completa passam no Temurin já instalado, selecionado por comando, sem mudar Java global. Lint preexistente falhava no HTML Redoc gerado (ICU); ignorado apenas artefato. Aislop/actionlint indisponíveis; revisão manual e gates existentes executados |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/14 — aberto. Run inicial `35546978418`: contratos passou; backend/frontend em execução no momento deste registro. Conferir checks do HEAD antes de merge; não afirmar main atualizada |
+| Próximo passo | Confirmar CI do HEAD e revisão/merge conforme autorização; depois C13a documentação, C13b segurança, C13c política/agenda/proteção. G1 externo continua dependente de C04 real, não de mocks |
+| Perguntas | Nenhuma nova nesta entrega. Credenciais/spike C04, fotos restantes e licença/destino de releases continuam na etapa correspondente. Preservada decisão posterior: principal em loop de até 30 s sem legendas |
