@@ -283,6 +283,8 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D63 | Documentação da API e testes são prioridades explícitas, corrigindo a deficiência relatada pelo usuário no projeto anterior. Cada funcionalidade exige contratos, exemplos, erros, testes e evidências atualizados antes de ser considerada concluída |
 | D64 | Autenticação aprovada: e-mail e senha para contas opcionais e administradores, Spring Security com sessões persistidas no PostgreSQL, cookie protegido e CSRF. Compra convidada preservada; confirmação de e-mail e recuperação de senha demonstradas no Mailpit |
 | D65 | Produtor referenciado não pode ser removido fisicamente; pode ser desativado. Procedência apresentada apenas como localidade ampla e texto editorial fictício, rotulados como demonstração; sem coordenadas, endereço ou alegações verificáveis |
+| D66 | Pedido pronto para retirada fica guardado por 3 dias úteis. Depois, abrir análise administrativa sem cancelar, descartar ou reembolsar automaticamente; manter estoque comprometido até resolução explícita |
+| D67 | Fixture C25 usa lotes explicitamente sintéticos e relógio fixo: por alimento, um lote atende exatamente à margem D54 na chegada prevista e outro fica um dia abaixo. A fixture não representa estoque real |
 
 D11–D13 são as regras adotadas no planejamento por resposta expressa do usuário. O marco de expedição foi definido em D29. O despacho parcial segue D30. O limite de cancelamento de retirada e a proteção contra conclusão simultânea seguem D31.
 
@@ -1393,14 +1395,15 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - **Aceite:** upload autenticado com limite de tamanho/tipo e nome interno seguro; imagem opcional por produto persiste em diretório local configurável; conteúdo acessível com descrição alternativa.
 - **Verificar:** `CatalogMediaApiIT`, testes de validação/armazenamento, contrato, build/UI, Playwright e gates de segurança/docs. Um adapter novo lê o arquivo persistido. Não buscar URLs arbitrárias no servidor.
 - **Decisões C24:** uma imagem principal por produto; JPEG/PNG até 5 MiB, escolhidos pelo usuário em 21/09/2026. A spec define limites técnicos de decodificação e metadados de licença/atribuição.
-- **Verificado:** processamento JPEG/PNG com limite 5 MiB, metadados e migration V16; rotas admin/pública com sessão/CSRF e verificação de estado; formulário de upload/prévia/remoção; `APP_MEDIA_DIRECTORY` padrão `./data/media`. Backend completo (31 testes unitários, 18 integrações, PostgreSQL 18.6, Spotless e Checkstyle), frontend (11 Angular, SSR e Playwright 3/3), contrato, docs, segurança e `aislop` passaram. PR #36 aberta, MERGEABLE/CLEAN; CI `35655927076` 7/7 verde; sem merge automático.
+- **Verificado:** processamento JPEG/PNG com limite 5 MiB, metadados e migration V16; rotas admin/pública com sessão/CSRF e verificação de estado; formulário de upload/prévia/remoção; `APP_MEDIA_DIRECTORY` padrão `./data/media`. Backend completo (31 testes unitários, 18 integrações, PostgreSQL 18.6, Spotless e Checkstyle), frontend (11 Angular, SSR e Playwright 3/3), contrato, docs, segurança e `aislop` passaram. PR #36 HEAD `9491996` aberta, MERGEABLE/CLEAN; CI `35656338034` 7/7 verde; sem merge automático.
 - **Divisão operacional:** C24a validação/armazenamento e metadados; C24b API/contratos; C24c administração e acessibilidade; C24d persistência local, documentação e gates. Cada fatia mantém o build executável.
 
 ### C24a — `docs(logistics): record individual delivery and coupon policy decisions`
 
-- [ ] **Depende:** C01, C17, C24. **Alvos:** decisões de logística/cancelamento/cupons e exemplos comerciais; M.
-- **Aceite:** transcrever as respostas já aprovadas de Q03a–Q06b e D21–D60 nas specs, sem repeti-las ao usuário; apresentar separadamente apenas lacunas reais listadas na seção de pendências, com proposta concreta e recomendação.
+- [ ] **Depende:** C01, C17, C24. **Alvos:** `specs/SPEC-logistics.md`, base de preço/cupons em `specs/SPEC-pricing.md`, decisões e rastreio; M.
+- **Aceite:** transcrever as respostas já aprovadas de Q03a–Q06b e as decisões D21–D60 aplicáveis a logística, cancelamento, cupons e exemplos comerciais (D21–D31, D33–D37, D54–D60) nas specs correspondentes, sem repeti-las ao usuário. Design, metas e catálogo de D32/D38–D53 permanecem em seus documentos proprietários. Apresentar separadamente apenas lacunas reais listadas na seção de pendências, com proposta concreta e recomendação.
 - **Verificar:** DOC e revisão com o usuário. Resolver também restrições Q10 quando discutir embalagens. Resposta pendente bloqueia a regra dependente, não autoriza escolher um padrão silenciosamente.
+- **Estado atual:** propostas documentais preparadas em `SPEC-logistics.md` e `SPEC-pricing.md`; Q03–Q06/Q10 e D21–D60 permanecem conforme respostas registradas; D66/D67 registram duas respostas desta revisão. Calendário, despacho parcial e contador global têm recomendações explícitas, ainda sujeitas à confirmação individual na etapa correspondente. A revisão do usuário continua necessária antes de marcar C24a concluída ou liberar trabalho dependente.
 
 ## Fase 3 — estoque, preço e vitrine
 
@@ -1408,7 +1411,8 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 - [ ] **Depende:** C17, C24a. **Alvos:** `specs/SPEC-inventory.md`, matriz de estoque; S.
 - **Aceite:** saldo físico/reservado/disponível; reserva de 15 minutos; lotes, validade na chegada, bloqueio e ajuste administrativo definidos.
-- **Verificar:** DOC; resolver Q04 antes da regra de elegibilidade.
+- **Verificar:** DOC; D27/D54 definem as margens e D67 aprova a fixture sintética com limite e um dia abaixo; não reabrir Q04. Conferir calendário oficial de feriados antes de usar datas concretas.
+- **Estado atual:** `specs/SPEC-inventory.md` preparada com vocabulário, invariantes, fronteira de validade, fixture D67 e critérios INV-001–008. FEFO, comportamento de lote bloqueado com reserva ativa e calendário anual continuam propostas/pendências para revisão; C25 ainda não está concluída.
 
 ### C26 — `feat(inventory): persist lots and stock movements`
 
