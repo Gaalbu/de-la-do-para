@@ -8,5 +8,7 @@ public interface InventoryLotRepository extends Repository<InventoryLotEntity, U
 
     <S extends InventoryLotEntity> S save(S lot);
 
+    java.util.Optional<InventoryLotEntity> findById(UUID id);
+
     List<InventoryLotEntity> findAllBySkuIdOrderByReceivedAtAscIdAsc(UUID skuId);
 }

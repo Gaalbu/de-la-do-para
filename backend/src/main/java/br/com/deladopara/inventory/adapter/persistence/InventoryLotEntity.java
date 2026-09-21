@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -47,6 +48,10 @@ public class InventoryLotEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Version
+    @Column(nullable = false)
+    private int version;
 
     protected InventoryLotEntity() {}
 
@@ -120,5 +125,20 @@ public class InventoryLotEntity {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void adjustPhysicalUnits(int newPhysicalUnits, UUID actorId, String reason) {
+        if (newPhysicalUnits < reservedUnits) {
+            throw new IllegalArgumentException("Adjustment cannot reduce below reserved units");
+        }
+        if (actorId == null || reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Adjustment actor and reason are required");
+        }
+        physicalUnits = newPhysicalUnits;
+        updatedAt = Instant.now();
     }
 }
