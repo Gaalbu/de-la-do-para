@@ -22,8 +22,8 @@ bad=0
 while IFS= read -r line; do
   # extrai apenas a mensagem (após hash)
   msg="$(echo "$line" | sed -E 's/^[a-f0-9]+ //')"
-  # ignora merges
-  if echo "$msg" | grep -qE '^Merge (pull request|branch) '; then
+  # ignora merges (inclui merge sintético do GitHub: Merge <sha> into <sha>)
+  if echo "$msg" | grep -qE '^Merge '; then
     continue
   fi
   if ! echo "$msg" | grep -Eq "$re"; then
