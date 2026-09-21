@@ -100,6 +100,9 @@ respondidas em D01–D64.
   Q03e→D25; Q03f→D26; Q04a→D27; Q05a→D29; Q05b→D30; Q05c→D31; Q06a→D33;
   Q06b→D34; Q10a→D37; Q08a→D38; Q08b→D39; Q08c→D40; Q08d→D41; Q09→D42;
   Q04b→D54; Q10b→D55; Q10→D59/D60.
+- **CAT-Q01 (C18, respondida pelo usuário em 2026-09-21):** produtores são
+  geridos somente por administradores na v1; produtores não têm contas nem
+  acesso próprio. A decisão não autoriza portal de produtor.
 - **Pendências reais por etapa** (sem inferência silenciosa): URL/owner/repo e
   namespace (C00a/C00b/C05 — repo criado, namespace `br.com.deladopara`
   proposto); specs e propostas A-abertas (C01/C02 + spec do módulo); tons/

@@ -1344,7 +1344,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C17 — `docs(catalog): specify provenance products and packaging`
 
-- [ ] **Depende:** C01, C02, C03. **Alvos:** `specs/SPEC-catalog.md`, contrato catálogo; S.
+- [x] **Depende:** C01, C02, C03. **Alvos:** `specs/SPEC-catalog.md`, contrato catálogo; S.
 - **Aceite:** produtor/produto/SKU/imagem definidos; alimentos e artesanato têm campos pertinentes; conservação, embalagem e política de remoção explícitas.
 - **Verificar:** DOC; modelagem respeita BRL, ponto único e unidade/SKU confirmados em D17.
 
