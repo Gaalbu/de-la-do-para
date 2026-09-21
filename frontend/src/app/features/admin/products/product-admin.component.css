@@ -1,0 +1,270 @@
+:host {
+  display: block;
+  color: #28231e;
+}
+.admin {
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+.page-header,
+.section-heading,
+.card-title,
+.pagination,
+.form-actions,
+.sku-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.page-header {
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+.page-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  margin-bottom: 0.4rem;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+h2 {
+  margin-bottom: 0.25rem;
+}
+.eyebrow {
+  color: #77543c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+a {
+  color: #704325;
+  font-weight: 600;
+}
+.demo-notice {
+  padding: 1rem 1.2rem;
+  border-left: 0.3rem solid #a75c28;
+  background: #fff4e8;
+  margin-bottom: 1.5rem;
+}
+.demo-notice p {
+  margin: 0.35rem 0 0;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(19rem, 0.85fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.product-list,
+.editor {
+  border: 1px solid #e3d9ce;
+  border-radius: 0.8rem;
+  background: #fff;
+  padding: 1.25rem;
+}
+.section-heading {
+  margin-bottom: 1rem;
+}
+.section-heading p,
+.form-intro {
+  color: #675f57;
+  margin-bottom: 0;
+}
+.product-cards {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.product-card {
+  border: 1px solid #e5ded6;
+  border-radius: 0.6rem;
+  padding: 1rem;
+}
+.product-card.inactive {
+  background: #f8f6f3;
+}
+.card-title {
+  align-items: flex-start;
+}
+.card-title h3 {
+  margin-bottom: 0.35rem;
+}
+.producer-name,
+.product-meta {
+  color: #60432f;
+  font-weight: 600;
+}
+.status,
+.demo-tag {
+  display: inline-block;
+  border-radius: 999px;
+  background: #e5f3e8;
+  color: #235a31;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  white-space: nowrap;
+}
+.status-inactive {
+  background: #eee9e3;
+  color: #5f554c;
+}
+.demo-tag {
+  background: #fff0dd;
+  color: #71471e;
+  margin-bottom: 0.6rem;
+}
+.text-button {
+  display: block;
+  border: 0;
+  padding: 0.3rem 0;
+  color: #704325;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.empty {
+  padding: 2rem 1rem;
+  color: #675f57;
+  text-align: center;
+}
+.pagination {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+form {
+  margin-top: 1rem;
+}
+label {
+  display: block;
+  margin: 0.9rem 0 0.3rem;
+  font-weight: 650;
+}
+input:not([type='checkbox']),
+textarea,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #b9ada1;
+  border-radius: 0.35rem;
+  padding: 0.65rem 0.7rem;
+  font: inherit;
+}
+input:focus,
+textarea:focus,
+select:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #d18a4c;
+  outline-offset: 2px;
+}
+small {
+  display: block;
+  color: #675f57;
+  margin-top: 0.25rem;
+}
+.active-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.active-control input {
+  width: 1rem;
+  height: 1rem;
+}
+button {
+  border: 0;
+  border-radius: 0.4rem;
+  padding: 0.7rem 0.9rem;
+  color: white;
+  background: #704325;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button.secondary {
+  color: #513820;
+  background: #f1e9df;
+}
+.danger-action {
+  margin-top: 1rem;
+  color: #fff;
+  background: #9c2d24;
+}
+.form-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+.sku-heading {
+  margin-top: 1.5rem;
+}
+.sku-heading h3 {
+  margin-bottom: 0;
+}
+.sku-editor {
+  min-width: 0;
+  margin: 1rem 0;
+  padding: 0.8rem 1rem 1rem;
+  border: 1px solid #e3d9ce;
+  border-radius: 0.6rem;
+}
+.sku-editor legend {
+  padding: 0 0.35rem;
+  font-weight: 700;
+}
+.food-fields,
+.measure-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(6rem, 0.7fr);
+  align-items: end;
+  column-gap: 0.7rem;
+}
+.food-fields label,
+.measure-grid label {
+  align-self: center;
+}
+.food-fields input,
+.measure-grid input {
+  min-width: 0;
+}
+.craft-note {
+  margin: 0.9rem 0 0;
+  color: #675f57;
+  font-size: 0.9rem;
+}
+.error {
+  color: #a52222;
+}
+.success {
+  color: #235a31;
+}
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .page-header {
+    flex-direction: column;
+  }
+  .pagination {
+    font-size: 0.8rem;
+  }
+}

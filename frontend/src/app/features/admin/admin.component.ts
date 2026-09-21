@@ -57,7 +57,10 @@ const blankForm = (): ProducerForm => ({
           <h1 id="admin-title">Produtores</h1>
           <p>Cadastre e mantenha os perfis de demonstração do catálogo.</p>
         </div>
-        <a routerLink="/">Voltar à vitrine</a>
+        <nav aria-label="Administração do catálogo">
+          <a routerLink="/admin/products">Produtos</a>
+          <a routerLink="/">Voltar à vitrine</a>
+        </nav>
       </header>
 
       <aside class="demo-notice" aria-label="Aviso sobre dados de demonstração">

@@ -325,6 +325,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Decisões | Produtos ativos só aparecem publicamente quando produtor e ao menos um SKU também estão ativos. PATCH integral; SKU omitido desativado logicamente. Nenhuma rota DELETE. Escritas só admin com CSRF. |
 | Mudanças | Teste HTTP RED confirmou rota ausente; OpenAPI agora define rotas/admin/public e schemas. Implementados `ProductService`, controllers, DTOs, mapeamento Problem Details, autorização pública explícita GET e migration V15 para estado ativo do SKU. Documento API/spec atualizados. |
 | Verificação | `./scripts/verify.sh backend` passou: 15 unitários, 15 integrações incluindo PostgreSQL 18.6/Testcontainers, Flyway V15 e harness Kafka, Spotless e Checkstyle. Rodada final `-Dit.test=ProductAdminApiIT verify` passou 15 unitários + 4 integrações, cobrindo FOOD/CRAFT (campos alimentares nulos), rollback, 401/403/CSRF/404/409, inatividade de produtor/produto/SKUs e ausência de DELETE. `contracts:check` passou com geração TypeScript, `tsc` e eventos (10 avisos Redocly preexistentes); `docs:check` (24 Markdown) e `git diff --check` passaram. |
-| Remoto | C22 commitado localmente; C21 PR #33 aberta. CI C21 `35639675604` 7/7 verde após retry de HTTP 502 transitório no Maven Central. |
-| Próximo passo | Publicar PR C22 empilhada sobre #33, aguardar CI; depois C23 UI de produtos. |
+| Remoto | C22 `fca692a` publicado na PR #34 sobre #33: https://github.com/Gaalbu/de-la-do-para/pull/34, MERGEABLE/CLEAN; CI `35642638538` success 7/7 (backend, frontend, contracts, docs, security, commit-policy, quality-gate). |
+| Próximo passo | C23 — interface administrativa de produtos, branch empilhada sobre C22; sem merge automático. |
 | Perguntas | Nenhuma. |
+
+## Sessão 2026-09-21 — C23 interface administrativa de produtos (verificada localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c22-product-api-contracts@fca692a`; branch `feat/c23-product-admin-ui`; `.angular/` não rastreado preexistente preservado |
+| Tarefa | C23 — `feat(catalog-ui): manage products and packaging details` — implementação local concluída; PR ainda não aberta |
+| Mudanças | Nova rota protegida `/admin/products` com SSR; lista paginada, seleção de produtores ativos, formulário de alimentos/artesanato, variantes editáveis, campos alimentares condicionais, dimensões/peso/fragilidade, erros recuperáveis, edição e confirmação ao desativar produto. UI ligada à API tipada de C22; sem upload de imagem (C24) |
+| Verificação | Reexecutado `./scripts/verify.sh frontend` exit 0: lint, Prettier, 10 testes Angular, build SSR e Playwright 3/3; jornada Playwright cobre FOOD/CRAFT, conflito corrigido, edição dos dois tipos e confirmação de desativação. Teste unitário cobre recuperação após falha no carregamento de produtores. API no E2E é simulada; endpoints PostgreSQL/HTTP já foram cobertos e CI 7/7 em C22. `git diff --check` limpo. `npx aislop scan --changes --json`: 100/100, 0 erros/avisos, 69 arquivos analisados. |
+| Remoto | C22 PR #34 aberta, MERGEABLE/CLEAN, CI `35642638538` 7/7 verde; C23 pronta para publicação empilhada sobre #34 |
+| Próximo passo | Revisar diff, executar `aislop`, commit C23, push e abrir PR empilhada sobre `feat/c22-product-api-contracts`; não fazer merge automático |
+| Perguntas | Nenhuma nova |
