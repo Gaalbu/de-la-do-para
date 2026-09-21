@@ -1439,6 +1439,10 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C23, C27. **Alvos:** `F/admin/inventory`, formulário/histórico e teste; M.
 - **Aceite:** admin registra lote, corrige saldo e vê motivo; não apresenta reservado como disponível.
 - **Verificar:** F/E; comparar histórico antes/depois de ajuste.
+- **Estado atual:** tela `/admin/inventory` implementada com seleção de SKU,
+  recebimento de lote, consulta de físico/reservado/disponível e ajuste com
+  versão retornada pelo backend. Build e 11 testes frontend passaram; o CI do
+  PR #39 ainda precisa concluir no SHA publicado.
 
 ### C29 — `docs(pricing): specify money discounts and coupon eligibility`
 
