@@ -21,6 +21,8 @@ case "${1:-all}" in
     ./scripts/check-commits.sh origin/main HEAD
     ;;
   frontend)
+    # Frontend features consume generated OpenAPI types in clean checkouts.
+    npm --prefix frontend run contracts:generate
     npm --prefix frontend run lint
     npm --prefix frontend run format:check
     npm --prefix frontend run test:ci

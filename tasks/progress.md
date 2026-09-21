@@ -334,9 +334,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Campo | Conteúdo |
 |---|---|
 | Base | `feat/c22-product-api-contracts@fca692a`; branch `feat/c23-product-admin-ui`; `.angular/` não rastreado preexistente preservado |
-| Tarefa | C23 — `feat(catalog-ui): manage products and packaging details` — implementação local concluída; PR ainda não aberta |
+| Tarefa | C23 — `feat(catalog-ui): manage products and packaging details` — commit `c540d3f`, PR #35 aberta; correção de CI em andamento |
 | Mudanças | Nova rota protegida `/admin/products` com SSR; lista paginada, seleção de produtores ativos, formulário de alimentos/artesanato, variantes editáveis, campos alimentares condicionais, dimensões/peso/fragilidade, erros recuperáveis, edição e confirmação ao desativar produto. UI ligada à API tipada de C22; sem upload de imagem (C24) |
-| Verificação | Reexecutado `./scripts/verify.sh frontend` exit 0: lint, Prettier, 10 testes Angular, build SSR e Playwright 3/3; jornada Playwright cobre FOOD/CRAFT, conflito corrigido, edição dos dois tipos e confirmação de desativação. Teste unitário cobre recuperação após falha no carregamento de produtores. API no E2E é simulada; endpoints PostgreSQL/HTTP já foram cobertos e CI 7/7 em C22. `git diff --check` limpo. `npx aislop scan --changes --json`: 100/100, 0 erros/avisos, 69 arquivos analisados. |
-| Remoto | C22 PR #34 aberta, MERGEABLE/CLEAN, CI `35642638538` 7/7 verde; C23 pronta para publicação empilhada sobre #34 |
-| Próximo passo | Revisar diff, executar `aislop`, commit C23, push e abrir PR empilhada sobre `feat/c22-product-api-contracts`; não fazer merge automático |
+| Verificação | `./scripts/verify.sh frontend` passou localmente: lint, Prettier, 10 testes Angular, build SSR e Playwright 3/3. O primeiro CI limpo falhou porque `frontend/src/generated/` é ignorado e o job não gerava os tipos OpenAPI. Após corrigir `scripts/verify.sh frontend` para rodar `contracts:generate`, o mesmo gate passou em arquivo limpo extraído do commit, com node_modules compartilhado; geração, lint, 10 testes, build SSR e Playwright 3/3. API no E2E é simulada; endpoints PostgreSQL/HTTP foram cobertos em C22. `npx aislop scan --changes --json`: 100/100, sem achados. |
+| Remoto | C22 PR #34 aberta, MERGEABLE/CLEAN, CI `35642638538` 7/7 verde. C23 PR #35 aberta sobre #34; run `35649968314` falhou em `frontend` e `quality-gate`; correção local pronta para publicar e reexecutar CI. |
+| Próximo passo | Publicar correção do gate, confirmar CI 7/7 de C23 e seguir implementação C24 na branch empilhada; nenhum merge automático |
 | Perguntas | Nenhuma nova |
