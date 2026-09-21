@@ -59,6 +59,7 @@ const blankForm = (): ProducerForm => ({
         </div>
         <nav aria-label="Administração do catálogo">
           <a routerLink="/admin/products">Produtos</a>
+          <a routerLink="/admin/inventory">Estoque</a>
           <a routerLink="/">Voltar à vitrine</a>
         </nav>
       </header>

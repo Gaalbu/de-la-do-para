@@ -2,6 +2,7 @@ package br.com.deladopara.inventory.adapter.web;
 
 import br.com.deladopara.inventory.adapter.persistence.InventoryAdjustmentService;
 import br.com.deladopara.inventory.adapter.web.dto.InventoryAdjustmentRequest;
+import br.com.deladopara.inventory.adapter.web.dto.InventoryLotCreateRequest;
 import br.com.deladopara.inventory.adapter.web.dto.InventoryLotResponse;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +28,12 @@ public class InventoryAdminController {
     @GetMapping("/skus/{skuId}/lots")
     public List<InventoryLotResponse> list(@PathVariable UUID skuId) {
         return inventory.list(skuId);
+    }
+
+    @PostMapping("/skus/{skuId}/lots")
+    public InventoryLotResponse receive(
+            @PathVariable UUID skuId, @Valid @RequestBody InventoryLotCreateRequest request) {
+        return inventory.receive(skuId, request);
     }
 
     @PatchMapping("/lots/{lotId}")

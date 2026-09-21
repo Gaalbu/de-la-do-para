@@ -1,6 +1,8 @@
 package br.com.deladopara.inventory.adapter.persistence;
 
+import br.com.deladopara.catalog.adapter.persistence.ProductSkuRepository;
 import br.com.deladopara.inventory.adapter.web.dto.InventoryAdjustmentRequest;
+import br.com.deladopara.inventory.adapter.web.dto.InventoryLotCreateRequest;
 import br.com.deladopara.inventory.adapter.web.dto.InventoryLotResponse;
 import jakarta.persistence.OptimisticLockException;
 import java.util.List;
@@ -13,10 +15,13 @@ public class InventoryAdjustmentService {
 
     private final InventoryLotRepository lots;
     private final InventoryMovementRepository movements;
+    private final ProductSkuRepository skus;
 
-    public InventoryAdjustmentService(InventoryLotRepository lots, InventoryMovementRepository movements) {
+    public InventoryAdjustmentService(
+            InventoryLotRepository lots, InventoryMovementRepository movements, ProductSkuRepository skus) {
         this.lots = lots;
         this.movements = movements;
+        this.skus = skus;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +51,33 @@ public class InventoryAdjustmentService {
                     request.reason(),
                     java.time.Instant.now()));
         }
+        return response(saved);
+    }
+
+    @Transactional
+    public InventoryLotResponse receive(UUID skuId, InventoryLotCreateRequest request) {
+        var sku = skus.findById(skuId).orElseThrow(() -> new IllegalArgumentException("SKU not found"));
+        var now = java.time.Instant.now();
+        var lot = new InventoryLotEntity(
+                UUID.randomUUID(),
+                sku,
+                request.physicalUnits(),
+                0,
+                false,
+                request.expiresOn(),
+                request.minimumShelfLifeDays(),
+                request.receivedAt(),
+                now);
+        var saved = lots.save(lot);
+        movements.save(new InventoryMovementEntity(
+                UUID.randomUUID(),
+                sku,
+                "RECEIPT",
+                request.physicalUnits(),
+                "lot-receipt:" + saved.getId(),
+                null,
+                "recebimento inicial",
+                now));
         return response(saved);
     }
 

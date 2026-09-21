@@ -1,0 +1,20 @@
+<section class="admin" aria-labelledby="inventory-title">
+  <p class="eyebrow">Painel administrativo</p>
+  <h1 id="inventory-title">Estoque e lotes</h1>
+  <p><a routerLink="/admin">Produtores</a> · <a routerLink="/admin/products">Produtos</a></p>
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+  <label for="sku">SKU</label>
+  <select id="sku" [ngModel]="selectedSkuId()" (ngModelChange)="selectedSkuId.set($event); loadLots()">
+    @for (sku of skuOptions(); track sku.id) { <option [value]="sku.id">{{ sku.label }}</option> }
+  </select>
+  <form (ngSubmit)="receive()" class="receive-form">
+    <label>Unidades <input type="number" name="units" min="1" [(ngModel)]="physicalUnits" required /></label>
+    <label>Validade <input type="date" name="expires" [(ngModel)]="expiresOn" /></label>
+    <label>Margem mínima (dias) <input type="number" name="shelf" min="0" [(ngModel)]="minimumShelfLifeDays" /></label>
+    <button type="submit" [disabled]="receiving || !selectedSkuId()">Registrar recebimento</button>
+  </form>
+  <table><caption>Lotes e saldo disponível</caption><thead><tr><th>SKU</th><th>Físico</th><th>Reservado</th><th>Disponível</th><th>Validade</th><th>Ação</th></tr></thead>
+    <tbody>@for (lot of lots(); track lot.id) { <tr><td>{{ lot.skuCode }}</td><td>{{ lot.physicalUnits }}</td><td>{{ lot.reservedUnits }}</td><td>{{ lot.freeUnits }}</td><td>{{ lot.expiresOn || 'Sem validade alimentar' }}</td><td><button type="button" (click)="adjust(lot)">Ajustar</button></td></tr> }</tbody>
+  </table>
+</section>
