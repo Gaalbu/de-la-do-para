@@ -413,7 +413,7 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 |---|---|
 | Base | `feat/c30-pricing-totals@6409c4f`; implementação em `feat/c26-inventory-lot-invariants` |
 | Tarefa | C26 — núcleo independente de saldos e elegibilidade de lote |
-| Mudanças | Criado `InventoryLot`: valida `physical >= reserved >= 0`, calcula `freeUnits` e `availableFor(arrivalDate)`, aplica a margem D67 e bloqueio, e permite artesanato sem validade alimentar |
+| Mudanças | Criados `InventoryLot`, `InventoryAvailability`, `InventoryMovement`, `InventoryLedger`, `InventoryReservation` e `ReservationIntent`: saldos, margem D67, bloqueio, ledger idempotente, expiração de 15 minutos e validação multi-SKU |
 | Verificação | Testes focados e `./mvnw -q -DargLine=-Xint verify` verdes; `aislop` 100/100, zero achados |
-| Remoto | Commit `0dba72c`; PR #39: https://github.com/Gaalbu/de-la-do-para/pull/39; CI 7/7 verde, aberta e mergeable |
+| Remoto | Commits até `e81ea6e`; PR #39: https://github.com/Gaalbu/de-la-do-para/pull/39; rodada atual do CI em andamento, PR aberta e mergeable |
 | Limites | FEFO, lotes bloqueados com alocação ativa, persistência, reserva e API continuam fora desta fatia até revisão das regras abertas |
