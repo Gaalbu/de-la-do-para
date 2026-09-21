@@ -192,3 +192,31 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | https://github.com/Gaalbu/de-la-do-para/pull/15 — MERGED `d2fb069` |
 | Próximo passo | C13b `ci(security): enforce scoped permissions and dependency checks` (pinagem, scans, dependabot) — depois C13c `ci(quality): require healthy PRs and scheduled checks` (agregador docs-only, proteção de main) |
 | Perguntas | Nenhuma nova |
+
+## Sessão 2026-09-21 — C13b gate de segurança (PR #16 merged)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@d2fb069`; branch `ci/c13b-security` (`b84a01d`) |
+| Tarefa | C13b — `ci(security): enforce scoped permissions and dependency checks` — concluída, verificada e merged |
+| Mudanças | `permissions: contents: read` no workflow e job `security`; actions pinadas por SHA (`checkout@11d5960a`, `setup-java@cf277c60`, `setup-node@49933ea`, `upload-artifact@ea165f8d`); `scripts/check-secrets.sh` + `.secret-allowlist.txt` + `scripts/verify.sh security` (secrets + `npm audit --omit=dev --audit-level=high` 0 high; completo 4 high dev-only triados); `.github/dependabot.yml` semanal (npm/maven/actions); `docs/ci.md` com triagem |
+| Verificação | `check-secrets.sh` OK, fixture `AKIA...` falha como esperado; `verify.sh security` OK; `npm run lint` 0, `format:check` OK, `diff --check` limpo; runtime audit 0 high, completo 4 high dev-only documentados (`js-yaml` via `@hey-api` GHSA-52cp/5p4m/2883); CI `355481...` success backend/frontend/contracts/docs/security/quality-gate |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/16 — MERGED `d0ce796` |
+| Próximo passo | C13c `ci(quality): require healthy PRs and scheduled checks` |
+| Perguntas | Nenhuma nova |
+
+## Sessão 2026-09-21 — C13c gate de qualidade e proteção (PR #25 merged)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@d0ce796`; branch `ci/c13c-quality` (`071315e`, `68faf7e`) |
+| Tarefa | C13c — `ci(quality): require healthy PRs and scheduled checks` — concluída, verificada e merged |
+| Mudanças | `scripts/check-commits.sh` (Conventional Commits `feat|fix|test|docs|refactor|build|ci|chore`, merge ignorado); job `commit-policy` (`fetch-depth:0` + check); `schedule: 17 9 * * 1` semanal; `quality-gate` exige 6 checks (backend/frontend/contracts/docs/security/commit-policy); `verify.sh` casos `commits`/`all`; `docs/ci.md` § agenda/gates/proteção; branch protection via API `strict:true`, contexts 7, `enforce_admins:false` |
+| Verificação | `check-commits.sh origin/main HEAD` OK, fixture ruim reprova; `verify.sh docs/security/commits` OK; `lint` 0, `format:check` OK, `diff --check` limpo; CI `35548287393` success 7/7 (backend/frontend/contracts/docs/security/commit-policy/quality-gate) |
+| Remoto | https://github.com/Gaalbu/de-la-do-para/pull/25 — MERGED `2db8139` (commits `071315e`, `68faf7e`) |
+| Próximo passo | G1 fechado (CI/docs/security/commit-policy verificados); C14 `docs(identity): specify sessions and optional customer accounts` — spec SDD antes de C15 |
+| Perguntas | Nenhuma nova; spike C04 sandbox e curadoria de fotos permanecem para etapa própria |
+
+## G1 — verificação
+
+- CI com 7 jobs obrigatórios, proteção de `main` verificada via `gh api repos/Gaalbu/de-la-do-para/branches/main/protection`; docs-only não bypassa gates; sandbox C04 continua pendente opt-in (não comprovado por mocks).
