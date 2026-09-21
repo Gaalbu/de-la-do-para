@@ -265,6 +265,6 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | C17 — `docs(catalog): specify provenance products and packaging` — spec revisada e aprovada pelo usuário |
 | Mudanças | `specs/SPEC-catalog.md`: limites, produtor/produto/SKU, regras alimentos/artesanato, dimensões, embalagem, imagem/licença, contratos propostos, CAT-001..009 e perguntas. CAT-Q01 respondida: só admin gere produtores na v1, sem conta própria. Atualizados `docs/decisions.md`, `docs/traceability.md`. |
 | Verificação | `npm run docs:check` OK (24 Markdown); `npm run contracts:check` exit 0 (10 warnings Redocly preexistentes; exemplos, geração e TypeScript OK); `git diff --check` OK. |
-| Remoto | PR/commit C17 ainda não criado nesta atualização. |
+| Remoto | PR #30 aberto: https://github.com/Gaalbu/de-la-do-para/pull/30, `docs/c17-catalog@4c424dc`. CI run `35631089081` success: backend, frontend, contracts, docs, security, commit-policy e quality-gate (7/7). PR mergeable; não merged. |
 | Próximo passo | C18 — persistência de produtores/procedência (PostgreSQL, migration e teste de integração). CAT-Q02/03 permanecem para C19. Curadoria final de assets continua pendente em C03, sem adicionar imagens não aprovadas. |
 | Perguntas | Nenhuma nova para C18. |

@@ -22,7 +22,7 @@ ou payloads pessoais.
 | C11a — referência API | `docs/api-guide.md` | Redoc 40KB, stub WireMock | `0cac71d` | PR #12 merged |
 | C11b — harness contrato | `RouteContractCoverageTest` | `verify` + fixtures divergentes reprovam | `37f86ec` | PR #13 merged |
 | C14 — spec identity | `specs/SPEC-identity.md` | DOC: `docs:check` 24 OK, `verify docs/security` OK, CI 7/7 | `4b82a3f`, merge `2edd714` | PR #26 merged (`35548577157` success) |
-| C17 — spec catálogo/procedência | `specs/SPEC-catalog.md` | `docs:check` 24 OK; `contracts:check` exit 0 (10 warnings Redocly); `git diff --check` OK | trabalho local, aguardando commit/PR | Spec aprovada pelo usuário em 2026-09-21; CAT-Q01 respondida (só admin gere produtores, sem conta v1); C18 liberada |
+| C17 — spec catálogo/procedência | `specs/SPEC-catalog.md` | local `docs:check` 24 OK, `contracts:check` exit 0; CI 7/7 success (`35631089081`) | `4c424dc`; PR #30 aberto, mergeable (não merged) | Spec aprovada pelo usuário em 2026-09-21; CAT-Q01 respondida (só admin gere produtores, sem conta v1); C18 liberada |
 
 Evidências por release vivem em `docs/evidence/<marco-ou-release>/`
 (criado quando houver a primeira entrega executável).
