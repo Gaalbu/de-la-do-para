@@ -395,3 +395,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Mudanças | Criado `tasks/plan.md` com fatias C30 (totais canônicos + BT) e C31 (reserva atômica + BI), dependências, gates e bloqueios; rastreio atualizado |
 | Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop` após edição; sem código funcional |
 | Próximo passo | Revisão das specs C25/C29 e decisão do ciclo global de cupons; depois iniciar C30 |
+
+## Sessão 2026-09-21 — C30 totais canônicos
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@7259c35`; implementação em `feat/c30-pricing-totals` |
+| Tarefa | C30 — calcular total canônico em centavos BRL |
+| Mudanças | Criados `PurchaseLine`, `PurchaseTotalRequest`, `CouponDiscount`, `PurchaseTotal` e `PurchaseTotalCalculator`; desconto percentual half-up, desconto fixo limitado ao subtotal, frete e total com aritmética exata |
+| Verificação | RED por compilação sem tipos; depois teste focado verde e `./mvnw -q -DargLine=-Xint verify` verde; `aislop scan --staged --json`: 100/100, zero achados |
+| Remoto | Commit `a7a0551`; PR #38: https://github.com/Gaalbu/de-la-do-para/pull/38; CI 7/7 verde, aberta e mergeable; nenhum merge automático |
+| Próximo passo | Definir contador global de cupons e iniciar C31; expor cálculo por API só quando o contrato de checkout estiver definido |
