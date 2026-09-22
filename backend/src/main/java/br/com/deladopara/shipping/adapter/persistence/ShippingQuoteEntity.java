@@ -94,4 +94,8 @@ public class ShippingQuoteEntity {
     public UUID getSnapshotId() {
         return snapshotId;
     }
+
+    public String getPackageSequences() {
+        return packageSequences;
+    }
 }
