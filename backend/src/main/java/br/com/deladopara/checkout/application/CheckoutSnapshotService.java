@@ -87,6 +87,18 @@ public class CheckoutSnapshotService {
         return pickupOptions.evaluate(snapshot.getItems());
     }
 
+    @Transactional(readOnly = true)
+    public PickupOptionsService.PickupOption selectPickupOption(
+            String sessionId, UUID snapshotId, long snapshotVersion, String optionId) {
+        var sessionKey = GuestCartService.hashSession(sessionId);
+        var snapshot =
+                snapshots.findByIdAndGuestSessionKey(snapshotId, sessionKey).orElseThrow();
+        if (snapshot.getCartVersion() != snapshotVersion) {
+            throw new SnapshotVersionConflictException();
+        }
+        return pickupOptions.select(snapshot.getItems(), optionId);
+    }
+
     @Transactional
     public CheckoutSnapshotEntity start(String sessionId) {
         var sessionKey = GuestCartService.hashSession(sessionId);

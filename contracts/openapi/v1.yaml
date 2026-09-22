@@ -769,6 +769,26 @@ paths:
         '404': {$ref: '#/components/responses/Problem404'}
         '409': {$ref: '#/components/responses/Problem409'}
 
+  /api/v1/checkout/{snapshotId}/pickup-selection:
+    post:
+      operationId: selectCheckoutPickupOption
+      summary: Validar e selecionar uma opção de retirada
+      security: []
+      parameters:
+        - {in: path, name: snapshotId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: snapshotVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/PickupSelectionRequest'}}
+      responses:
+        '200':
+          description: Opção de retirada validada para o snapshot
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/PickupSelection'}}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
   /api/v1/cart/items:
     put:
       operationId: replaceGuestCartItems
@@ -1391,6 +1411,21 @@ components:
         quoteId: {type: string, format: uuid}
         snapshotVersion: {type: integer, format: int64, minimum: 0}
         inputFingerprint: {type: string, minLength: 1}
+    PickupSelectionRequest:
+      type: object
+      additionalProperties: false
+      required: [pickupOptionId]
+      properties:
+        pickupOptionId: {type: string, minLength: 1}
+    PickupSelection:
+      type: object
+      additionalProperties: false
+      required: [id, point, window, preparationDays]
+      properties:
+        id: {type: string}
+        point: {type: string}
+        window: {type: string}
+        preparationDays: {type: integer, minimum: 0}
     PublicProductSku:
       type: object
       additionalProperties: false

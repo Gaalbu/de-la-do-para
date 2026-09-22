@@ -43,6 +43,17 @@ public class PickupOptionsService {
         }
     }
 
+    public PickupOption select(String snapshotItems, String optionId) {
+        var options = evaluate(snapshotItems);
+        if (!"AVAILABLE".equals(options.status())) {
+            throw new PickupSelectionConflictException();
+        }
+        return options.options().stream()
+                .filter(option -> option.id().equals(optionId))
+                .findFirst()
+                .orElseThrow(PickupSelectionConflictException::new);
+    }
+
     private boolean isPickupEligible(UUID skuId) {
         return skus.findById(skuId)
                 .filter(sku -> sku.isActive() && sku.isPickupEligible())
@@ -52,4 +63,6 @@ public class PickupOptionsService {
     public record PickupOptions(String status, List<PickupOption> options, List<UUID> unavailableSkuIds) {}
 
     public record PickupOption(String id, String point, String window, int preparationDays) {}
+
+    public static class PickupSelectionConflictException extends RuntimeException {}
 }

@@ -1,6 +1,7 @@
 package br.com.deladopara.checkout.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,5 +23,16 @@ class PickupOptionsServiceTest {
 
         assertThat(result.status()).isEqualTo("UNAVAILABLE");
         assertThat(result.unavailableSkuIds()).containsExactly(skuId);
+    }
+
+    @Test
+    void rejectsSelectionWhenPickupIsUnavailable() {
+        var skus = mock(ProductSkuRepository.class);
+        var skuId = UUID.randomUUID();
+        when(skus.findById(skuId)).thenReturn(java.util.Optional.empty());
+        var service = new PickupOptionsService(skus, new ObjectMapper());
+
+        assertThatThrownBy(() -> service.select("[{\"skuId\":\"" + skuId + "\",\"quantity\":1}]", "PONTO-DEMO-BELEM"))
+                .isInstanceOf(PickupOptionsService.PickupSelectionConflictException.class);
     }
 }

@@ -50,6 +50,7 @@ export class CheckoutService {
   readonly options = signal<ShippingQuote[] | null>(null);
   readonly pickupOptions = signal<PickupOptions | null>(null);
   readonly selectedOption = signal<ShippingQuote | null>(null);
+  readonly selectedPickupOption = signal<PickupOption | null>(null);
 
   async quote(postalCode: string): Promise<boolean> {
     this.loading.set(true);
@@ -60,6 +61,7 @@ export class CheckoutService {
     this.options.set(null);
     this.pickupOptions.set(null);
     this.selectedOption.set(null);
+    this.selectedPickupOption.set(null);
     try {
       const snapshot = await firstValueFrom(
         this.http.post<CheckoutSnapshot>('/api/v1/checkout/snapshots', {}),
@@ -107,10 +109,32 @@ export class CheckoutService {
         ),
       );
       this.selectedOption.set(option);
+      this.selectedPickupOption.set(null);
       return true;
     } catch {
       this.error.set(true);
       this.errorMessage.set('Esta cotação mudou ou expirou. Consulte as opções novamente.');
+      return false;
+    }
+  }
+
+  async selectPickup(option: PickupOption): Promise<boolean> {
+    const snapshot = this.snapshot();
+    if (!snapshot) return false;
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `/api/v1/checkout/${snapshot.snapshotId}/pickup-selection`,
+          { pickupOptionId: option.id },
+          { params: { snapshotVersion: snapshot.snapshotVersion } },
+        ),
+      );
+      this.selectedPickupOption.set(option);
+      this.selectedOption.set(null);
+      return true;
+    } catch {
+      this.error.set(true);
+      this.errorMessage.set('Esta opção de retirada mudou. Consulte as opções novamente.');
       return false;
     }
   }
