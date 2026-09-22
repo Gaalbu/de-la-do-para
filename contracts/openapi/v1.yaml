@@ -934,7 +934,8 @@ components:
         category: FOOD
         producerId: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
         skus:
-          - skuCode: DEMO-200G
+          - id: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+            skuCode: DEMO-200G
             salesUnit: Pacote
             netContentGrams: 200
             minimumShelfLifeDays: 30
@@ -1095,7 +1096,8 @@ components:
           description: Texto editorial fictício de demonstração.
           demonstration: true
         skus:
-          - skuCode: DEMO-200G
+          - id: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+            skuCode: DEMO-200G
             salesUnit: Pacote
             netContentGrams: 200
             minimumShelfLifeDays: 30
@@ -1237,8 +1239,9 @@ components:
     PublicProductSku:
       type: object
       additionalProperties: false
-      required: [skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, priceCents, availableUnits]
+      required: [id, skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, priceCents, availableUnits]
       properties:
+        id: {type: string, format: uuid}
         skuCode: {type: string}
         salesUnit: {type: string}
         netContentGrams: {type: [integer, 'null'], minimum: 1}

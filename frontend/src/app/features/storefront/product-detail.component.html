@@ -36,6 +36,7 @@
             <p>{{ formatPrice(sku.priceCents) }}</p>
             @if (sku.availableUnits > 0) {
               <span class="availability">Disponível · {{ sku.availableUnits }} unidade(s)</span>
+              <button type="button" (click)="addToCart(sku.id)">Adicionar ao carrinho</button>
             } @else {
               <span class="availability">Indisponível no momento</span>
             }

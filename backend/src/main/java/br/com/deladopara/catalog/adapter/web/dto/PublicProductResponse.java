@@ -38,6 +38,7 @@ public record PublicProductResponse(
                         producer.getDisplayName(), producer.getOriginLabel(), producer.getDescription(), true),
                 skus.stream()
                         .map(sku -> new PublicProductSku(
+                                sku.id(),
                                 sku.skuCode(),
                                 sku.salesUnit(),
                                 sku.netContentGrams(),
@@ -55,6 +56,7 @@ public record PublicProductResponse(
     public record PublicProducer(String displayName, String originLabel, String description, boolean demonstration) {}
 
     public record PublicProductSku(
+            UUID id,
             String skuCode,
             String salesUnit,
             Integer netContentGrams,

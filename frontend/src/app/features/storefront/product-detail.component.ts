@@ -2,8 +2,10 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { CartService } from '../cart/cart.service';
 
 interface PublicSku {
+  id: string;
   skuCode: string;
   salesUnit: string;
   netContentGrams: number | null;
@@ -31,6 +33,7 @@ interface PublicProduct {
 export class ProductDetailComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
+  readonly cartService = inject(CartService);
 
   readonly product = signal<PublicProduct | null>(null);
   readonly loading = signal(true);
@@ -59,5 +62,10 @@ export class ProductDetailComponent implements OnInit {
     return cents === null
       ? 'Preço indisponível'
       : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+  }
+
+  async addToCart(skuId: string): Promise<void> {
+    if (!this.cartService.cart()) await this.cartService.load();
+    await this.cartService.add(skuId);
   }
 }

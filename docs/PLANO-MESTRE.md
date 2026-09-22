@@ -1536,7 +1536,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C40 — `feat(cart-ui): edit a persistent guest shopping cart`
 
-- [ ] **Depende:** C35, C36, C39a. **Alvos:** `F/cart`, contador/resumo e testes; M.
+- [x] **Depende:** C35, C36, C39a. **Alvos:** `F/cart`, contador/resumo e testes; M. Implementado nesta entrega.
 - **Aceite:** carrinho sobrevive a reload; erro de estoque explicado; totais vêm do contrato backend.
 - **Verificar:** F/E; visitante adiciona, muda quantidade e retoma carrinho sem conta.
 

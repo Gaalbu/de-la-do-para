@@ -501,3 +501,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Sessão HTTP é persistida somente como SHA-256; mutações exigem CSRF e `expectedVersion`.
 - Duplicidade de SKU, SKU inativo/inexistente, versão obsoleta e concorrência JPA retornam erros contratuais.
 - Teste `GuestCartApiIT` cobre reload, mutação, conflito e remoção; próximo passo é C40 (UI persistente) após publicar o PR.
+## Sessão 2026-09-22 — C40 UI de carrinho persistente
+
+- C39a foi mergeado no PR #51 (`22f8ae7`) após correção do contrato de rotas e isolamento do handler de validação.
+- Implementada UI `/cart`, contador no cabeçalho e integração de adicionar/editar/remover/limpar com `expectedVersion`.
+- O SKU público agora expõe seu UUID para a UI; contrato OpenAPI e geração TypeScript foram atualizados.
+- Validação frontend: 16 testes, build, lint, format e contracts:check verdes; backend de catálogo/carrinho validado localmente.
+- Próximo passo: C41, regras de cotação/expedição.
