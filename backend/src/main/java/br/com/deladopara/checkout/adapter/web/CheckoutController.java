@@ -39,11 +39,13 @@ public class CheckoutController {
             @RequestParam long snapshotVersion,
             @RequestParam String postalCode,
             HttpServletRequest request) {
-        return new DeliveryOptionsResponse(
-                snapshotId,
-                snapshotVersion,
-                snapshots.findDeliveryOptions(
-                        request.getSession(true).getId(), snapshotId, snapshotVersion, postalCode));
+        var options = snapshots.findDeliveryOptions(
+                request.getSession(true).getId(), snapshotId, snapshotVersion, postalCode);
+        var inputFingerprint = options.stream()
+                .map(ShippingQuote::inputFingerprint)
+                .findFirst()
+                .orElse(null);
+        return new DeliveryOptionsResponse(snapshotId, snapshotVersion, inputFingerprint, options);
     }
 
     @PostMapping("/{snapshotId}/delivery-selection")
@@ -60,7 +62,7 @@ public class CheckoutController {
     public record SnapshotResponse(UUID snapshotId, long snapshotVersion) {}
 
     public record DeliveryOptionsResponse(
-            UUID snapshotId, long snapshotVersion, java.util.List<ShippingQuote> options) {}
+            UUID snapshotId, long snapshotVersion, String inputFingerprint, java.util.List<ShippingQuote> options) {}
 
     public record SelectionRequest(UUID quoteId, String inputFingerprint) {}
 

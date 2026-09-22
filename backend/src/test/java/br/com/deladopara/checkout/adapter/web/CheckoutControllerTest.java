@@ -60,6 +60,7 @@ class CheckoutControllerTest {
         var response = controller.deliveryOptions(snapshotId, 4, "66053-000", request);
 
         assertThat(response.options()).containsExactly(quote);
+        assertThat(response.inputFingerprint()).isEqualTo("fingerprint");
     }
 
     @Test

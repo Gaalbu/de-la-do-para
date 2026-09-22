@@ -660,3 +660,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - A UI agora diferencia erro de consulta do CEP de cotação rejeitada por mudança/expiração, preservando a tela e permitindo nova consulta.
 - Teste do serviço cobre resposta `410` server-side sem marcar uma opção como selecionada; frontend passou com 9 arquivos/23 testes, lint e formatação OK.
 - Próximo passo: publicar essa recuperação, conferir o CI remoto e então avaliar a origem server-side de retirada prevista na spec.
+
+## Sessão 2026-09-22 — C44 fingerprint no envelope da cotação
+
+- A resposta de `delivery-options` agora expõe `inputFingerprint` no envelope, conforme `SPEC-checkout`, mantendo também o valor em cada cotação para a seleção explícita.
+- Controller testado com fingerprint retornado e OpenAPI atualizado; `contracts:lint` válido com os 11 avisos preexistentes.
+- Próximo passo: publicar a correção e acompanhar o CI; retirada segue separada até existir contrato e origem server-side.

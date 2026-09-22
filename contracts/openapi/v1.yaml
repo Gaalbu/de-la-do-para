@@ -1308,10 +1308,11 @@ components:
     DeliveryOptions:
       type: object
       additionalProperties: false
-      required: [snapshotId, snapshotVersion, options]
+      required: [snapshotId, snapshotVersion, inputFingerprint, options]
       properties:
         snapshotId: {type: string, format: uuid}
         snapshotVersion: {type: integer, format: int64, minimum: 0}
+        inputFingerprint: {type: [string, 'null']}
         options:
           type: array
           items: {$ref: '#/components/schemas/ShippingQuote'}
