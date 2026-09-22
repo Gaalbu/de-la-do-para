@@ -292,3 +292,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PR #30 de C17 OPEN/MERGEABLE, CI 7/7 no head `91ed77b`; implementação C18/C19 ainda não publicada. |
 | Próximo passo | C20 UI de gestão administrativa, coberta por teste browser real e reload da lista/detalhes. |
 | Perguntas | Nenhuma nova; produtores não têm conta própria na v1. |
+
+## Sessão 2026-09-21 — C20 interface administrativa de produtores
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c18-producer-persistence` (C18/C19); branch `feat/c20-producer-admin-ui`; `.angular/` preexistente não rastreado preservado |
+| Decisões | D65 aplicada: somente admin; desativar em vez de apagar; conteúdo fictício/amplo com identificação de demonstração. SSR de `/admin` renderiza o shell sem cookies; autorização efetiva ocorre no guard do browser e, obrigatoriamente, na API. |
+| Mudanças | Página administrativa lista/pagina produtores ativos e inativos, cria, edita e desativa/restaura; formulário acessível com required/pattern/maxlength, avisos contra endereço/coordenadas/alegações e estados de loading/erro/sucesso. Sem ação de exclusão. Corrigido guard SSR: sessão baseada em cookie só é consultada no browser; API segue responsável por autorização. |
+| Verificação | `./scripts/verify.sh frontend` passou: lint, format, 6 testes Angular, build SSR, Playwright 2/2. `verify.sh docs`, `contracts` (10 avisos Redocly), `security` (0 vulnerabilidades runtime; 4 high dev-only preexistentes em js-yaml) passaram; `git diff --check` OK; aislop 100/100 sem findings. |
+| Remoto | Commit `02bf308` enviado; PR #32 aberto/mergeable sobre `feat/c18-producer-persistence`; CI em execução. PR #31 (C18/C19) aberto/mergeable e CI 7/7 verde. |
+| Próximo passo | Aguardar/inspecionar CI de #32; sem merge automático. |
+| Perguntas | Nenhuma. |
