@@ -21,6 +21,7 @@ export interface ShippingQuote {
 export interface DeliveryOptions {
   snapshotId: string;
   snapshotVersion: number;
+  inputFingerprint: string | null;
   options: ShippingQuote[];
 }
 
