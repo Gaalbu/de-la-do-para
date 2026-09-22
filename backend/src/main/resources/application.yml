@@ -8,6 +8,10 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   jpa:
     hibernate:
       ddl-auto: validate
@@ -24,6 +28,13 @@ spring:
     jdbc:
       initialize-schema: never
     timeout: 30m
+    cookie:
+      name: DLSESSION
+      http-only: true
+      secure: true
+      same-site: lax
+      path: /
+      max-age: 43200
   mail:
     host: localhost
     port: 11025
@@ -32,19 +43,10 @@ spring:
       mail.smtp.starttls.enable: false
 
 app:
+  media:
+    directory: ${APP_MEDIA_DIRECTORY:./data/media}
   identity:
     bcrypt-strength: 12
-
-server:
-  servlet:
-    session:
-      cookie:
-        name: DLSESSION
-        http-only: true
-        secure: true
-        same-site: lax
-        path: /
-        max-age: 12h
 
 management:
   endpoints:
@@ -64,3 +66,48 @@ management:
       enabled: false
     db:
       enabled: true
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: worker
+
+app:
+  eventing:
+    publisher:
+      bootstrap-servers: ${APP_EVENTING_BOOTSTRAP_SERVERS}
+      topic: ${APP_EVENTING_TOPIC}
+      lease: ${APP_EVENTING_LEASE}
+      batch-size: ${APP_EVENTING_BATCH_SIZE}
+      poll-delay: ${APP_EVENTING_POLL_DELAY}
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:55432}/${POSTGRES_DB:deladopara}
+    username: ${POSTGRES_USER:deladopara}
+    password: ${POSTGRES_PASSWORD:deladopara}
+  mail:
+    host: localhost
+    port: 11025
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  flyway:
+    enabled: true
+  mail:
+    host: localhost
+    port: 3025
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never

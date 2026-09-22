@@ -1,10 +1,10 @@
 # Registro de decisões — De Lá do Pará
 
-Transcrição fiel das decisões aprovadas pelo usuário (D01–D64), das propostas
+Transcrição fiel das decisões aprovadas pelo usuário (D01–D67), das propostas
 técnicas em revisão (A01–A10) e das perguntas com encaminhamento. Fonte:
 `docs/PLANO-MESTRE.md` (consolidação 20/09/2026). Quando houver sobreposição,
 a decisão mais recente e específica prevalece. Não repetir perguntas já
-respondidas em D01–D64.
+respondidas em D01–D65.
 
 ## Decisões confirmadas pelo usuário
 
@@ -74,6 +74,10 @@ respondidas em D01–D64.
 | D62 | Monorepo: `backend/`, `frontend/`, `contracts/`, `infra/`, `docs/`, `specs/`, `tasks/` |
 | D63 | Documentação da API e testes obrigatórios por funcionalidade |
 | D64 | Auth: e-mail/senha, Spring Security + sessões PostgreSQL, cookie protegido, CSRF; compra convidada; e-mails no Mailpit |
+| D65 | Produtor referenciado não pode ser excluído fisicamente; permite desativação. Exibir apenas localidade ampla e texto editorial fictício, ambos rotulados como demonstração, sem coordenadas/endereço nem alegações verificáveis |
+| D66 | Pedido pronto para retirada fica guardado por 3 dias úteis. Após o prazo, abrir análise administrativa; sem cancelamento, descarte ou reembolso automáticos e mantendo o estoque comprometido até resolução explícita |
+| D67 | Fixture de teste C25 usa lotes explicitamente sintéticos e relógio fixo: para cada alimento, um lote atende exatamente à margem D54 na chegada prevista e outro fica um dia abaixo. Não representa estoque real |
+| D68 | Após qualquer pacote ser entregue à transportadora, os demais pacotes continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
 
 ## Propostas técnicas (revisão do plano, não respostas do usuário)
 
@@ -100,6 +104,17 @@ respondidas em D01–D64.
   Q03e→D25; Q03f→D26; Q04a→D27; Q05a→D29; Q05b→D30; Q05c→D31; Q06a→D33;
   Q06b→D34; Q10a→D37; Q08a→D38; Q08b→D39; Q08c→D40; Q08d→D41; Q09→D42;
   Q04b→D54; Q10b→D55; Q10→D59/D60.
+- **C24a (2026-09-21):** guarda de retirada de 3 dias úteis com análise manual
+  (D66); fixture sintética de lotes com relógio fixo e fronteiras de validade
+  (D67). São decisões do usuário; não representam estoque ou operação reais.
+- **CAT-Q01 (C18, respondida pelo usuário em 2026-09-21):** produtores são
+  geridos somente por administradores na v1; produtores não têm contas nem
+  acesso próprio. A decisão não autoriza portal de produtor.
+- **CAT-Q02/Q03 (C19, respondidas pelo usuário em 2026-09-21; D65):** produtor
+  referenciado não pode ser apagado fisicamente; desativação é permitida. A
+  procedência exposta limita-se a localidade ampla e texto editorial fictício,
+  identificados como demonstração; não expor coordenadas, endereço ou alegação
+  verificável.
 - **Pendências reais por etapa** (sem inferência silenciosa): URL/owner/repo e
   namespace (C00a/C00b/C05 — repo criado, namespace `br.com.deladopara`
   proposto); specs e propostas A-abertas (C01/C02 + spec do módulo); tons/

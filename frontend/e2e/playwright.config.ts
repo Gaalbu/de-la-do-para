@@ -9,9 +9,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm start -- --port 4200',
+    command: 'node ../dist/frontend/server/server.mjs',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env['CI'],
-    timeout: 180_000,
+    timeout: 30_000,
+    env: {
+      PORT: '4200',
+    },
   },
 });

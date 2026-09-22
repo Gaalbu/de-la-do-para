@@ -1,0 +1,48 @@
+<section class="detail" aria-labelledby="product-title">
+  <p><a routerLink="/">← Voltar à vitrine</a></p>
+  @if (loading()) {
+    <p class="state" role="status">Carregando produto…</p>
+  } @else if (error() || !product()) {
+    <div class="state state-error" role="alert">
+      <strong>Produto não disponível.</strong>
+      <span>Ele pode ter sido desativado ou não existe na vitrine.</span>
+    </div>
+  } @else {
+    <div class="detail-heading">
+      <div>
+        <p class="eyebrow">{{ product()!.category === 'FOOD' ? 'Alimento' : 'Artesanato' }}</p>
+        <h1 id="product-title">{{ product()!.displayName }}</h1>
+        <p class="description">{{ product()!.description }}</p>
+      </div>
+      @if (product()!.image; as image) {
+        <img [src]="image.url" [alt]="image.altText" />
+      }
+    </div>
+    <aside class="provenance" aria-labelledby="origin-title">
+      <p class="eyebrow" id="origin-title">De onde vem</p>
+      <h2>{{ product()!.producer.displayName }}</h2>
+      <p>{{ product()!.producer.originLabel }}</p>
+      <p>{{ product()!.producer.description }}</p>
+    </aside>
+    <section aria-labelledby="variants-title">
+      <h2 id="variants-title">Escolha uma variante</h2>
+      <div class="variants">
+        @for (sku of product()!.skus; track sku.skuCode) {
+          <article class="variant" [class.unavailable]="sku.availableUnits === 0">
+            <div>
+              <strong>{{ sku.skuCode }}</strong
+              ><span>{{ sku.salesUnit }}</span>
+            </div>
+            <p>{{ formatPrice(sku.priceCents) }}</p>
+            @if (sku.availableUnits > 0) {
+              <span class="availability">Disponível · {{ sku.availableUnits }} unidade(s)</span>
+              <button type="button" (click)="addToCart(sku.id)">Adicionar ao carrinho</button>
+            } @else {
+              <span class="availability">Indisponível no momento</span>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>

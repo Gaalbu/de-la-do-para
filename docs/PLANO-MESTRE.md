@@ -2,7 +2,7 @@
 
 Documento autossuficiente para um executor de código com contexto limitado. Data de consolidação: 20/09/2026. Contém todas as decisões e os oito documentos de planejamento, com referências internas e complementos de execução/CI/CD.
 
-**Estado atual:** planejamento documental. Nenhum backend, frontend, workflow executável, repositório novo ou commit de implementação foi criado nesta entrega. A criação deste arquivo não é autorização para começar a codificação. Quando o usuário pedir a execução, seguir este roteiro. Não repetir perguntas já respondidas em D01–D64.
+**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D65.
 
 ## Índice de leitura
 
@@ -32,7 +32,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 
 - Este arquivo é suficiente para retomar o projeto: não depender do histórico do chat, de memória do modelo ou da existência da pasta de documentos original.
 - Requisitos adicionais desta consolidação: clone do **novo** repositório em `/home/gaalbu/codigos`, pipeline CI/CD obrigatória, documentação verificada, commits limpos e código enxuto. Eles atualizam trechos anteriores que chamavam CI de opcional.
-- As decisões D01–D64 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes e D64 autenticação.
+- As decisões D01–D65 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
 - A01/A03/A05/A06/A07/A10 são propostas técnicas detalhadas. Validar compatibilidade e registrar em ADR nas etapas indicadas; não apresentá-las como respostas explícitas do usuário. Decisões comerciais ou arquitetônicas ainda ambíguas devem ser perguntadas, uma de cada vez, com opções e recomendação. Não transformar silêncio em aprovação.
 - Dados de preços, produtores, lotes, embalagens e origem da demonstração são fictícios ou referências de teste identificadas. Não alegar proteção física de embalagem, segurança alimentar, operação em produção ou disponibilidade de marca.
 - Não copiar código, identidade, namespace, dados pessoais, credenciais ou histórico Git do LAPES Commerce. Usar apenas os aprendizados funcionais descritos neste documento.
@@ -43,7 +43,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 1. Ler esta seção, o registro de progresso e apenas a spec/módulo/tarefa relevante. Não reler todo o documento a cada pequena mudança.
 2. Conferir `git status --short`, branch, remoto e último SHA antes de editar. Preservar mudanças do usuário. Não usar reset/clean/force-push para resolver dúvidas.
 3. Selecionar o primeiro ID pendente com dependências concluídas. Trabalhar em uma intenção por vez, em branch curta.
-4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D64.
+4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D65.
 5. Definir contrato e exemplos. Para comportamento, escrever teste que falha pelo motivo esperado; implementar o mínimo e refatorar com o teste passando.
 6. Atualizar documentação e exemplos no mesmo conjunto da mudança. Cada endpoint deve ter teste HTTP e contrato; cada regra crítica deve ter teste de limite/falha.
 7. Rodar os gates previstos e revisar o diff. Não pular testes para economizar tempo; não alegar aprovação se Docker, navegador, sandbox ou ferramenta não executou.
@@ -168,7 +168,7 @@ Não criar uma nova sequência interminável de perguntas sobre preferências j�
 | Capacidade real das integrações e idempotência de provedores | C04/C53/C65 | Verificar docs oficiais e sandbox, registrar limitação, não inventar garantias |
 | Calendário concreto de feriados, lotes/estoque inicial e regras de datas | Specs inventory/shipping | Propor fixtures reproduzíveis e calendário com fonte; confirmar o que muda a regra comercial |
 | Prazo de guarda da retirada, não comparecimento, validade na retirada tardia | Specs orders/shipping | Formular pergunta antes de implementar expiração/descarte/reembolso automático |
-| Decisões administrativas após despacho parcial | Specs checkout/payments/shipping | Solicitação sem reembolso automático já aprovada; critérios para conclusão ainda precisam da spec |
+| Decisões administrativas após despacho parcial | Specs checkout/payments/shipping | Após um pacote ser entregue à transportadora, os demais continuam por padrão; pausar exige decisão administrativa, sem cancelamento ou reembolso automático ou parcial (D68) |
 | Política de reserva/liberação do contador global de cupons | Spec pricing | Reutilização por e-mail após reembolso já aprovada; documentar sem inferir reset ilimitado global |
 | Licença do código público, destino final de releases e publicação | Preparação do repositório/release | Perguntar; repo público não implica licença escolhida, marca livre ou publicação de vídeo autorizada |
 
@@ -282,6 +282,10 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D62 | Um único repositório público (monorepo) com backend/, frontend/, contracts/, infra/, docs/, specs/ e tasks/. Backend e frontend mantêm builds próprios; specs, contratos, código e evidências versionados juntos. Nenhuma criação de repositório ou codificação nesta etapa |
 | D63 | Documentação da API e testes são prioridades explícitas, corrigindo a deficiência relatada pelo usuário no projeto anterior. Cada funcionalidade exige contratos, exemplos, erros, testes e evidências atualizados antes de ser considerada concluída |
 | D64 | Autenticação aprovada: e-mail e senha para contas opcionais e administradores, Spring Security com sessões persistidas no PostgreSQL, cookie protegido e CSRF. Compra convidada preservada; confirmação de e-mail e recuperação de senha demonstradas no Mailpit |
+| D65 | Produtor referenciado não pode ser removido fisicamente; pode ser desativado. Procedência apresentada apenas como localidade ampla e texto editorial fictício, rotulados como demonstração; sem coordenadas, endereço ou alegações verificáveis |
+| D66 | Pedido pronto para retirada fica guardado por 3 dias úteis. Depois, abrir análise administrativa sem cancelar, descartar ou reembolsar automaticamente; manter estoque comprometido até resolução explícita |
+| D67 | Fixture C25 usa lotes explicitamente sintéticos e relógio fixo: por alimento, um lote atende exatamente à margem D54 na chegada prevista e outro fica um dia abaixo. A fixture não representa estoque real |
+| D68 | Após qualquer pacote ser entregue à transportadora, os demais continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
 
 D11–D13 são as regras adotadas no planejamento por resposta expressa do usuário. O marco de expedição foi definido em D29. O despacho parcial segue D30. O limite de cancelamento de retirada e a proteção contra conclusão simultânea seguem D31.
 
@@ -1344,57 +1348,63 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C17 — `docs(catalog): specify provenance products and packaging`
 
-- [ ] **Depende:** C01, C02, C03. **Alvos:** `specs/SPEC-catalog.md`, contrato catálogo; S.
+- [x] **Depende:** C01, C02, C03. **Alvos:** `specs/SPEC-catalog.md`, contrato catálogo; S.
 - **Aceite:** produtor/produto/SKU/imagem definidos; alimentos e artesanato têm campos pertinentes; conservação, embalagem e política de remoção explícitas.
 - **Verificar:** DOC; modelagem respeita BRL, ponto único e unidade/SKU confirmados em D17.
 
 ### C18 — `feat(catalog): persist producers and provenance`
 
-- [ ] **Depende:** C09, C17. **Alvos:** produtor, repositório, migration e teste de persistência; M.
-- **Aceite:** origem e descrição persistidas; constraints garantem identidade; alteração preserva relações existentes.
-- **Verificar:** BI(ProducerPersistence) com PostgreSQL e migration.
+- [x] **Depende:** C09, C17. **Alvos:** produtor, repositório, migration e teste de persistência; M.
+- **Divisão operacional:** C18a persiste entidade/migration com teste de esquema e integridade; C18b adiciona o repositório com teste de leitura/atualização. Cada fatia deve respeitar o limite de arquivos manuais do ciclo SDD.
+- **Aceite:** origem e descrição persistidas; constraints garantem identidade; atualização conserva o UUID estável que serve de alvo às relações de produtos adicionadas em C21.
+- **Verificar:** BI(ProducerPersistence) com PostgreSQL real, aplicação da migration, unicidade e identidade estável após atualização — C18a/C18b verificadas localmente.
 
 ### C19 — `feat(catalog): expose authorized producer management`
 
-- [ ] **Depende:** C15, C18. **Alvos:** API/aplicação/DTOs de produtor e testes; M.
-- **Aceite:** criar/editar/consultar produtor; validação de dados; somente admin modifica.
-- **Verificar:** BI(ProducerApi), C e isolamento de papéis.
+- [x] **Depende:** C15, C18. **Alvos:** API/aplicação/DTOs de produtor e testes; M.
+- **Contrato:** `GET/POST /api/v1/admin/producers`, `GET/PATCH /api/v1/admin/producers/{id}`; paginação 0–50, corpo integral no PATCH, sem DELETE; respostas sempre rotulam a procedência fictícia (`demonstration: true`).
+- **Aceite:** criar/editar/consultar e desativar produtor; validação de dados; somente admin modifica; referências históricas não são removidas.
+- **Verificar:** BI(ProducerAdminApi) com PostgreSQL/Testcontainers, contrato OpenAPI e geração Angular; isolamento de papéis, CSRF, erros e ausência de DELETE — aprovado localmente.
 
 ### C20 — `feat(catalog-ui): edit producers and provenance`
 
-- [ ] **Depende:** C16, C19. **Alvos:** `F/admin/producers`, formulário e teste; M.
-- **Aceite:** admin cadastra e altera produtor; erros por campo; mudança visível depois de recarregar.
-- **Verificar:** F/E; um produtor de demonstração aparece com origem correta.
+- [x] **Depende:** C16, C19. **Alvos:** `F/admin/producers`, formulário e teste; M.
+- **Aceite:** admin cadastra e altera produtor; validação nativa por campo; mudança visível depois de recarregar.
+- **Verificar:** testes Angular e Playwright; produtor demonstração aparece com origem ampla correta, pode ser desativado/restaurado e não tem exclusão física — aprovado localmente.
 
 ### C21 — `feat(catalog): persist products and shippable SKUs`
 
-- [ ] **Depende:** C18. **Alvos:** produto/SKU, repositório, migration e teste; M.
+- [x] **Depende:** C18. **Alvos:** produto/SKU, repositório, migration e teste; M.
 - **Aceite:** SKU identificável, embalagem e vínculo ao produtor; dados inválidos rejeitados; remoção lógica não quebra snapshots futuros.
-- **Verificar:** BI(ProductPersistence), incluindo SKU repetido e dimensão inválida.
+- **Verificar:** `ProductRepositoryIT` com PostgreSQL/Testcontainers, testes de categoria/embalagem; SKU repetido e dimensão inválida rejeitados, múltiplas variantes e IDs preservados ao editar/desativar — C21 commitada em `7e009a0`, PR #33 aberta sobre C20; validação local aprovada.
 
 ### C22 — `feat(catalog): add product administration contracts`
 
-- [ ] **Depende:** C15, C21. **Alvos:** aplicação/controller/DTOs de produto e testes; M.
+- [x] **Depende:** C15, C21. **Alvos:** aplicação/controller/DTOs de produto e testes; M.
 - **Aceite:** criar/editar/desativar produto; desativado some da oferta pública; erros HTTP seguem contrato.
-- **Verificar:** BI(ProductApi), C e permissões.
+- **Verificar:** `ProductAdminApiIT`, cobertura de rotas do OpenAPI, geração TypeScript; CSRF/papel admin, variantes, desativação fora da consulta pública e `Problem Details` — gate backend completo, contrato e docs aprovados localmente.
 
 ### C23 — `feat(catalog-ui): manage products and packaging details`
 
-- [ ] **Depende:** C20, C22. **Alvos:** `F/admin/products`, formulário e teste; M.
+- [x] **Depende:** C20, C22. **Alvos:** `F/admin/products`, formulário e teste; M.
 - **Aceite:** admin gerencia alimento/artesanato com campos próprios; seleção de produtor; confirmação ao desativar.
-- **Verificar:** F/E; preencher, corrigir erro e editar um produto de cada tipo.
+- **Verificar:** `./scripts/verify.sh frontend` aprovado: lint, formato, 10 testes Angular, build SSR e Playwright 3/3. Jornada cobre preencher alimento, recuperar conflito, editar alimento e artesanato e confirmar desativação; API do E2E simulada, API real coberta em C22.
 
 ### C24 — `feat(media): store validated product images locally`
 
-- [ ] **Depende:** C22, C23. **Alvos:** adapter de arquivo do catálogo, API e controle de imagem; M.
-- **Aceite:** upload autenticado com limite de tamanho/tipo e nome interno seguro; imagens persistem em volume; conteúdo acessível com descrição alternativa.
-- **Verificar:** testes de upload inválido/traversal, F/E e reinício preservando imagens. Não buscar URLs arbitrárias no servidor.
+- [x] **Depende:** C22, C23. **Alvos:** adapter de arquivo do catálogo, API e controle de imagem; M.
+- **Aceite:** upload autenticado com limite de tamanho/tipo e nome interno seguro; imagem opcional por produto persiste em diretório local configurável; conteúdo acessível com descrição alternativa.
+- **Verificar:** `CatalogMediaApiIT`, testes de validação/armazenamento, contrato, build/UI, Playwright e gates de segurança/docs. Um adapter novo lê o arquivo persistido. Não buscar URLs arbitrárias no servidor.
+- **Decisões C24:** uma imagem principal por produto; JPEG/PNG até 5 MiB, escolhidos pelo usuário em 21/09/2026. A spec define limites técnicos de decodificação e metadados de licença/atribuição.
+- **Verificado:** processamento JPEG/PNG com limite 5 MiB, metadados e migration V16; rotas admin/pública com sessão/CSRF e verificação de estado; formulário de upload/prévia/remoção; `APP_MEDIA_DIRECTORY` padrão `./data/media`. Backend completo (31 testes unitários, 18 integrações, PostgreSQL 18.6, Spotless e Checkstyle), frontend (11 Angular, SSR e Playwright 3/3), contrato, docs, segurança e `aislop` passaram. PR #36 foi merged no commit `b66326b`; CI `35656338034` passou 7/7.
+- **Divisão operacional:** C24a validação/armazenamento e metadados; C24b API/contratos; C24c administração e acessibilidade; C24d persistência local, documentação e gates. Cada fatia mantém o build executável.
 
 ### C24a — `docs(logistics): record individual delivery and coupon policy decisions`
 
-- [ ] **Depende:** C01, C17, C24. **Alvos:** decisões de logística/cancelamento/cupons e exemplos comerciais; M.
-- **Aceite:** transcrever as respostas já aprovadas de Q03a–Q06b e D21–D60 nas specs, sem repeti-las ao usuário; apresentar separadamente apenas lacunas reais listadas na seção de pendências, com proposta concreta e recomendação.
+- [ ] **Depende:** C01, C17, C24. **Alvos:** `specs/SPEC-logistics.md`, base de preço/cupons em `specs/SPEC-pricing.md`, decisões e rastreio; M.
+- **Aceite:** transcrever as respostas já aprovadas de Q03a–Q06b e as decisões D21–D60 aplicáveis a logística, cancelamento, cupons e exemplos comerciais (D21–D31, D33–D37, D54–D60) nas specs correspondentes, sem repeti-las ao usuário. Design, metas e catálogo de D32/D38–D53 permanecem em seus documentos proprietários. Apresentar separadamente apenas lacunas reais listadas na seção de pendências, com proposta concreta e recomendação.
 - **Verificar:** DOC e revisão com o usuário. Resolver também restrições Q10 quando discutir embalagens. Resposta pendente bloqueia a regra dependente, não autoriza escolher um padrão silenciosamente.
+- **Estado atual:** propostas documentais preparadas em `SPEC-logistics.md` e `SPEC-pricing.md`; Q03–Q06/Q10 e D21–D60 permanecem conforme respostas registradas; D66–D68 registram três respostas desta revisão. A regra de despacho parcial está aprovada em D68; calendário e contador global ainda aguardam confirmação individual. A revisão do usuário continua necessária antes de marcar C24a concluída ou liberar trabalho dependente.
 
 ## Fase 3 — estoque, preço e vitrine
 
@@ -1402,37 +1412,50 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 - [ ] **Depende:** C17, C24a. **Alvos:** `specs/SPEC-inventory.md`, matriz de estoque; S.
 - **Aceite:** saldo físico/reservado/disponível; reserva de 15 minutos; lotes, validade na chegada, bloqueio e ajuste administrativo definidos.
-- **Verificar:** DOC; resolver Q04 antes da regra de elegibilidade.
+- **Verificar:** DOC; D27/D54 definem as margens e D67 aprova a fixture sintética com limite e um dia abaixo; não reabrir Q04. Conferir calendário oficial de feriados antes de usar datas concretas.
+- **Estado atual:** `specs/SPEC-inventory.md` preparada com vocabulário, invariantes, fronteira de validade, fixture D67 e critérios INV-001–008. FEFO, comportamento de lote bloqueado com reserva ativa e calendário anual continuam propostas/pendências para revisão; C25 ainda não está concluída. PR #37 foi merged em `c8a97d8`; CI `35658857246` passou 7/7.
 
 ### C26 — `feat(inventory): persist lots and stock movements`
 
-- [ ] **Depende:** C21, C25. **Alvos:** modelo/repositório de estoque, migration e testes; M.
+- [x] **Depende:** C21, C25. **Alvos:** modelo/repositório de estoque, migration e testes; M. Implementado e merged no PR #39 (`b251da4`).
 - **Aceite:** entrada/ajuste com motivo e histórico; lote vencido/bloqueado distinguido; constraint evita saldo impossível.
 - **Verificar:** BI(StockLedger); ajustar duas vezes não apaga movimento anterior.
+- **Estado atual:** migration V17, entidades JPA e repositórios de lotes/movimentações
+  implementados no PR #39; invariantes de construção têm testes unitários. O verify
+  local chegou à fase de integração, mas uma execução falhou por indisponibilidade
+  transitória do container PostgreSQL; CI remoto do PR confirmou 7/7 checks verdes.
 
 ### C27 — `feat(inventory): expose authorized stock adjustments`
 
-- [ ] **Depende:** C15, C26. **Alvos:** aplicação/API/DTOs de estoque e testes; M.
+- [x] **Depende:** C15, C26. **Alvos:** aplicação/API/DTOs de estoque e testes; M. Implementado e merged no PR #39 (`b251da4`).
 - **Aceite:** consulta de saldo e ajuste versionado; conflito concorrente sinalizado; papel e motivo obrigatórios.
 - **Verificar:** BI(StockAdjustmentApi), C e duas alterações concorrentes.
+- **Estado atual:** endpoint administrativo de consulta por SKU e ajuste físico por
+  lote implementado no PR #39, com ator, motivo, versão esperada e resposta 409
+  para conflito otimista; o histórico de ajuste usa movimento `ADMIN_ADJUSTMENT`.
 
 ### C28 — `feat(inventory-ui): manage lots and inspect stock history`
 
-- [ ] **Depende:** C23, C27. **Alvos:** `F/admin/inventory`, formulário/histórico e teste; M.
+- [x] **Depende:** C23, C27. **Alvos:** `F/admin/inventory`, formulário/histórico e teste; M. Implementado e merged no PR #39 (`b251da4`).
 - **Aceite:** admin registra lote, corrige saldo e vê motivo; não apresenta reservado como disponível.
 - **Verificar:** F/E; comparar histórico antes/depois de ajuste.
+- **Estado atual:** tela `/admin/inventory` implementada com seleção de SKU,
+  recebimento de lote, consulta de físico/reservado/disponível e ajuste com
+  versão retornada pelo backend. Build e 11 testes frontend passaram; PR #39 foi
+  merged em `b251da4` com CI remoto concluído.
 
 ### C29 — `docs(pricing): specify money discounts and coupon eligibility`
 
 - [ ] **Depende:** C02, C17, C24a. **Alvos:** `specs/SPEC-pricing.md`, exemplos de cálculo; S.
 - **Aceite:** arredondamento e soma de frete/desconto; cupons por percentual/valor com mínimo/validade; política de convidado e reembolso definida.
 - **Verificar:** DOC; resolver Q06; exemplos incluem centavos, limite e desconto que excederia subtotal.
+- **Estado atual:** `SPEC-pricing.md` contém modelo em centavos, ordem proposta de cálculo, exemplos de fronteira, elegibilidade e estados de reembolso. Combinações de cupons e reserva/liberação do contador global continuam propostas para revisão; C29 ainda não está concluída.
 
 ### C30 — `feat(pricing): calculate canonical purchase totals`
 
-- [ ] **Depende:** C21, C29. **Alvos:** tipos/cálculo monetário, aplicação de preço e testes; M.
+- [x] **Depende:** C21, C29. **Alvos:** tipos/cálculo monetário, aplicação de preço e testes; M. Implementado e merged no PR #38 (`eb5e4d5`).
 - **Aceite:** servidor calcula total determinístico; arredondamento explícito; preço do navegador não é confiado.
-- **Verificar:** BT(PurchaseTotal), incluindo fronteiras de arredondamento e moeda inválida.
+- **Verificar:** BT(PurchaseTotal), incluindo fronteiras de arredondamento e moeda inválida. BT inicial verde; API de checkout e contador global permanecem fora desta fatia.
 
 ### C31 — `feat(pricing): reserve coupon usage atomically`
 
@@ -1448,31 +1471,44 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C33 — `docs(storefront): specify public discovery and rendering`
 
-- [ ] **Depende:** C03, C17, C25, C29. **Alvos:** `specs/SPEC-storefront.md`, jornadas públicas; S.
+- [x] **Depende:** C03, C17, C25, C29. **Alvos:** `specs/SPEC-storefront.md`, jornadas públicas; S. Implementado em `ced510b`, PR #40 merged em `7ee7090`.
 - **Aceite:** filtros/ordenação/paginação e URLs compartilháveis; página de origem; SSR sem dados de sessão; critérios visuais aprovados de DEMO-VIDEO.md ligados aos estados reais da jornada, incluindo responsividade, movimento reduzido e legibilidade.
 - **Verificar:** DOC e protótipo revisado.
+- **Estado atual:** `SPEC-storefront.md` define rotas públicas, filtros em URL,
+  paginação estável, disponibilidade por saldo livre, isolamento de sessão no
+  SSR, estados recuperáveis e critérios visuais/a11y de C03. C34 continua
+  bloqueada por uma lacuna de contrato: C30 calcula totais, mas não existe
+  fonte persistida de preço por SKU; preço permanece responsabilidade de
+  `pricing` conforme SPEC-catalog, sem autorização para duplicá-lo no
+  catálogo/storefront.
 
 ### C34 — `feat(storefront): compose catalog price and availability queries`
 
-- [ ] **Depende:** C22, C27, C30, C33. **Alvos:** `B/storefront`, DTOs de consulta e testes; M.
+- [x] **Depende:** C22, C27, C30, C33. **Alvos:** `B/storefront`, DTOs de consulta e testes; M. Implementado em `923c882`, PR #45 merged.
 - **Aceite:** filtros combináveis e ordenação estável; disponibilidade correta; paginação limitada e sem leitura cruzada de repositories.
 - **Verificar:** BI(StorefrontQueries), C e consulta vazia/limites/filtro inválido.
+- **Estado atual:** a primeira fatia de pricing foi integrada em `b77bd3c`:
+  `SkuPrice`, migration V19, repositório e serviço batch para preços correntes por
+  SKU, com teste unitário e integração PostgreSQL/Flyway. A consulta storefront
+  foi entregue em `GET /api/v1/products`, com filtros, ordenação estável,
+  paginação limitada, preço corrente e saldo livre por SKU; portas de
+  disponibilidade/preço preservam as fronteiras dos módulos.
 
 ### C35 — `feat(storefront-ui): browse filter and paginate products`
 
-- [ ] **Depende:** C07, C24, C34. **Alvos:** `F/storefront/catalog`, filtros/listagem e testes; M.
+- [x] **Depende:** C07, C24, C34. **Alvos:** `F/storefront/catalog`, filtros/listagem e testes; M. Implementado em `c28a120`, PR #46 merged.
 - **Aceite:** catálogo mobile, filtros na URL e estado vazio/erro; busca antiga cancelada não sobrescreve resultado novo.
 - **Verificar:** F/E; reload e voltar/avançar preservam filtro.
 
 ### C36 — `feat(storefront-ui): render product details and provenance`
 
-- [ ] **Depende:** C35. **Alvos:** `F/storefront/product`, metadados SSR e teste; M.
+- [x] **Depende:** C35. **Alvos:** `F/storefront/product`, metadados SSR e teste; M. Implementado em `9a9c122`, PR #47 merged.
 - **Aceite:** produto mostra origem/conservação/preço/imagem; SKU indisponível tem estado claro; HTML inicial contém conteúdo relevante.
 - **Verificar:** F/E, inspeção de HTML SSR e produto inexistente/desativado.
 
 ### C37 — `feat(storefront-ui): present producers and their products`
 
-- [ ] **Depende:** C19, C35. **Alvos:** `F/storefront/producer`, consulta pública e teste; M.
+- [x] **Depende:** C19, C35. **Alvos:** `F/storefront/producer`, consulta pública e teste; M. Implementado em `67c641e`, PR #48 merged.
 - **Aceite:** origem e texto coerentes; produtos pertencem ao produtor; navegação de retorno funciona.
 - **Verificar:** F/E; dados fictícios claramente identificados na demonstração.
 
@@ -1482,55 +1518,59 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C38 — `docs(cart): specify guest carts and purchase snapshots`
 
-- [ ] **Depende:** C14, C17, C25, C29. **Alvos:** `specs/SPEC-cart.md`, contrato de versão; S.
+- [x] **Depende:** C14, C17, C25, C29. **Alvos:** `specs/SPEC-cart.md`, contrato de versão; S. Implementado em `8505626`, PR #49 merged.
 - **Aceite:** sessão convidada, atualização concorrente e persistência; regra de combinação no login; preservação de itens adicionados depois do checkout.
 - **Verificar:** DOC; casos exemplificados com dois navegadores/duas abas.
 
 ### C39 — `feat(cart): persist guest carts and versioned item changes`
 
-- [ ] **Depende:** C15, C26, C30, C38. **Alvos:** agregado/repository de carrinho, migration e testes; M.
+- [x] **Depende:** C15, C26, C30, C38. **Alvos:** agregado/repository de carrinho, migration e testes; M. Implementado e merged no PR #50 (`f126e94`).
 - **Aceite:** itens e proprietário persistidos; quantidade válida; mudanças concorrentes usam versão explícita.
 - **Verificar:** BI(GuestCartPersistence), constraints e atualização concorrente.
 
 ### C39a — `feat(cart): expose authorized guest cart mutations`
 
-- [ ] **Depende:** C39. **Alvos:** aplicação/controller/DTOs de carrinho e testes; M.
+- [x] **Depende:** C39. **Alvos:** aplicação/controller/DTOs de carrinho e testes; M. Implementado nesta entrega.
 - **Aceite:** adicionar/alterar/remover/limpar pela API; sessão convidada isolada; conflito de versão segue contrato.
 - **Verificar:** BI(GuestCartApi), C e tentativa de alterar carrinho de outro visitante.
 
 ### C40 — `feat(cart-ui): edit a persistent guest shopping cart`
 
-- [ ] **Depende:** C35, C36, C39a. **Alvos:** `F/cart`, contador/resumo e testes; M.
+- [x] **Depende:** C35, C36, C39a. **Alvos:** `F/cart`, contador/resumo e testes; M. Implementado nesta entrega.
 - **Aceite:** carrinho sobrevive a reload; erro de estoque explicado; totais vêm do contrato backend.
 - **Verificar:** F/E; visitante adiciona, muda quantidade e retoma carrinho sem conta.
 
 ### C41 — `docs(shipping): specify quotes dispatch and pickup rules`
 
-- [ ] **Depende:** C04, C17, C24a, C25, C38. **Alvos:** `specs/SPEC-shipping.md`, contrato de cotação/expedição; S.
+- [x] **Depende:** C04, C17, C24a, C25, C38. **Alvos:** `specs/SPEC-shipping.md`, contrato de cotação/expedição; S. Implementado nesta entrega.
 - **Aceite:** cotação com validade/fingerprint e divisão em pacotes; prazo de preparo/origem/retirada; cancelamento também considera expedição parcial.
 - **Verificar:** DOC; D17/D18 incorporadas; resolver Q03/Q05/Q10 antes das respectivas funcionalidades.
 
 ### C41a — `feat(shipping): plan multi-package shipments without losing quantities`
 
-- [ ] **Depende:** C21, C41. **Alvos:** composição de pacotes, regras de embalagem e testes; M.
+- [x] **Depende:** C21, C41. **Alvos:** composição de pacotes, regras de embalagem e testes; M. Implementado nesta entrega.
 - **Aceite:** dividir a compra conforme embalagens/restrições aprovadas; cada unidade alocada uma vez; peso/dimensões e identidade de pacote preservados.
 - **Verificar:** BT(ParcelComposition), V21; limites de caixa/peso, artesanato frágil, item incompatível e repetição determinística do mesmo snapshot.
 
 ### C42 — `feat(shipping): quote sandbox freight through an adapter`
 
-- [ ] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M.
+- [x] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. Implementado e merged no PR #55 (`66a433c`).
+- Boundary sandbox implementado sem rede: contrato do adapter, configuração com timeout/credencial, parser Jackson com cobertura integral dos pacotes, custo/prazo positivos e validade futura; sem expor credenciais ou alterar carrinho.
 - **Aceite:** cotação respeita todos os pacotes/peso/dimensões/destino; parse valida cobertura/custos/prazos; timeout/credencial expirada/serviço ausente tratados.
 - **Verificar:** testes WireMock e uma cotação SB sanitizada; nenhuma chamada externa no teste comum.
 
 ### C43 — `feat(shipping): bind delivery quotes to purchase snapshots`
 
-- [ ] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M.
+- [x] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M. Implementado e merged nos PRs #56 (`8cbfbf0`) e #57 (`542ce2c`).
+- Persistidos snapshotId/version, destino normalizado, fingerprint, serviço, custo, prazos, pacotes e validade; a entidade exige identidade do snapshot e rejeita validade inválida.
+- Serviço transacional grava apenas cotações ainda válidas e serializa a cobertura dos pacotes; endpoint de checkout permanece dependente do snapshot e da origem de cotação.
 - **Aceite:** cotação vinculada a itens/endereço/composição dos pacotes; alteração invalida; custo total e prazos selecionados são verificados no servidor.
 - **Verificar:** BI(ShippingQuote), C e V12.
 
 ### C44 — `feat(checkout-ui): collect address and select delivery or pickup`
 
-- [ ] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M.
+- [x] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M. Implementado e integrado nos PRs #60–#62; merge final no commit `4551e24`, com CI `35772388503` verde.
+- Contrato preliminar criado em `specs/SPEC-checkout.md`: endereço sem inferência, opções persistidas, estado recuperável de cotação indisponível e invalidação por snapshot/endereço/modalidade.
 - **Aceite:** visitante compara modalidades, pacotes, prazos e custo total; cotação indisponível tem recuperação; CEP/endereço são validados sem inventar dados.
 - **Verificar:** F/E/A; troca de endereço/carrinho força nova cotação.
 
@@ -1543,18 +1583,34 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C04, C05, C11. **Alvos:** `specs/SPEC-eventing.md`, envelope/schema e ADR de retry; M.
 - **Aceite:** outbox/consumo/claims e ACK delimitados; ordem/versão/retenção definidas; nenhuma promessa global de exactly once.
 - **Verificar:** DOC/C; enumerar pontos de queda antes/depois de cada commit/ACK.
+- **Estado atual:** `SPEC-eventing.md` foi preparada em revisão sobre o envelope
+  JSON Schema existente e o ADR-0002. Os pontos de queda, deduplicação,
+  quarentena e limites de entrega estão explicitados; lease, backoff, número
+  de tentativas e retenção continuam propostas. C45 só será concluída após
+  revisão humana e validação do contrato; C04 ainda não tem homologação real.
 
 ### C46 — `feat(eventing): persist outbound events in the business transaction`
 
-- [ ] **Depende:** C09, C45. **Alvos:** outbox writer/model/repository, migration e teste; M.
+- [x] **Depende:** C09, C45. **Alvos:** outbox writer/model/repository, migration e teste; M. Implementado e merged na PR #66 (`116f612`).
 - **Aceite:** evento nasce na transação do efeito local; rollback elimina ambos; payload versionado e correlação persistidos.
 - **Verificar:** BI(TransactionalOutbox), incluindo V04.
+- **Estado atual:** a implementação local do slice de persistência está em
+  `feat/eventing-outbox`: migration V24, entidade/repository/writer e testes de
+  transação/rollback. Publicação, consumidores e recuperação permanecem fora
+  deste slice; a conclusão depende do CI e da revisão do PR.
 
 ### C47 — `feat(eventing): publish claimed outbox events to Kafka`
 
 - [ ] **Depende:** C08, C46. **Alvos:** publicador, claim/lease, config Kafka e testes; M.
 - **Aceite:** marca só após ACK; abandona claim recuperável em queda; múltiplos workers não perdem mensagens.
 - **Verificar:** BI(OutboxPublisher), broker interrompido e V05/V19.
+- **Estado atual:** primeira fatia implementada e integrada em `main` pelo PR #68
+  (`b07ffbc`):
+  claim PostgreSQL com `SKIP LOCKED`, lease recuperável, publicação com chave
+  `aggregateId`, ACK síncrono e marcação posterior de `PUBLISHED`, com teste
+  PostgreSQL/Kafka reais. Worker exige parâmetros explícitos no perfil `worker`;
+  C47 permanece em implementação até cobrir reinício/queda e revisar os valores
+  operacionais da C45.
 
 ### C48 — `feat(eventing): record consumer effects idempotently`
 

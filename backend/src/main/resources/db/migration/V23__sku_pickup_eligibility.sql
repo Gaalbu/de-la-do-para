@@ -1,0 +1,2 @@
+ALTER TABLE product_skus
+    ADD COLUMN pickup_eligible BOOLEAN NOT NULL DEFAULT FALSE;
