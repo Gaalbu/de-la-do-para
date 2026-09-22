@@ -738,3 +738,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | Fontes oficiais do Kafka e padrão Transactional Outbox consultados; `docs:check` passou; `contracts:check` passou com schema válido aceito e inválido rejeitado e 11 warnings OpenAPI preexistentes; `git diff --check` passou; `aislop` 100/100. |
 | Remoto | PR #65 publicada no commit `de5dfce`; CI `35775567134` passou 7/7; C04 permanece separada e não foi alegada. |
 | Próximo passo | Revisão humana da C45 e decisão dos valores propostos de lease/backoff/tentativas/retenção antes de C46. O roteiro C46–C49 está em `tasks/plan.md`. |
+
+## Sessão 2026-09-22 — C46 persistência local da outbox
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main` após o merge da PR #65; branch `feat/eventing-outbox` |
+| Tarefa | C46 — persistir eventos de saída na mesma transação do efeito local |
+| Mudanças | Adicionadas a entidade de domínio versionada, migration Flyway V24 com JSONB/estado/índice de pendentes, entidade JPA, repository e writer com transação `MANDATORY`. O slice não publica Kafka nem implementa consumidores, retries ou quarentena. |
+| Verificação | `OutboxEventTest` passou; `OutboxEventPersistenceIT` passou com PostgreSQL 18.6/Testcontainers (3 testes); backend executou 25 testes sem falhas; Spotless e `aislop` 100/100 passaram após formatação. |
+| Remoto | Ainda não publicado; PR será aberta após commit e revisão final. |
+| Próximo passo | Commitar/publicar o slice C46, conferir todos os gates remotos e só então decidir o merge; C47–C49 continuam separados. |

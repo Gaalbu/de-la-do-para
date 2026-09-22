@@ -1594,6 +1594,10 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C09, C45. **Alvos:** outbox writer/model/repository, migration e teste; M.
 - **Aceite:** evento nasce na transação do efeito local; rollback elimina ambos; payload versionado e correlação persistidos.
 - **Verificar:** BI(TransactionalOutbox), incluindo V04.
+- **Estado atual:** a implementação local do slice de persistência está em
+  `feat/eventing-outbox`: migration V24, entidade/repository/writer e testes de
+  transação/rollback. Publicação, consumidores e recuperação permanecem fora
+  deste slice; a conclusão depende do CI e da revisão do PR.
 
 ### C47 — `feat(eventing): publish claimed outbox events to Kafka`
 
