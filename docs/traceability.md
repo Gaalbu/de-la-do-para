@@ -23,6 +23,8 @@ ou payloads pessoais.
 | C11b — harness contrato | `RouteContractCoverageTest` | `verify` + fixtures divergentes reprovam | `37f86ec` | PR #13 merged |
 | C14 — spec identity | `specs/SPEC-identity.md` | DOC: `docs:check` 24 OK, `verify docs/security` OK, CI 7/7 | `4b82a3f`, merge `2edd714` | PR #26 merged (`35548577157` success) |
 | C17 — spec catálogo/procedência | `specs/SPEC-catalog.md` | local `docs:check` 24 OK, `contracts:check` exit 0; CI 7/7 success (`35631089081`) | `4c424dc`; PR #30 aberto, mergeable (não merged) | Spec aprovada pelo usuário em 2026-09-21; CAT-Q01 respondida (só admin gere produtores, sem conta v1); C18 liberada |
+| C18 — persistência de produtores | `specs/SPEC-catalog.md`, migration V13 | `ProducerPersistenceIT`, `ProducerRepositoryIT`; PostgreSQL 18.6/Testcontainers; Flyway V13 + Hibernate validate | local `feat/c18-producer-persistence` | UUID estável, slug único, origem/descrição, atualização verificados; trabalho pendente de publicação |
+| C19 — API administrativa de produtores | `contracts/openapi/v1.yaml`, `docs/api-guide.md` | `ProducerAdminApiIT`; contrato+geração Angular; 401/403/CSRF/400/404/409/201/200/405 | local `feat/c18-producer-persistence` | CAT-Q01–03 aplicadas; só admin; API sem DELETE, com flag de demonstração; trabalho pendente de publicação |
 
 Evidências por release vivem em `docs/evidence/<marco-ou-release>/`
 (criado quando houver a primeira entrega executável).

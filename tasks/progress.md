@@ -268,3 +268,27 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PR #30 aberto: https://github.com/Gaalbu/de-la-do-para/pull/30, `docs/c17-catalog@4c424dc`. CI run `35631089081` success: backend, frontend, contracts, docs, security, commit-policy e quality-gate (7/7). PR mergeable; não merged. |
 | Próximo passo | C18 — persistência de produtores/procedência (PostgreSQL, migration e teste de integração). CAT-Q02/03 permanecem para C19. Curadoria final de assets continua pendente em C03, sem adicionar imagens não aprovadas. |
 | Perguntas | Nenhuma nova para C18. |
+
+## Sessão 2026-09-21 — C18 persistência de produtores
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c17-catalog@91ed77b`; branch `feat/c18-producer-persistence`; árvore inicial preservava `.angular/` não rastreado |
+| Tarefa | C18a/C18b — `feat(catalog): persist producers and provenance` — implementada e verificada localmente |
+| Mudanças | `Producer` com UUID estável, slug normalizado para minúsculas, nome de exibição, rótulo amplo de origem, descrição e timestamps; migration `V13__catalog_producers.sql` com checks de slug/formato/campos, PK UUID e índice único case-insensitive; `ProducerRepository` expõe save/read/findBySlug/existsBySlug sem API de exclusão; testes cobrem persistência, atualizações, identidade/timestamp estáveis e duplicação de slug. CAT-Q01 respeitada: nenhum produtor tem conta própria. |
+| Verificação | RED inicial confirmou ausência da tabela; `./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT verify` BUILD SUCCESS: unitários 12/12 e integração 3/3, PostgreSQL 18.6 via Testcontainers, Flyway V13 aplicada, Hibernate `ddl-auto=validate`, Spotless e Checkstyle OK; `git diff --check` OK; `npx aislop scan --changes --json` 100/100, 0 findings. |
+| Remoto | PR #30 (C17) permanece OPEN/MERGEABLE, CI no head `91ed77b` SUCCESS 7/7. C18/C19 locais nesta branch, ainda não publicadas. |
+| Próximo passo | C20 — interface administrativa para consultar/criar/editar produtores, conforme contrato C19 e decisões D65. |
+| Perguntas | CAT-Q01 confirmada anteriormente; CAT-Q02/Q03 aprovadas pelo usuário em 2026-09-21 e registradas como D65. Sem contas para produtores nem exclusão física. |
+
+## Sessão 2026-09-21 — C19 API administrativa de produtores
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch local `feat/c18-producer-persistence`; C18 implementada na árvore atual; `.angular/` preexistente não rastreado preservado |
+| Decisões | Usuário aprovou CAT-Q02/Q03: sem remoção física de produtor referenciado, com desativação; apenas localidade ampla e texto editorial fictício, identificados como demonstração, sem coordenadas/endereço/alegações verificáveis. D65 registrado em `docs/decisions.md` e `docs/PLANO-MESTRE.md`. |
+| Mudanças | C18: `Producer`/repositório/migration V13 com `active`; constraints e índice único. C19: serviço e rotas administrativas GET/POST/lista/consulta/PATCH, paginação limitada, DTOs de demonstração, conflito de slug, validação/Problem Details correlacionado; sem DELETE. OpenAPI atualizado e clientes Angular regenerados; guia da API e rastreabilidade atualizados. SecurityConfig agora inclui `correlationId` RFC UUID nas respostas 401/403. |
+| Verificação | `./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT,ProducerAdminApiIT verify` BUILD SUCCESS: unitários 12/12, integração C18+C19 7/7; PostgreSQL 18.6/Testcontainers, Flyway V13, Hibernate validate, Spotless e Checkstyle OK. `contracts:check` exit 0 (spec válida, eventos, geração Angular e TypeScript; 10 avisos Redocly já existentes); `docs:check` 24 Markdown OK; `verify.sh security` zero segredos e zero vulnerabilidades runtime (4 high preexistentes dev-only em js-yaml); `git diff --check` OK; aislop 100/100, zero findings. |
+| Remoto | PR #30 de C17 OPEN/MERGEABLE, CI 7/7 no head `91ed77b`; implementação C18/C19 ainda não publicada. |
+| Próximo passo | C20 UI de gestão administrativa, coberta por teste browser real e reload da lista/detalhes. |
+| Perguntas | Nenhuma nova; produtores não têm conta própria na v1. |
