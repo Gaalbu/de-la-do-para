@@ -678,3 +678,8 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Adicionado `pickupEligible` ao SKU, com migration V23, DTO administrativo/OpenAPI e default `false`; a política agora é dado explícito e não pode ser inferida pelo nome do produto.
 - Teste de domínio cobre SKU elegível para retirada; testes focados de catálogo passaram com `-DargLine=-Xint`.
 - Próximo passo: ligar esse dado a uma opção server-side de retirada com ponto/janela aprovados, preservando seleção e compatibilidade no servidor.
+
+### Correção após CI do modelo de SKU
+
+- CI `35770235622` encontrou fixtures Angular administrativas sem o novo campo obrigatório `pickupEligible`; a fixture de produto foi atualizada.
+- Frontend local passou novamente: 9 arquivos/23 testes, lint e formatação OK. O backend remoto ainda estava executando antes da falha de qualidade causada pelo frontend.
