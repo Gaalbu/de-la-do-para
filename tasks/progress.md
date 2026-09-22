@@ -472,3 +472,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | PR #47 CI 7/7 verde e merged em `9a9c122`; backend compile/Spotless, `contracts:check`, frontend format/lint, 4 testes de vitrine e build SSR verdes nesta branch. |
 | Remoto | C36 merged; C37 ainda local, sem commit/PR. |
 | Próximo passo | Adicionar teste específico de produtor, rodar gate final/aislop disponível, commitar e abrir PR C37. |
+
+## Sessão 2026-09-22 — C37 concluído e C38 carrinho convidado
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@67c641e`; branch `feat/storefront-next-step` |
+| Tarefa | C37 merged; iniciar C38 — especificar carrinho convidado e snapshots |
+| Mudanças | C37 PR #48 entrega produtor público e seus produtos. C38 cria `specs/SPEC-cart.md` com sessão convidada, proprietário, versão otimista, conflitos 409, combinação explícita no login, snapshot imutável e limites de responsabilidade entre cart/catalog/inventory/pricing/checkout. |
+| Verificação | PR #48 CI 7/7 verde e merged em `67c641e`; C38 pendente de docs:check, diff check e revisão da spec. |
+| Remoto | C37 merged; C38 ainda local, sem commit/PR. |
+| Próximo passo | Rodar gates documentais, commitar e abrir PR C38; depois C39 só após o contrato ser revisado. |
