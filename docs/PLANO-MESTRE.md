@@ -1508,7 +1508,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C37 — `feat(storefront-ui): present producers and their products`
 
-- [ ] **Depende:** C19, C35. **Alvos:** `F/storefront/producer`, consulta pública e teste; M.
+- [x] **Depende:** C19, C35. **Alvos:** `F/storefront/producer`, consulta pública e teste; M. Implementado em `67c641e`, PR #48 merged.
 - **Aceite:** origem e texto coerentes; produtos pertencem ao produtor; navegação de retorno funciona.
 - **Verificar:** F/E; dados fictícios claramente identificados na demonstração.
 
