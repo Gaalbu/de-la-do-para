@@ -75,8 +75,8 @@ describe('CheckoutService', () => {
       options: [
         {
           id: 'PONTO-DEMO-BELEM',
-          name: 'Ponto de demonstração — Belém',
-          openingHours: 'segunda a sexta',
+          point: 'Ponto de demonstração — Belém',
+          window: 'segunda a sexta',
           preparationDays: 1,
         },
       ],
