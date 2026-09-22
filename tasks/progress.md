@@ -461,3 +461,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `ProductAdminApiIT` verde; `contracts:check` verde; frontend `format:check`, `lint`, teste da vitrine (3 testes) e build SSR verdes. |
 | Remoto | C35 merged em `c28a120`; C36 ainda local, sem commit/PR. |
 | Próximo passo | Adicionar teste específico do detalhe público, rodar gate final/aislop disponível, commitar e abrir PR C36. |
+
+## Sessão 2026-09-22 — C36 concluído e C37 produtor público
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@9a9c122`; branch `feat/storefront-producer-page` |
+| Tarefa | C36 merged; iniciar C37 com página pública do produtor |
+| Mudanças | C36 PR #47 adicionou detalhe público, procedência, preço/saldo por SKU e estados de indisponibilidade. C37 adiciona `GET /api/v1/producers/{slug}` com produtor ativo e produtos filtrados pela consulta storefront, além da rota Angular `/producers/:slug` e navegação a partir dos cards. |
+| Verificação | PR #47 CI 7/7 verde e merged em `9a9c122`; backend compile/Spotless, `contracts:check`, frontend format/lint, 4 testes de vitrine e build SSR verdes nesta branch. |
+| Remoto | C36 merged; C37 ainda local, sem commit/PR. |
+| Próximo passo | Adicionar teste específico de produtor, rodar gate final/aislop disponível, commitar e abrir PR C37. |

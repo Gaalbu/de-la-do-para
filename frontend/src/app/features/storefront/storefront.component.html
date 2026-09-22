@@ -86,7 +86,11 @@
           <h2>
             <a [routerLink]="['/products', product.slug]">{{ product.displayName }}</a>
           </h2>
-          <p class="producer">{{ product.producer.displayName }}</p>
+          <p class="producer">
+            <a [routerLink]="['/producers', product.producer.slug]">{{
+              product.producer.displayName
+            }}</a>
+          </p>
           <p class="price">A partir de {{ formatPrice(lowestPrice(product)) }}</p>
           <p class="sku-count">
             {{ product.skus.length }} {{ product.skus.length === 1 ? 'variante' : 'variantes' }}

@@ -20,6 +20,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'producers/:slug',
+    loadComponent: () =>
+      import('./features/storefront/producer-detail.component').then(
+        (m) => m.ProducerDetailComponent,
+      ),
+  },
+  {
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./features/admin/admin.component').then((m) => m.AdminComponent),

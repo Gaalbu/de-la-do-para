@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+.producer-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+}
+.producer-page > p:first-child {
+  margin-bottom: 4rem;
+}
+a {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.eyebrow {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+h1 {
+  max-width: 12ch;
+  margin: 0.5rem 0;
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+.origin {
+  color: var(--color-accent);
+  font-weight: 800;
+}
+.description {
+  max-width: 55ch;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+h2 {
+  margin-top: 4rem;
+}
+.products {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.products article {
+  min-height: 8rem;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+}
+.products h3 {
+  margin-top: 2rem;
+}
+.state {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--color-line);
+  color: var(--color-muted);
+}
+.state strong {
+  color: var(--color-ink);
+}
+@media (max-width: 620px) {
+  .products {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
