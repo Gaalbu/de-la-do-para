@@ -709,3 +709,4 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - A UI permite selecionar a retirada e limpa a seleção de entrega, e vice-versa; nenhuma combinação de modalidades é criada.
 - O contrato OpenAPI e os testes de serviço cobrem a rejeição de retirada indisponível e a seleção vinculada ao snapshot.
 - Validação local: backend focado, lint/formatação/build frontend com `NG_BUILD_MAX_WORKERS=2`, contrato OpenAPI e `aislop` pendentes da publicação final.
+- Jornada Playwright adicionada para comparar entrega/retirada, selecionar retirada e confirmar que as quatro requisições server-owned ocorrem na ordem esperada; suíte E2E completa passou (4 testes).
