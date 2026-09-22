@@ -6,7 +6,7 @@ import java.util.List;
 public record StorefrontProductResponse(
         String slug, String displayName, Product.Category category, PublicProducer producer, List<StorefrontSku> skus) {
 
-    public record PublicProducer(String displayName, String originLabel) {}
+    public record PublicProducer(String slug, String displayName, String originLabel) {}
 
     public record StorefrontSku(String skuCode, String salesUnit, long priceCents, int availableUnits) {}
 }

@@ -1502,7 +1502,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C36 — `feat(storefront-ui): render product details and provenance`
 
-- [ ] **Depende:** C35. **Alvos:** `F/storefront/product`, metadados SSR e teste; M.
+- [x] **Depende:** C35. **Alvos:** `F/storefront/product`, metadados SSR e teste; M. Implementado em `9a9c122`, PR #47 merged.
 - **Aceite:** produto mostra origem/conservação/preço/imagem; SKU indisponível tem estado claro; HTML inicial contém conteúdo relevante.
 - **Verificar:** F/E, inspeção de HTML SSR e produto inexistente/desativado.
 

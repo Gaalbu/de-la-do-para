@@ -1,0 +1,30 @@
+<section class="producer-page" aria-labelledby="producer-title">
+  <p><a routerLink="/">← Voltar à vitrine</a></p>
+  @if (loading()) {
+    <p role="status">Carregando produtor…</p>
+  } @else if (error() || !producer()) {
+    <div class="state" role="alert">
+      <strong>Produtor não disponível.</strong><span>Confira o endereço ou volte à vitrine.</span>
+    </div>
+  } @else {
+    <p class="eyebrow">Origem</p>
+    <h1 id="producer-title">{{ producer()!.displayName }}</h1>
+    <p class="origin">{{ producer()!.originLabel }}</p>
+    <p class="description">{{ producer()!.description }}</p>
+    <h2>Produtos deste produtor</h2>
+    @if (producer()!.products.length === 0) {
+      <p class="state">Nenhum produto disponível no momento.</p>
+    } @else {
+      <div class="products">
+        @for (product of producer()!.products; track product.slug) {
+          <article>
+            <p class="eyebrow">{{ product.category === 'FOOD' ? 'Alimento' : 'Artesanato' }}</p>
+            <h3>
+              <a [routerLink]="['/products', product.slug]">{{ product.displayName }}</a>
+            </h3>
+          </article>
+        }
+      </div>
+    }
+  }
+</section>

@@ -568,6 +568,29 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/producers/{slug}:
+    get:
+      operationId: getPublicProducer
+      summary: Consultar produtor público e seus produtos
+      security: []
+      parameters:
+        - {in: path, name: slug, required: true, schema: {type: string, minLength: 1, maxLength: 80}}
+        - {in: query, name: page, required: false, schema: {type: integer, minimum: 0, default: 0}}
+        - {in: query, name: size, required: false, schema: {type: integer, minimum: 1, maximum: 50, default: 12}}
+      responses:
+        '200':
+          description: Produtor ativo e produtos públicos disponíveis
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicProducerPage'}
+        '400':
+          description: Paginação inválida
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+        '404':
+          description: Produtor não disponível
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
   /api/v1/accounts/verify:
     post:
       operationId: verifyEmail
@@ -1035,6 +1058,20 @@ components:
         size: {type: integer, minimum: 1, maximum: 50}
         totalElements: {type: integer, minimum: 0}
         totalPages: {type: integer, minimum: 0}
+    PublicProducerPage:
+      type: object
+      additionalProperties: false
+      required: [slug, displayName, originLabel, description, products, page, size, totalElements, totalPages]
+      properties:
+        slug: {type: string}
+        displayName: {type: string}
+        originLabel: {type: string}
+        description: {type: string}
+        products: {type: array, items: {$ref: '#/components/schemas/StorefrontProduct'}}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1, maximum: 50}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
     StorefrontProduct:
       type: object
       additionalProperties: false
@@ -1046,8 +1083,9 @@ components:
         producer:
           type: object
           additionalProperties: false
-          required: [displayName, originLabel]
+          required: [slug, displayName, originLabel]
           properties:
+            slug: {type: string}
             displayName: {type: string}
             originLabel: {type: string}
         skus:

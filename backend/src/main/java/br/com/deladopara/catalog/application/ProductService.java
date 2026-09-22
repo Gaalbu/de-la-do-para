@@ -116,6 +116,7 @@ public class ProductService {
                         product.getDisplayName(),
                         product.getCategory(),
                         new StorefrontProductResponse.PublicProducer(
+                                product.getProducer().getSlug(),
                                 product.getProducer().getDisplayName(),
                                 product.getProducer().getOriginLabel()),
                         skusByProduct.getOrDefault(product.getId(), List.of()).stream()

@@ -17,7 +17,7 @@ interface StorefrontProduct {
   slug: string;
   displayName: string;
   category: Category;
-  producer: { displayName: string; originLabel: string };
+  producer: { slug: string; displayName: string; originLabel: string };
   skus: StorefrontSku[];
 }
 
