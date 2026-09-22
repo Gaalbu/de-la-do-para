@@ -108,4 +108,27 @@ public class OutboxEventEntity {
     public JsonNode getPayload() {
         return payload.deepCopy();
     }
+
+    public void claim(Instant newLeaseUntil) {
+        this.leaseUntil = newLeaseUntil;
+        this.attemptCount++;
+    }
+
+    public OutboxEvent toDomain() {
+        return new OutboxEvent(
+                eventId,
+                eventType,
+                schemaVersion,
+                aggregateId,
+                aggregateVersion,
+                occurredAt,
+                correlationId,
+                causationId,
+                payload,
+                status,
+                availableAt,
+                attemptCount,
+                leaseUntil,
+                createdAt);
+    }
 }

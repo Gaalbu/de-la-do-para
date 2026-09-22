@@ -30,6 +30,15 @@ docker compose --profile local down        # preserva volumes e dados
 docker compose --profile local down -v
 ```
 
+## Worker de outbox
+
+O publisher Kafka não é iniciado no perfil padrão da API. Para executar o
+processo separado, use `--spring.profiles.active=worker` e forneça todos os
+parâmetros `APP_EVENTING_BOOTSTRAP_SERVERS`, `APP_EVENTING_TOPIC`,
+`APP_EVENTING_LEASE`, `APP_EVENTING_BATCH_SIZE` e `APP_EVENTING_POLL_DELAY`.
+Eles não têm valores padrão enquanto a C45 não aprovar lease e polling; o
+worker falha cedo se a configuração estiver incompleta.
+
 ## Superfícies expostas
 
 Só as portas acima, só em `localhost`. Banco, broker e simuladores ficam na
