@@ -6,8 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import br.com.deladopara.catalog.domain.Producer;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
-import br.com.deladopara.inventory.adapter.persistence.InventoryLotEntity;
-import br.com.deladopara.inventory.adapter.persistence.InventoryLotRepository;
 import br.com.deladopara.pricing.adapter.persistence.SkuPriceEntity;
 import br.com.deladopara.pricing.adapter.persistence.SkuPriceRepository;
 import br.com.deladopara.pricing.domain.Money;
@@ -32,7 +30,6 @@ class ProductRepositoryIT {
     private final ProducerRepository producers;
     private final JdbcTemplate jdbc;
     private final SkuPriceRepository prices;
-    private final InventoryLotRepository lots;
 
     @Autowired
     ProductRepositoryIT(
@@ -40,14 +37,12 @@ class ProductRepositoryIT {
             ProductSkuRepository skus,
             ProducerRepository producers,
             JdbcTemplate jdbc,
-            SkuPriceRepository prices,
-            InventoryLotRepository lots) {
+            SkuPriceRepository prices) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.jdbc = jdbc;
         this.prices = prices;
-        this.lots = lots;
     }
 
     @Test
@@ -68,7 +63,22 @@ class ProductRepositoryIT {
                 UUID.randomUUID(), product, "STOREFRONT-200G", "Pacote", 200, 30, false, 180, 120, 40, 220, now);
         skus.save(sku);
         prices.save(new SkuPriceEntity(sku.getId(), Money.brl(2_500), now));
-        lots.save(new InventoryLotEntity(UUID.randomUUID(), sku, 4, 3, false, null, null, now, now));
+        jdbc.update(
+                "INSERT INTO inventory_lots "
+                        + "(id, sku_id, physical_units, reserved_units, blocked, expires_on, "
+                        + "minimum_shelf_life_days, received_at, created_at, updated_at, version) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                UUID.randomUUID(),
+                sku.getId(),
+                4,
+                3,
+                false,
+                null,
+                null,
+                now,
+                now,
+                now,
+                0);
 
         var result = products.findAvailableForStorefront(
                 producer.getSlug(),

@@ -15,7 +15,6 @@ import br.com.deladopara.catalog.adapter.web.dto.StorefrontProductPageResponse;
 import br.com.deladopara.catalog.adapter.web.dto.StorefrontProductResponse;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
-import br.com.deladopara.inventory.adapter.persistence.InventoryLotRepository;
 import br.com.deladopara.pricing.application.SkuPriceService;
 import java.sql.SQLException;
 import java.time.Clock;
@@ -40,7 +39,7 @@ public class ProductService {
     private final Clock clock;
     private final ProductImageRepository images;
     private final SkuPriceService prices;
-    private final InventoryLotRepository lots;
+    private final StorefrontAvailability availability;
 
     public ProductService(
             ProductRepository products,
@@ -49,14 +48,14 @@ public class ProductService {
             Clock clock,
             ProductImageRepository images,
             SkuPriceService prices,
-            InventoryLotRepository lots) {
+            StorefrontAvailability availability) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.clock = clock;
         this.images = images;
         this.prices = prices;
-        this.lots = lots;
+        this.availability = availability;
     }
 
     @Transactional(readOnly = true)
@@ -109,12 +108,7 @@ public class ProductService {
         var skuIds = loadedSkus.stream().map(ProductSku::getId).toList();
         var currentPrices = prices.findCurrentPrices(skuIds);
         var availableOn = LocalDate.now(clock);
-        var availableUnits = lots.findAllBySkuIdInOrderBySkuIdAscReceivedAtAscIdAsc(skuIds).stream()
-                .filter(lot -> !lot.isBlocked()
-                        && (lot.getExpiresOn() == null || !lot.getExpiresOn().isBefore(availableOn)))
-                .collect(Collectors.groupingBy(
-                        lot -> lot.getSku().getId(),
-                        Collectors.summingInt(lot -> lot.getPhysicalUnits() - lot.getReservedUnits())));
+        var availableUnits = availability.freeUnits(skuIds, availableOn);
         var skusByProduct = loadedSkus.stream()
                 .collect(Collectors.groupingBy(sku -> sku.getProduct().getId()));
         var content = pageProducts.stream()
