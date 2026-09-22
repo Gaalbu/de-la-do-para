@@ -6,10 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import br.com.deladopara.catalog.domain.Producer;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
-import br.com.deladopara.pricing.adapter.persistence.SkuPriceEntity;
-import br.com.deladopara.pricing.adapter.persistence.SkuPriceRepository;
-import br.com.deladopara.pricing.domain.Money;
 import br.com.deladopara.support.PostgresTestContainer;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -29,20 +27,14 @@ class ProductRepositoryIT {
     private final ProductSkuRepository skus;
     private final ProducerRepository producers;
     private final JdbcTemplate jdbc;
-    private final SkuPriceRepository prices;
 
     @Autowired
     ProductRepositoryIT(
-            ProductRepository products,
-            ProductSkuRepository skus,
-            ProducerRepository producers,
-            JdbcTemplate jdbc,
-            SkuPriceRepository prices) {
+            ProductRepository products, ProductSkuRepository skus, ProducerRepository producers, JdbcTemplate jdbc) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.jdbc = jdbc;
-        this.prices = prices;
     }
 
     @Test
@@ -61,8 +53,13 @@ class ProductRepositoryIT {
         products.save(product);
         var sku = new ProductSku(
                 UUID.randomUUID(), product, "STOREFRONT-200G", "Pacote", 200, 30, false, 180, 120, 40, 220, now);
-        skus.save(sku);
-        prices.save(new SkuPriceEntity(sku.getId(), Money.brl(2_500), now));
+        skus.saveAndFlush(sku);
+        jdbc.update(
+                "INSERT INTO pricing_sku_prices (sku_id, unit_price_cents, currency, updated_at) VALUES (?, ?, ?, ?)",
+                sku.getId(),
+                2_500,
+                "BRL",
+                Timestamp.from(now));
         jdbc.update(
                 "INSERT INTO inventory_lots "
                         + "(id, sku_id, physical_units, reserved_units, blocked, expires_on, "
@@ -75,9 +72,9 @@ class ProductRepositoryIT {
                 false,
                 null,
                 null,
-                now,
-                now,
-                now,
+                Timestamp.from(now),
+                Timestamp.from(now),
+                Timestamp.from(now),
                 0);
 
         var result = products.findAvailableForStorefront(

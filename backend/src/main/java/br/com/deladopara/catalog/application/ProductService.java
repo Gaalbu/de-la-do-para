@@ -15,7 +15,6 @@ import br.com.deladopara.catalog.adapter.web.dto.StorefrontProductPageResponse;
 import br.com.deladopara.catalog.adapter.web.dto.StorefrontProductResponse;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
-import br.com.deladopara.pricing.application.SkuPriceService;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -38,7 +37,7 @@ public class ProductService {
     private final ProducerRepository producers;
     private final Clock clock;
     private final ProductImageRepository images;
-    private final SkuPriceService prices;
+    private final StorefrontPricing pricing;
     private final StorefrontAvailability availability;
 
     public ProductService(
@@ -47,14 +46,14 @@ public class ProductService {
             ProducerRepository producers,
             Clock clock,
             ProductImageRepository images,
-            SkuPriceService prices,
+            StorefrontPricing pricing,
             StorefrontAvailability availability) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.clock = clock;
         this.images = images;
-        this.prices = prices;
+        this.pricing = pricing;
         this.availability = availability;
     }
 
@@ -106,7 +105,7 @@ public class ProductService {
                         .filter(ProductSku::isActive)
                         .toList();
         var skuIds = loadedSkus.stream().map(ProductSku::getId).toList();
-        var currentPrices = prices.findCurrentPrices(skuIds);
+        var currentPrices = pricing.currentPriceCents(skuIds);
         var availableOn = LocalDate.now(clock);
         var availableUnits = availability.freeUnits(skuIds, availableOn);
         var skusByProduct = loadedSkus.stream()
@@ -124,10 +123,7 @@ public class ProductService {
                                 .map(sku -> new StorefrontProductResponse.StorefrontSku(
                                         sku.getSkuCode(),
                                         sku.getSalesUnit(),
-                                        currentPrices
-                                                .get(sku.getId())
-                                                .unitPrice()
-                                                .cents(),
+                                        currentPrices.get(sku.getId()),
                                         availableUnits.getOrDefault(sku.getId(), 0)))
                                 .toList()))
                 .toList();
