@@ -74,4 +74,27 @@ describe('CheckoutService', () => {
     expect(await selection).toBe(true);
     expect(service.selectedOption()).toEqual(option);
   });
+
+  it('exposes a recoverable message when server selection is rejected', async () => {
+    service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    const option = {
+      id: 'quote-1',
+      inputFingerprint: 'fingerprint-1',
+      serviceName: 'Sandbox PAC',
+      priceCents: 2590,
+      deliveryDays: 5,
+      preparationDays: 2,
+      packageSequences: [1],
+      expiresAt: '2026-09-22T13:00:00Z',
+    };
+    const selection = service.select(option);
+    const request = http.expectOne((candidate) =>
+      candidate.urlWithParams.includes('delivery-selection'),
+    );
+    request.flush({ codigo: 'CHECKOUT_005' }, { status: 410, statusText: 'Gone' });
+
+    expect(await selection).toBe(false);
+    expect(service.errorMessage()).toContain('mudou ou expirou');
+    expect(service.selectedOption()).toBeNull();
+  });
 });

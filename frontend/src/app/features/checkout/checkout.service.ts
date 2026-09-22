@@ -29,6 +29,9 @@ export class CheckoutService {
   private readonly http = inject(HttpClient);
   readonly loading = signal(false);
   readonly error = signal(false);
+  readonly errorMessage = signal(
+    'Não foi possível consultar este CEP. Confira os dados e tente novamente.',
+  );
   readonly snapshot = signal<CheckoutSnapshot | null>(null);
   readonly options = signal<ShippingQuote[] | null>(null);
   readonly selectedOption = signal<ShippingQuote | null>(null);
@@ -36,6 +39,9 @@ export class CheckoutService {
   async quote(postalCode: string): Promise<boolean> {
     this.loading.set(true);
     this.error.set(false);
+    this.errorMessage.set(
+      'Não foi possível consultar este CEP. Confira os dados e tente novamente.',
+    );
     this.options.set(null);
     this.selectedOption.set(null);
     try {
@@ -52,6 +58,9 @@ export class CheckoutService {
       return true;
     } catch {
       this.error.set(true);
+      this.errorMessage.set(
+        'Não foi possível consultar este CEP. Confira os dados e tente novamente.',
+      );
       return false;
     } finally {
       this.loading.set(false);
@@ -76,6 +85,7 @@ export class CheckoutService {
       return true;
     } catch {
       this.error.set(true);
+      this.errorMessage.set('Esta cotação mudou ou expirou. Consulte as opções novamente.');
       return false;
     }
   }

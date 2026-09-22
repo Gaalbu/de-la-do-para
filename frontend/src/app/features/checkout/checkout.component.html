@@ -21,7 +21,7 @@
     <p class="state" role="status">Consultando opções…</p>
   } @else if (checkout.error()) {
     <p class="state" role="alert">
-      Não foi possível consultar este CEP. Confira os dados e tente novamente.
+      {{ checkout.errorMessage() }}
     </p>
   } @else if (checkout.options(); as options) {
     @if (options.length) {
