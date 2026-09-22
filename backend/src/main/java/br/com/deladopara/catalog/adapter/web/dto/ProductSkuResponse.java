@@ -16,6 +16,7 @@ public record ProductSkuResponse(
         int heightMm,
         int grossWeightGrams,
         boolean active,
+        boolean pickupEligible,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -32,6 +33,7 @@ public record ProductSkuResponse(
                 sku.getHeightMm(),
                 sku.getGrossWeightGrams(),
                 sku.isActive(),
+                sku.isPickupEligible(),
                 sku.getCreatedAt(),
                 sku.getUpdatedAt());
     }

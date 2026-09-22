@@ -277,6 +277,7 @@ public class ProductService {
                         now);
             }
             sku.setActive(Boolean.TRUE.equals(request.active()), now);
+            sku.setPickupEligible(Boolean.TRUE.equals(request.pickupEligible()));
             skus.saveAndFlush(sku);
         }
         for (var sku : existingSkus) {
@@ -303,6 +304,7 @@ public class ProductService {
                 request.widthMm(),
                 request.heightMm(),
                 request.grossWeightGrams(),
+                Boolean.TRUE.equals(request.pickupEligible()),
                 now);
         sku.setActive(Boolean.TRUE.equals(request.active()), now);
         return sku;

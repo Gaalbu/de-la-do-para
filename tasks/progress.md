@@ -672,3 +672,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - O commit `96740d3` passou no CI remoto `35769337883` em 7/7: backend, frontend/browser smoke, contracts, docs, security, commit-policy e quality-gate.
 - PR #61 permanece aberta e mergeable, sem merge automático.
 - C44 continua em implementação: entrega/cotação/seleção estão cobertas; retirada depende da origem server-side de ponto, janela e compatibilidade descrita na spec.
+
+## Sessão 2026-09-22 — C44 pré-requisito explícito de retirada
+
+- Adicionado `pickupEligible` ao SKU, com migration V23, DTO administrativo/OpenAPI e default `false`; a política agora é dado explícito e não pode ser inferida pelo nome do produto.
+- Teste de domínio cobre SKU elegível para retirada; testes focados de catálogo passaram com `-DargLine=-Xint`.
+- Próximo passo: ligar esse dado a uma opção server-side de retirada com ponto/janela aprovados, preservando seleção e compatibilidade no servidor.
