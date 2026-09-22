@@ -55,6 +55,9 @@ describe('CheckoutComponent', () => {
           },
         ],
       });
+    http
+      .expectOne((request) => request.urlWithParams.includes('pickup-options'))
+      .flush({ status: 'UNAVAILABLE', options: [], unavailableSkuIds: [] });
     await quote;
     await fixture.whenStable();
     fixture.detectChanges();
@@ -93,6 +96,9 @@ describe('CheckoutComponent', () => {
           },
         ],
       });
+    http
+      .expectOne((request) => request.urlWithParams.includes('pickup-options'))
+      .flush({ status: 'UNAVAILABLE', options: [], unavailableSkuIds: [] });
     await quote;
     fixture.detectChanges();
 

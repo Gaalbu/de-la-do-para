@@ -61,6 +61,7 @@ describe('CheckoutService', () => {
     http
       .expectOne('/api/v1/checkout/snapshots')
       .flush({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    await Promise.resolve();
     http
       .expectOne((request) => request.urlWithParams.includes('delivery-options'))
       .flush({
