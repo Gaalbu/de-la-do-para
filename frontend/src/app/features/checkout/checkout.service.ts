@@ -14,6 +14,7 @@ export interface ShippingQuote {
   priceCents: number;
   deliveryDays: number;
   preparationDays: number;
+  packageSequences: number[];
   expiresAt: string;
 }
 

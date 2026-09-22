@@ -648,3 +648,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - O serviço de checkout ganhou teste explícito de seleção somente para snapshot pertencente à sessão e versão atual; o teste verifica a delegação server-owned ao serviço de cotações.
 - O CI remoto `35768644650` terminou verde em 7/7 no commit `5c9eb3a`, incluindo backend real com PostgreSQL/Kafka e frontend com browser smoke.
 - A nova cobertura local passou em nova execução com `-DargLine=-Xint`; houve uma falha intermitente adicional de SIGSEGV do GraalVM durante uma execução anterior, preservada como `backend/hs_err_pid56795.log`.
+
+## Sessão 2026-09-22 — C44 comparação explícita de pacotes
+
+- A UI passou a exibir a cobertura de pacotes retornada pelo servidor junto da modalidade, prazo total e custo; nenhum pacote é inferido no frontend.
+- Verificação: frontend `test:ci` 9 arquivos/22 testes, lint e formatação OK.
+- Próximo passo: publicar essa extensão e continuar a recuperação de seleção inválida/expirada; retirada permanece pendente da origem de opções correspondente no servidor.
