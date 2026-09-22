@@ -61,4 +61,19 @@ describe('CheckoutComponent', () => {
     expect(text).toContain('Sandbox PAC');
     expect(text).toMatch(/R\$\s*25,90/);
   });
+
+  it('shows a recoverable error when the snapshot cannot be created', async () => {
+    const fixture = TestBed.createComponent(CheckoutComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.postalCode = '66053-000';
+    const quote = component.quote();
+    http
+      .expectOne('/api/v1/checkout/snapshots')
+      .flush({ title: 'Erro', codigo: 'CHECKOUT_001' }, { status: 404, statusText: 'Not Found' });
+    await quote;
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')).not.toBeNull();
+  });
 });
