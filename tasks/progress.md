@@ -688,3 +688,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 - CI `35770500417` confirmou migration V23 e 22 testes backend sem falhas; o único erro foi Spotless em `ProductSkuPackagingTest`.
 - Formatação corrigida localmente; `spotless:check`, `git diff --check` e `aislop` passaram. Commit corretivo será publicado para reexecutar o CI.
+
+## Sessão 2026-09-22 — C44 primeira origem server-side de retirada
+
+- Implementado `GET /api/v1/checkout/{snapshotId}/pickup-options`: valida ownership e versão do snapshot, resolve os SKUs persistidos e retorna `AVAILABLE` apenas quando todos estão ativos e `pickupEligible`; caso contrário retorna `UNAVAILABLE` com os SKUs incompatíveis.
+- A opção disponível usa somente o ponto e a janela aprovados na spec, sem aceitar retirada, pedido, cobrança ou reserva.
+- Testes focados de pickup/snapshot/controller passaram com `-DargLine=-Xint`; OpenAPI será validado antes da publicação.

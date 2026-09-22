@@ -753,6 +753,22 @@ paths:
           content:
             application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
 
+  /api/v1/checkout/{snapshotId}/pickup-options:
+    get:
+      operationId: listCheckoutPickupOptions
+      summary: Consultar opções de retirada do snapshot
+      security: []
+      parameters:
+        - {in: path, name: snapshotId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: snapshotVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      responses:
+        '200':
+          description: Estado e opções de retirada server-owned
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/PickupOptions'}}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
   /api/v1/cart/items:
     put:
       operationId: replaceGuestCartItems
@@ -1339,6 +1355,27 @@ components:
         packageSequences: {type: array, items: {type: integer, minimum: 1}}
         createdAt: {type: string, format: date-time}
         expiresAt: {type: string, format: date-time}
+    PickupOptions:
+      type: object
+      additionalProperties: false
+      required: [status, options, unavailableSkuIds]
+      properties:
+        status: {type: string, enum: [AVAILABLE, UNAVAILABLE]}
+        options:
+          type: array
+          items: {$ref: '#/components/schemas/PickupOption'}
+        unavailableSkuIds:
+          type: array
+          items: {type: string, format: uuid}
+    PickupOption:
+      type: object
+      additionalProperties: false
+      required: [id, point, window, preparationDays]
+      properties:
+        id: {type: string}
+        point: {type: string}
+        window: {type: string}
+        preparationDays: {type: integer, minimum: 0}
     DeliverySelectionRequest:
       type: object
       additionalProperties: false
