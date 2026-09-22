@@ -40,6 +40,7 @@ describe('CheckoutService', () => {
           priceCents: 2590,
           deliveryDays: 5,
           preparationDays: 2,
+          packageSequences: [1],
           expiresAt: '2026-09-22T13:00:00Z',
         },
       ],
@@ -58,6 +59,7 @@ describe('CheckoutService', () => {
       priceCents: 2590,
       deliveryDays: 5,
       preparationDays: 2,
+      packageSequences: [1],
       expiresAt: '2026-09-22T13:00:00Z',
     };
     const selection = service.select(option);

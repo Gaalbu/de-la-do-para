@@ -33,6 +33,7 @@
               <div>
                 <strong>{{ option.serviceName }}</strong
                 ><span>{{ option.preparationDays + option.deliveryDays }} dias úteis</span>
+                <small>Pacotes: {{ option.packageSequences.join(', ') }}</small>
               </div>
               <div class="option-action">
                 <strong>{{ formatPrice(option.priceCents) }}</strong>
