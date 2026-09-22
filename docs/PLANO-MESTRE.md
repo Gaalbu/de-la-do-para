@@ -1542,7 +1542,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C41 — `docs(shipping): specify quotes dispatch and pickup rules`
 
-- [ ] **Depende:** C04, C17, C24a, C25, C38. **Alvos:** `specs/SPEC-shipping.md`, contrato de cotação/expedição; S.
+- [x] **Depende:** C04, C17, C24a, C25, C38. **Alvos:** `specs/SPEC-shipping.md`, contrato de cotação/expedição; S. Implementado nesta entrega.
 - **Aceite:** cotação com validade/fingerprint e divisão em pacotes; prazo de preparo/origem/retirada; cancelamento também considera expedição parcial.
 - **Verificar:** DOC; D17/D18 incorporadas; resolver Q03/Q05/Q10 antes das respectivas funcionalidades.
 

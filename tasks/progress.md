@@ -508,3 +508,11 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - O SKU público agora expõe seu UUID para a UI; contrato OpenAPI e geração TypeScript foram atualizados.
 - Validação frontend: 16 testes, build, lint, format e contracts:check verdes; backend de catálogo/carrinho validado localmente.
 - Próximo passo: C41, regras de cotação/expedição.
+## Sessão 2026-09-22 — C41 especificação de shipping
+
+- C40 foi mergeado no PR #52 (`a193c4b`), com carrinho persistente na UI.
+- Criada `specs/SPEC-shipping.md` com fingerprint/validade, modalidades,
+  pacotes, preparo, retirada, expedição parcial e cancelamento.
+- Regras D17/D18 e limites C41a–C43 permanecem separados, sem inventar
+  adapter ou capacidade física.
+- Próximo passo: C41a, composição determinística de pacotes.
