@@ -970,6 +970,7 @@ components:
         heightMm: {type: integer, minimum: 1}
         grossWeightGrams: {type: integer, minimum: 1}
         active: {type: boolean}
+        pickupEligible: {type: boolean, default: false, description: 'Indica se o SKU pode compor uma opção de retirada retornada pelo servidor.'}
     ProductFields:
       type: object
       required: [slug, displayName, description, category, producerId, skus]
@@ -1007,6 +1008,7 @@ components:
             heightMm: 40
             grossWeightGrams: 220
             active: true
+            pickupEligible: false
     ProductUpdate:
       type: object
       allOf:
@@ -1038,7 +1040,7 @@ components:
     ProductSku:
       type: object
       additionalProperties: false
-      required: [id, skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, active, createdAt, updatedAt]
+      required: [id, skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, active, pickupEligible, createdAt, updatedAt]
       properties:
         id: {type: string, format: uuid}
         skuCode: {type: string}
@@ -1051,6 +1053,7 @@ components:
         heightMm: {type: integer, minimum: 1}
         grossWeightGrams: {type: integer, minimum: 1}
         active: {type: boolean}
+        pickupEligible: {type: boolean}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
     Product:
@@ -1079,6 +1082,7 @@ components:
             heightMm: 40
             grossWeightGrams: 220
             active: true
+            pickupEligible: false
             createdAt: '2026-09-21T12:00:00Z'
             updatedAt: '2026-09-21T12:00:00Z'
         createdAt: '2026-09-21T12:00:00Z'
@@ -1125,6 +1129,7 @@ components:
                 heightMm: 40
                 grossWeightGrams: 220
                 active: true
+                pickupEligible: false
                 createdAt: '2026-09-21T12:00:00Z'
                 updatedAt: '2026-09-21T12:00:00Z'
             createdAt: '2026-09-21T12:00:00Z'

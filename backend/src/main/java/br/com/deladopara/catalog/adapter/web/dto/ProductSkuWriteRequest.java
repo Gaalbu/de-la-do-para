@@ -21,4 +21,5 @@ public record ProductSkuWriteRequest(
         @NotNull @Positive Integer widthMm,
         @NotNull @Positive Integer heightMm,
         @NotNull @Positive Integer grossWeightGrams,
-        @NotNull Boolean active) {}
+        @NotNull Boolean active,
+        Boolean pickupEligible) {}

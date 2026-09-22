@@ -134,6 +134,9 @@ preserva referências, e snapshots independentes ficam para pedidos.
    fora do catálogo (D17–D18, D27, D54, D57).
 5. Artesanato não possui prazo alimentar. Cuia, tigela e vaso são frágeis;
    cesto não é frágil. Chocolate 70% é somente para retirada na v1 (D55–D56).
+   A elegibilidade de retirada é dado explícito do SKU (`pickupEligible`),
+   nunca inferido pelo nome ou pela categoria; o padrão para SKUs existentes é
+   `false` até uma fixture/administração aprovada configurá-lo.
 6. O SKU guarda dimensões brutas unitárias e massa bruta aprovadas em D57;
    gravar cm convertidos exatamente para mm, sem arredondamento. Caixa e
    proteção são responsabilidade de shipping, que consome dimensões e massas
