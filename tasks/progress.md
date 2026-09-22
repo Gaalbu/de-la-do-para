@@ -654,3 +654,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - A UI passou a exibir a cobertura de pacotes retornada pelo servidor junto da modalidade, prazo total e custo; nenhum pacote é inferido no frontend.
 - Verificação: frontend `test:ci` 9 arquivos/22 testes, lint e formatação OK.
 - Próximo passo: publicar essa extensão e continuar a recuperação de seleção inválida/expirada; retirada permanece pendente da origem de opções correspondente no servidor.
+
+## Sessão 2026-09-22 — C44 recuperação de seleção rejeitada
+
+- A UI agora diferencia erro de consulta do CEP de cotação rejeitada por mudança/expiração, preservando a tela e permitindo nova consulta.
+- Teste do serviço cobre resposta `410` server-side sem marcar uma opção como selecionada; frontend passou com 9 arquivos/23 testes, lint e formatação OK.
+- Próximo passo: publicar essa recuperação, conferir o CI remoto e então avaliar a origem server-side de retirada prevista na spec.
