@@ -1484,18 +1484,19 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C34 — `feat(storefront): compose catalog price and availability queries`
 
-- [ ] **Depende:** C22, C27, C30, C33. **Alvos:** `B/storefront`, DTOs de consulta e testes; M.
+- [x] **Depende:** C22, C27, C30, C33. **Alvos:** `B/storefront`, DTOs de consulta e testes; M. Implementado em `923c882`, PR #45 merged.
 - **Aceite:** filtros combináveis e ordenação estável; disponibilidade correta; paginação limitada e sem leitura cruzada de repositories.
 - **Verificar:** BI(StorefrontQueries), C e consulta vazia/limites/filtro inválido.
 - **Estado atual:** a primeira fatia de pricing foi integrada em `b77bd3c`:
   `SkuPrice`, migration V19, repositório e serviço batch para preços correntes por
   SKU, com teste unitário e integração PostgreSQL/Flyway. A consulta storefront
-  produto+preço+disponibilidade, filtros, ordenação e paginação ainda não foi
-  implementada.
+  foi entregue em `GET /api/v1/products`, com filtros, ordenação estável,
+  paginação limitada, preço corrente e saldo livre por SKU; portas de
+  disponibilidade/preço preservam as fronteiras dos módulos.
 
 ### C35 — `feat(storefront-ui): browse filter and paginate products`
 
-- [ ] **Depende:** C07, C24, C34. **Alvos:** `F/storefront/catalog`, filtros/listagem e testes; M.
+- [ ] **Depende:** C07, C24, C34. **Alvos:** `F/storefront/catalog`, filtros/listagem e testes; M. Implementação local em `feat/next-catalog-work` pendente de PR/CI.
 - **Aceite:** catálogo mobile, filtros na URL e estado vazio/erro; busca antiga cancelada não sobrescreve resultado novo.
 - **Verificar:** F/E; reload e voltar/avançar preservam filtro.
 

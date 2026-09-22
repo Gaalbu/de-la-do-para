@@ -4,7 +4,8 @@ import { adminGuard } from './features/admin/admin.guard';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
+    loadComponent: () =>
+      import('./features/storefront/storefront.component').then((m) => m.StorefrontComponent),
   },
   {
     path: 'login',

@@ -1,0 +1,24 @@
+:root {
+  --color-ink: #28231f;
+  --color-muted: #6f665f;
+  --color-accent: #9b3f2f;
+  --color-on-accent: #fffaf2;
+  --color-surface: #fffdf9;
+  --color-paper: #f4eee5;
+  --color-line: #d9cec2;
+  --color-focus: #0d6b78;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+a {
+  color: inherit;
+}
