@@ -716,3 +716,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 - C39 estava marcado como pendente apesar de o PR #50 (`f126e94`) estar merged e a migration V20 estar presente em `main`.
 - O item foi marcado como concluído sem alteração de comportamento; a evidência permanece no histórico remoto e nos testes de persistência/conflito do carrinho.
+
+## Sessão 2026-09-22 — reconciliação remota do plano C24–C44
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `docs/reconcile-plan-state`, SHA inicial `3ed316e`, plano mestre vigente |
+| Tarefa | Reconciliação documental de estados remotos; em execução até publicação do registro |
+| Mudanças | Atualizados `docs/PLANO-MESTRE.md` e `docs/traceability.md` para refletir os merges verificados dos PRs #30–#39 e #55–#62. C24, C26–C28 tiveram o estado de implementação integrado explicitado; C25 continua pendente de revisão das regras abertas. |
+| Verificação | `npm --prefix frontend run docs:check` passou: 25 Markdown, nenhum link quebrado; `git diff --check` passou. Não houve alteração de comportamento. |
+| Remoto | Evidência consultada via GitHub: PRs #30–#39 e #42–#59 merged; #60–#62 integrados em `main` (`4551e24`). Esta reconciliação ainda não foi publicada. |
+| Próximo passo | Rodar `aislop`, revisar o diff e publicar esta reconciliação em PR. Depois, C24a requer revisão das pendências de calendário/contador global; C45 continua bloqueada pela ausência de homologação real de C04. |
