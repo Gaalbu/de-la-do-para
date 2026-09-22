@@ -1,5 +1,7 @@
 package br.com.deladopara.identity.config;
 
+import java.util.UUID;
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,6 +40,10 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/sessions/current")
                         .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/product-images/**")
+                        .permitAll()
                         .requestMatchers("/api/v1/admin/**")
                         .hasRole("ADMIN")
                         .anyRequest()
@@ -46,25 +52,28 @@ public class SecurityConfig {
                         .csrfTokenRequestHandler(handler)
                         .ignoringRequestMatchers("/api/v1/sessions", "/api/v1/accounts/verify"))
                 .sessionManagement(session -> session.sessionFixation(fix -> fix.changeSessionId()))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, exc) -> {
-                            res.setStatus(401);
-                            res.setContentType("application/problem+json");
-                            var body = "{\"title\":\"Não autenticado\",\"status\":401,"
-                                    + "\"codigo\":\"IDENTITY_006\",\"detail\":\"Sessão ausente ou expirada\"}";
-                            res.getWriter().write(body);
-                        })
-                        .accessDeniedHandler((req, res, exc) -> {
-                            res.setStatus(403);
-                            res.setContentType("application/problem+json");
-                            var body = "{\"title\":\"Acesso negado\",\"status\":403,"
-                                    + "\"codigo\":\"IDENTITY_008\",\"detail\":\"Permissão insuficiente ou CSRF ausente\"}";
-                            res.getWriter().write(body);
-                        }))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, exc) ->
+                                writeProblem(res, 401, "IDENTITY_006", "Não autenticado", "Sessão ausente ou expirada"))
+                        .accessDeniedHandler((req, res, exc) -> writeProblem(
+                                res, 403, "IDENTITY_008", "Acesso negado", "Permissão insuficiente ou CSRF ausente")))
                 .logout(logout -> logout.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
 
         return http.build();
+    }
+
+    private void writeProblem(
+            jakarta.servlet.http.HttpServletResponse response, int status, String code, String title, String detail)
+            throws java.io.IOException {
+        response.setStatus(status);
+        response.setContentType("application/problem+json");
+        var correlationId = MDC.get("correlationId");
+        response.getWriter()
+                .printf(
+                        "{\"title\":\"%s\",\"status\":%d,\"detail\":\"%s\",\"codigo\":\"%s\","
+                                + "\"correlationId\":\"%s\"}",
+                        title, status, detail, code, correlationId == null ? UUID.randomUUID() : correlationId);
     }
 
     @Bean

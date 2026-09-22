@@ -268,3 +268,152 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PR #30 aberto: https://github.com/Gaalbu/de-la-do-para/pull/30, `docs/c17-catalog@4c424dc`. CI run `35631089081` success: backend, frontend, contracts, docs, security, commit-policy e quality-gate (7/7). PR mergeable; não merged. |
 | Próximo passo | C18 — persistência de produtores/procedência (PostgreSQL, migration e teste de integração). CAT-Q02/03 permanecem para C19. Curadoria final de assets continua pendente em C03, sem adicionar imagens não aprovadas. |
 | Perguntas | Nenhuma nova para C18. |
+
+## Sessão 2026-09-21 — C18 persistência de produtores
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c17-catalog@91ed77b`; branch `feat/c18-producer-persistence`; árvore inicial preservava `.angular/` não rastreado |
+| Tarefa | C18a/C18b — `feat(catalog): persist producers and provenance` — implementada e verificada localmente |
+| Mudanças | `Producer` com UUID estável, slug normalizado para minúsculas, nome de exibição, rótulo amplo de origem, descrição e timestamps; migration `V13__catalog_producers.sql` com checks de slug/formato/campos, PK UUID e índice único case-insensitive; `ProducerRepository` expõe save/read/findBySlug/existsBySlug sem API de exclusão; testes cobrem persistência, atualizações, identidade/timestamp estáveis e duplicação de slug. CAT-Q01 respeitada: nenhum produtor tem conta própria. |
+| Verificação | RED inicial confirmou ausência da tabela; `./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT verify` BUILD SUCCESS: unitários 12/12 e integração 3/3, PostgreSQL 18.6 via Testcontainers, Flyway V13 aplicada, Hibernate `ddl-auto=validate`, Spotless e Checkstyle OK; `git diff --check` OK; `npx aislop scan --changes --json` 100/100, 0 findings. |
+| Remoto | PR #30 (C17) permanece OPEN/MERGEABLE, CI no head `91ed77b` SUCCESS 7/7. C18/C19 locais nesta branch, ainda não publicadas. |
+| Próximo passo | C20 — interface administrativa para consultar/criar/editar produtores, conforme contrato C19 e decisões D65. |
+| Perguntas | CAT-Q01 confirmada anteriormente; CAT-Q02/Q03 aprovadas pelo usuário em 2026-09-21 e registradas como D65. Sem contas para produtores nem exclusão física. |
+
+## Sessão 2026-09-21 — C19 API administrativa de produtores
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch local `feat/c18-producer-persistence`; C18 implementada na árvore atual; `.angular/` preexistente não rastreado preservado |
+| Decisões | Usuário aprovou CAT-Q02/Q03: sem remoção física de produtor referenciado, com desativação; apenas localidade ampla e texto editorial fictício, identificados como demonstração, sem coordenadas/endereço/alegações verificáveis. D65 registrado em `docs/decisions.md` e `docs/PLANO-MESTRE.md`. |
+| Mudanças | C18: `Producer`/repositório/migration V13 com `active`; constraints e índice único. C19: serviço e rotas administrativas GET/POST/lista/consulta/PATCH, paginação limitada, DTOs de demonstração, conflito de slug, validação/Problem Details correlacionado; sem DELETE. OpenAPI atualizado e clientes Angular regenerados; guia da API e rastreabilidade atualizados. SecurityConfig agora inclui `correlationId` RFC UUID nas respostas 401/403. |
+| Verificação | `./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT,ProducerAdminApiIT verify` BUILD SUCCESS: unitários 12/12, integração C18+C19 7/7; PostgreSQL 18.6/Testcontainers, Flyway V13, Hibernate validate, Spotless e Checkstyle OK. `contracts:check` exit 0 (spec válida, eventos, geração Angular e TypeScript; 10 avisos Redocly já existentes); `docs:check` 24 Markdown OK; `verify.sh security` zero segredos e zero vulnerabilidades runtime (4 high preexistentes dev-only em js-yaml); `git diff --check` OK; aislop 100/100, zero findings. |
+| Remoto | PR #30 de C17 OPEN/MERGEABLE, CI 7/7 no head `91ed77b`; implementação C18/C19 ainda não publicada. |
+| Próximo passo | C20 UI de gestão administrativa, coberta por teste browser real e reload da lista/detalhes. |
+| Perguntas | Nenhuma nova; produtores não têm conta própria na v1. |
+
+## Sessão 2026-09-21 — C20 interface administrativa de produtores
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c18-producer-persistence` (C18/C19); branch `feat/c20-producer-admin-ui`; `.angular/` preexistente não rastreado preservado |
+| Decisões | D65 aplicada: somente admin; desativar em vez de apagar; conteúdo fictício/amplo com identificação de demonstração. SSR de `/admin` renderiza o shell sem cookies; autorização efetiva ocorre no guard do browser e, obrigatoriamente, na API. |
+| Mudanças | Página administrativa lista/pagina produtores ativos e inativos, cria, edita e desativa/restaura; formulário acessível com required/pattern/maxlength, avisos contra endereço/coordenadas/alegações e estados de loading/erro/sucesso. Sem ação de exclusão. Corrigido guard SSR: sessão baseada em cookie só é consultada no browser; API segue responsável por autorização. |
+| Verificação | `./scripts/verify.sh frontend` passou: lint, format, 6 testes Angular, build SSR, Playwright 2/2. `verify.sh docs`, `contracts` (10 avisos Redocly), `security` (0 vulnerabilidades runtime; 4 high dev-only preexistentes em js-yaml) passaram; `git diff --check` OK; aislop 100/100 sem findings. |
+| Remoto | Commit `02bf308` enviado; PR #32 aberto/mergeable sobre `feat/c18-producer-persistence`; CI `35637344901` 7/7 verde. PR #31 (C18/C19) aberto/mergeable e CI 7/7 verde. |
+| Próximo passo | C21 — persistência de produtos/SKUs na branch empilhada sobre C20. |
+| Perguntas | Nenhuma. |
+
+## Sessão 2026-09-21 — C21 persistência de produtos e SKUs
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `feat/c21-catalog-product-persistence`, baseada em C20/C19/C18; `.angular/` preexistente não rastreado preservado |
+| Decisões | D65: produtores somente por admin, sem conta própria; produtores referenciados ficam sem exclusão física, podem ser desativados; exibição usa somente localidade ampla e texto editorial fictício identificados como demonstração. C21 protege produto/SKUs referenciados por FK restritiva; snapshots independentes pertencem à futura capacidade de pedidos. Fixture real/sintética do catálogo permanece em C26. |
+| Mudanças | Entidades `Product` e `ProductSku`, repositórios sem operação de exclusão física, migration V14 com unicidade case-insensitive, invariantes de categoria/conteúdo/validade e dimensões/peso. SKU representa unidade vendida, com variantes distintas por conteúdo/embalagem. Desativar produto preserva identidades e relações. Spec esclarece limites de snapshots e fixture; rastreabilidade e plano atualizados. |
+| Verificação | `./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT,ProducerAdminApiIT,ProductRepositoryIT verify` passou: 15 testes unitários, 10 integração, PostgreSQL 18.6/Testcontainers, Flyway V14, Spotless e Checkstyle sem violações. `npm run docs:check --prefix frontend` passou (24 Markdown); `git diff --check` OK. |
+| Remoto | C20 PR #32 aberto/mergeable, CI `35637344901` 7/7 verde. C21 commit `7e009a0` publicado em PR #33, empilhada sobre C20; retry do CI `35639675604` concluiu 7/7 verde após 502 transitório do Maven Central. |
+| Próximo passo | C22 — API de administração e consulta pública sobre C21; sem merge automático. |
+| Perguntas | Nenhuma. |
+
+## Sessão 2026-09-21 — C22 API de produtos (verificada localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `feat/c22-product-api-contracts`, empilhada sobre C21/C20; `.angular/` preexistente não rastreado preservado |
+| Decisões | Produtos ativos só aparecem publicamente quando produtor e ao menos um SKU também estão ativos. PATCH integral; SKU omitido desativado logicamente. Nenhuma rota DELETE. Escritas só admin com CSRF. |
+| Mudanças | Teste HTTP RED confirmou rota ausente; OpenAPI agora define rotas/admin/public e schemas. Implementados `ProductService`, controllers, DTOs, mapeamento Problem Details, autorização pública explícita GET e migration V15 para estado ativo do SKU. Documento API/spec atualizados. |
+| Verificação | `./scripts/verify.sh backend` passou: 15 unitários, 15 integrações incluindo PostgreSQL 18.6/Testcontainers, Flyway V15 e harness Kafka, Spotless e Checkstyle. Rodada final `-Dit.test=ProductAdminApiIT verify` passou 15 unitários + 4 integrações, cobrindo FOOD/CRAFT (campos alimentares nulos), rollback, 401/403/CSRF/404/409, inatividade de produtor/produto/SKUs e ausência de DELETE. `contracts:check` passou com geração TypeScript, `tsc` e eventos (10 avisos Redocly preexistentes); `docs:check` (24 Markdown) e `git diff --check` passaram. |
+| Remoto | C22 `fca692a` publicado na PR #34 sobre #33: https://github.com/Gaalbu/de-la-do-para/pull/34, MERGEABLE/CLEAN; CI `35642638538` success 7/7 (backend, frontend, contracts, docs, security, commit-policy, quality-gate). |
+| Próximo passo | C23 — interface administrativa de produtos, branch empilhada sobre C22; sem merge automático. |
+| Perguntas | Nenhuma. |
+
+## Sessão 2026-09-21 — C23 interface administrativa de produtos (verificada localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c22-product-api-contracts@fca692a`; branch `feat/c23-product-admin-ui`; `.angular/` não rastreado preexistente preservado |
+| Tarefa | C23 — `feat(catalog-ui): manage products and packaging details` — commit `c540d3f`, PR #35 aberta; correção de CI em andamento |
+| Mudanças | Nova rota protegida `/admin/products` com SSR; lista paginada, seleção de produtores ativos, formulário de alimentos/artesanato, variantes editáveis, campos alimentares condicionais, dimensões/peso/fragilidade, erros recuperáveis, edição e confirmação ao desativar produto. UI ligada à API tipada de C22; sem upload de imagem (C24) |
+| Verificação | `./scripts/verify.sh frontend` passou localmente: lint, Prettier, 10 testes Angular, build SSR e Playwright 3/3. O primeiro CI limpo falhou porque `frontend/src/generated/` é ignorado e o job não gerava os tipos OpenAPI. Após corrigir `scripts/verify.sh frontend` para rodar `contracts:generate`, o mesmo gate passou em arquivo limpo extraído do commit, com node_modules compartilhado; geração, lint, 10 testes, build SSR e Playwright 3/3. API no E2E é simulada; endpoints PostgreSQL/HTTP foram cobertos em C22. `npx aislop scan --changes --json`: 100/100, sem achados. |
+| Remoto | C22 PR #34 aberta, MERGEABLE/CLEAN, CI `35642638538` 7/7 verde. C23 PR #35 aberta sobre #34; run `35649968314` falhou em `frontend` e `quality-gate`; correção local pronta para publicar e reexecutar CI. |
+| Próximo passo | Publicar correção do gate, confirmar CI 7/7 de C23 e seguir implementação C24 na branch empilhada; nenhum merge automático |
+| Perguntas | Nenhuma nova |
+
+## Sessão 2026-09-21 — C24 imagem principal de catálogo (em implementação)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c24-media`, empilhada em C23; `.angular/` preexistente preservado |
+| Decisões | Uma imagem principal opcional por produto; JPEG/PNG; máximo 5 MiB. Limites técnicos internos: 12 MP e 6000 px por lado. |
+| Mudanças | Spec/ADR 0006; processador raster que confere bytes e remove metadados; armazenamento local UUID em `APP_MEDIA_DIRECTORY`; domínio e migration V16; rotas multipart admin, remoção e entrega pública condicionada a produto/produtor/SKU ativos; OpenAPI/DTO; formulário administrativo com prévia, licenciamento, confirmação, upload e remoção; guia local/API atualizado. |
+| Verificação | Backend `verify`: 31 testes unitários e 18 integrações passaram com PostgreSQL 18.6, migrations até V16, Spotless e Checkstyle. Foi necessário `-DargLine=-Xint` após SIGSEGV no compilador C1 de Temurin 25.0.4. `scripts/verify.sh frontend`: geração OpenAPI, lint, formato, 11 testes Angular, build SSR e Playwright 3/3. `docs:check` validou 25 Markdown; `contracts:check` passou com 10 avisos Redocly preexistentes; security detectou zero segredos e audit runtime zero vulnerabilidades; `aislop scan --changes --json`: 100/100, zero achados; `git diff --check` limpo. |
+| Remoto | C24 implementação `1d5b2ac`, HEAD de documentação `9491996`, PR #36: https://github.com/Gaalbu/de-la-do-para/pull/36, base `feat/c23-product-admin-ui`. Estado atual reconsultado: PR aberta/MERGEABLE, CI `35656338034` 7/7 verde. C23 PR #35 aberta/MERGEABLE, CI `35650869375` 7/7 verde. Nenhum merge automático. |
+| Próximos passos | C24 entregue para revisão remota; acompanhar as PRs empilhadas sem merge automático. |
+
+## Sessão 2026-09-21 — C24a políticas logísticas e comerciais (proposta para revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c24-media@9491996`; nova branch `docs/c24a-logistics-decisions`, empilhada sem integrar PRs abertas |
+| Tarefa | C24a — consolidar regras já aprovadas e encaminhar lacunas às etapas designadas; D66/D67 aprovadas, revisão final da spec pendente |
+| Mudanças | Criadas `specs/SPEC-logistics.md` e `specs/SPEC-pricing.md`; atualizados C24a em `docs/PLANO-MESTRE.md`, `docs/decisions.md` e rastreio. D21–D31, D33–D37 e D54–D60 resumidas sem reabrir respostas; D66 (guarda por 3 dias úteis + análise manual) e D67 (fixture sintética dos limites D54, clock fixo) aprovadas e registradas. O escopo de C24a foi precisado para deixar design/metas/catálogo em suas specs próprias. Recomendações futuras seguem identificadas como propostas |
+| Verificação | `npm run docs:check --prefix frontend` aprovado: 25 arquivos Markdown, nenhum link quebrado; `git diff --check` aprovado; conferência manual dos pontos citados com D21–D31, D33–D37 e D54–D60. Fontes oficiais federal/estadual e atos municipais de Belém consultados; a cobertura municipal anual permanece a confirmar antes de montar calendário completo. `aislop scan --changes --json`: 100/100, zero achados |
+| Remoto | Ainda sem commit/PR |
+| Próximo passo | Registrar a resposta sobre despacho parcial e apresentar a pendência seguinte; C25 pode usar fixture D67, mas segue após conclusão/revisão de C24a e conferência do calendário municipal |
+| Perguntas | Nenhuma nova; escolhas de imagem e tamanho já aprovadas |
+
+## Sessão 2026-09-21 — C25 inventário (spec em revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@9491996`; alterações locais ainda não commitadas |
+| Tarefa | C25 — especificar lotes, saldos, reservas e invariantes; spec preparada, não concluída |
+| Mudanças | Criado `specs/SPEC-inventory.md`: saldo físico/reservado/livre, reserva de 15 minutos, pagamento tardio D13, elegibilidade `arrivalDate`/validade, fixture D67, alocação all-or-nothing, ledger/auditoria, handoff por pacote e critérios INV-001–008. FEFO, bloqueio com reserva ativa, calendário anual e validade em retirada tardia ficaram explicitamente abertos |
+| Verificação | Ainda executar após esta edição: `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json`. Nenhum código ou migration foi criado |
+| Remoto | Commit `a819ffd` publicado na PR #37: https://github.com/Gaalbu/de-la-do-para/pull/37, base `feat/c24-media`; PR aberta/MERGEABLE; CI inicial `35658857246` 7/7 verde. Nenhum merge automático |
+| Próximo passo | Acompanhar CI do commit de progresso; depois perguntar a regra de despacho parcial e obter revisão da spec antes de marcar C25 concluída |
+
+## Sessão 2026-09-21 — C29 preço e cupons (spec em revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@a6e5915`; PR #37 aberta, sem merge |
+| Tarefa | C29 — especificar cálculo monetário, descontos e elegibilidade de cupons; proposta documental, não concluída |
+| Mudanças | Ampliada `specs/SPEC-pricing.md` com centavos inteiros, ordem de subtotal/frete/desconto, arredondamento half-up proposto, limite de desconto, mínimo/validade/e-mail verificado, snapshots e casos de fronteira. Combinações e contador global permanecem decisões abertas |
+| Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json` após a edição; sem código ou migration |
+| Remoto | PR #37 cobre a spec-base; nova alteração ainda local |
+| Próximo passo | Validar documentação; pedir revisão das regras propostas antes de C30/C31 |
+
+## Sessão 2026-09-21 — plano executável C30/C31
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@7259c35`; PR #37 aberta, 7/7 verde |
+| Tarefa | Preparar ordem de implementação sem aprovar silenciosamente o contador global |
+| Mudanças | Criado `tasks/plan.md` com fatias C30 (totais canônicos + BT) e C31 (reserva atômica + BI), dependências, gates e bloqueios; rastreio atualizado |
+| Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop` após edição; sem código funcional |
+| Próximo passo | Revisão das specs C25/C29 e decisão do ciclo global de cupons; depois iniciar C30 |
+
+## Sessão 2026-09-21 — C30 totais canônicos
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@7259c35`; implementação em `feat/c30-pricing-totals` |
+| Tarefa | C30 — calcular total canônico em centavos BRL |
+| Mudanças | Criados `Money`/`Currency` (BRL), `PurchaseLine`, `PurchaseTotalRequest`, `CouponDiscount`, `PurchaseTotal` e `PurchaseTotalCalculator`; desconto percentual half-up, mínimo, desconto fixo limitado ao subtotal, frete e total com aritmética exata |
+| Verificação | RED por compilação sem tipos; depois teste focado verde e `./mvnw -q -DargLine=-Xint verify` verde; `aislop scan --staged --json`: 100/100, zero achados |
+| Remoto | Commits `a7a0551`, `5813f3f`; PR #38: https://github.com/Gaalbu/de-la-do-para/pull/38; CI final 7/7 verde, aberta e mergeable; nenhum merge automático |
+| Próximo passo | Definir contador global de cupons e iniciar C31; expor cálculo por API só quando o contrato de checkout estiver definido |
+
+## Sessão 2026-09-21 — C26 invariantes de lote
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c30-pricing-totals@6409c4f`; implementação em `feat/c26-inventory-lot-invariants` |
+| Tarefa | C26 — núcleo independente de saldos e elegibilidade de lote |
+| Mudanças | Criados `InventoryLot`, `InventoryAvailability`, `InventoryMovement`, `InventoryLedger`, `InventoryReservation` e `ReservationIntent`: saldos, margem D67, bloqueio, ledger idempotente, expiração de 15 minutos e validação multi-SKU |
+| Verificação | Testes focados e `./mvnw -q -DargLine=-Xint verify` verdes; `aislop` 100/100, zero achados |
+| Remoto | Commits até `e81ea6e`; PR #39: https://github.com/Gaalbu/de-la-do-para/pull/39; rodada atual do CI em andamento, PR aberta e mergeable |
+| Limites | FEFO, lotes bloqueados com alocação ativa, persistência, reserva e API continuam fora desta fatia até revisão das regras abertas |

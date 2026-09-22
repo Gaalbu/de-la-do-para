@@ -171,6 +171,379 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CsrfResponse'
+  /api/v1/admin/producers:
+    get:
+      operationId: listAdminProducers
+      summary: Listar produtores para gestão administrativa
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 0, default: 0}
+        - in: query
+          name: size
+          schema: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        '200':
+          description: Página de produtores, incluindo inativos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProducerPage'}
+        '400':
+          description: Paginação inválida
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    post:
+      operationId: createAdminProducer
+      summary: Criar produtor de demonstração
+      description: Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProducerWrite'}
+      responses:
+        '201':
+          description: Produtor criado
+          headers:
+            Location: {schema: {type: string, format: uri-reference}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Producer'}
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Slug já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/producers/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getAdminProducer
+      summary: Consultar produtor
+      responses:
+        '200':
+          description: Produtor encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Producer'}
+        '400':
+          description: UUID inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    patch:
+      operationId: updateAdminProducer
+      summary: Atualizar dados ou desativar produtor
+      description: Corpo completo dos campos editáveis. Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProducerUpdate'}
+      responses:
+        '200':
+          description: Produtor atualizado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Producer'}
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Slug já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/products:
+    get:
+      operationId: listAdminProducts
+      summary: Listar produtos e variantes para gestão administrativa
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 0, default: 0}
+        - in: query
+          name: size
+          schema: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        '200':
+          description: Página incluindo produtos e SKUs inativos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProductPage'}
+        '400':
+          description: Paginação inválida
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    post:
+      operationId: createAdminProduct
+      summary: Criar produto e seus SKUs de demonstração
+      description: Cria o produto e variantes numa transação. Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductWrite'}
+      responses:
+        '201':
+          description: Produto criado
+          headers:
+            Location: {schema: {type: string, format: uri-reference}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Product'}
+        '400':
+          description: Dados ou vínculo inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Slug de produto ou código SKU já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getAdminProduct
+      summary: Consultar produto e histórico de variantes
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Product'}
+        '400':
+          description: UUID inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Produto não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    patch:
+      operationId: updateAdminProduct
+      summary: Atualizar ou desativar produto e variantes
+      description: Corpo integral dos campos editáveis. SKUs omitidos são desativados sem exclusão física. Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductUpdate'}
+      responses:
+        '200':
+          description: Produto atualizado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Product'}
+        '400':
+          description: Dados ou vínculo inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Produto ou produtor não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Slug de produto ou código SKU já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/products/{productId}/image:
+    parameters:
+      - in: path
+        name: productId
+        required: true
+        schema: {type: string, format: uuid}
+    put:
+      operationId: putAdminProductImage
+      summary: Definir ou substituir a imagem principal do produto
+      description: JPEG ou PNG até 5 MiB; exige sessão administrativa e CSRF.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, altText, source, license, rightsReviewed]
+              properties:
+                file: {type: string, format: binary}
+                altText: {type: string, minLength: 1, maxLength: 250}
+                source: {type: string, minLength: 1, maxLength: 1500}
+                license: {type: string, minLength: 1, maxLength: 200}
+                creator: {type: string, maxLength: 200}
+                attribution: {type: string, maxLength: 500}
+                rightsReviewed: {type: boolean, const: true}
+      responses:
+        '200': {description: Imagem substituída, content: {application/json: {schema: {$ref: '#/components/schemas/ProductImage'}}}}
+        '201': {description: Imagem criada, content: {application/json: {schema: {$ref: '#/components/schemas/ProductImage'}}}}
+        '400': {description: Imagem ou metadados inválidos, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+        '401': {description: Sessão ausente ou expirada, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+        '403': {description: Papel insuficiente ou CSRF ausente, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+        '404': {description: Produto não encontrado, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+        '413': {description: Arquivo acima de 5 MiB, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+    delete:
+      operationId: deleteAdminProductImage
+      summary: Remover a imagem principal do produto
+      x-csrf-required: true
+      responses:
+        '204': {description: Imagem removida}
+        '401': {description: Sessão ausente ou expirada, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+        '403': {description: Papel insuficiente ou CSRF ausente, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+        '404': {description: Imagem não encontrada, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+  /api/v1/product-images/{id}:
+    get:
+      operationId: getPublicProductImage
+      summary: Baixar imagem principal de produto disponível
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Conteúdo JPEG ou PNG
+          content:
+            image/jpeg: {schema: {type: string, format: binary}}
+            image/png: {schema: {type: string, format: binary}}
+        '404': {description: Imagem ou produto não disponível, content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}}
+  /api/v1/products/{slug}:
+    get:
+      operationId: getPublicProduct
+      summary: Consultar produto ativo e procedência de demonstração
+      security: []
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: {type: string, minLength: 1, maxLength: 80}
+      responses:
+        '200':
+          description: Produto ativo com produtor ativo e ao menos um SKU ativo
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicProduct'}
+        '404':
+          description: Produto não disponível
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/accounts/verify:
     post:
       operationId: verifyEmail
@@ -199,8 +572,62 @@ paths:
       responses:
         '200':
           description: Senha redefinida
+  /api/v1/admin/inventory/skus/{skuId}/lots:
+    get:
+      operationId: listInventoryLots
+      summary: Consultar lotes de um SKU
+      parameters:
+        - {$ref: '#/components/parameters/SkuId'}
+      responses:
+        '200':
+          description: Lotes do SKU
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/InventoryLot'}}
+    post:
+      operationId: receiveInventoryLot
+      summary: Registrar recebimento de lote
+      parameters:
+        - {$ref: '#/components/parameters/SkuId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/InventoryLotCreate'}
+      responses:
+        '200':
+          description: Lote registrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InventoryLot'}
+        '400': {$ref: '#/components/responses/Problem400'}
+  /api/v1/admin/inventory/lots/{lotId}:
+    patch:
+      operationId: adjustInventoryLot
+      summary: Ajustar saldo físico de lote
+      parameters:
+        - {$ref: '#/components/parameters/LotId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/InventoryAdjustment'}
+      responses:
+        '200':
+          description: Lote ajustado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InventoryLot'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
 components:
   responses:
+    Problem400:
+      description: Dados inválidos
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
+    Problem409:
+      description: Conflito de versão
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
     HealthUp:
       description: Processo disponível; não comprova integrações sandbox.
       headers:
@@ -235,6 +662,17 @@ components:
       schema:
         type: string
         format: uuid
+  parameters:
+    SkuId:
+      name: skuId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    LotId:
+      name: lotId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -272,6 +710,12 @@ components:
       description: Erro padronizado (RFC 9457 + código comercial estável)
       type: object
       required: [title, status, codigo]
+      example:
+        title: Erro
+        status: 409
+        detail: identificador já cadastrado
+        codigo: CATALOG_002
+        correlationId: 4b1e7c69-628c-4c81-92f7-f30d6821d30a
       properties:
         title:
           type: string
@@ -328,3 +772,386 @@ components:
       properties:
         token:
           type: string
+    ProductCategory:
+      type: string
+      enum: [FOOD, CRAFT]
+    ProductSkuWrite:
+      type: object
+      additionalProperties: false
+      required: [skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, active]
+      properties:
+        id: {type: string, format: uuid, description: 'Omitente para criar uma variante; enviar para atualizar uma variante existente.'}
+        skuCode: {type: string, minLength: 1, maxLength: 80, pattern: '^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$'}
+        salesUnit: {type: string, minLength: 1, maxLength: 40}
+        netContentGrams: {type: [integer, 'null'], minimum: 1, description: 'Obrigatório para FOOD e nulo ou omitido para CRAFT.'}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 1, description: 'Obrigatório para FOOD e nulo ou omitido para CRAFT.'}
+        fragile: {type: boolean}
+        lengthMm: {type: integer, minimum: 1}
+        widthMm: {type: integer, minimum: 1}
+        heightMm: {type: integer, minimum: 1}
+        grossWeightGrams: {type: integer, minimum: 1}
+        active: {type: boolean}
+    ProductFields:
+      type: object
+      required: [slug, displayName, description, category, producerId, skus]
+      properties:
+        slug: {type: string, minLength: 1, maxLength: 80, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'}
+        displayName: {type: string, minLength: 1, maxLength: 160}
+        description: {type: string, minLength: 1, maxLength: 2000, description: 'Texto editorial fictício, identificado como demonstração.'}
+        category: {$ref: '#/components/schemas/ProductCategory'}
+        producerId: {type: string, format: uuid}
+        skus:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: {$ref: '#/components/schemas/ProductSkuWrite'}
+    ProductWrite:
+      type: object
+      allOf:
+        - {$ref: '#/components/schemas/ProductFields'}
+      unevaluatedProperties: false
+      example:
+        slug: alimento-demo
+        displayName: Alimento de demonstração
+        description: Produto fictício de demonstração.
+        category: FOOD
+        producerId: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+        skus:
+          - skuCode: DEMO-200G
+            salesUnit: Pacote
+            netContentGrams: 200
+            minimumShelfLifeDays: 30
+            fragile: false
+            lengthMm: 180
+            widthMm: 120
+            heightMm: 40
+            grossWeightGrams: 220
+            active: true
+    ProductUpdate:
+      type: object
+      allOf:
+        - {$ref: '#/components/schemas/ProductFields'}
+        - type: object
+          required: [active]
+          properties:
+            active: {type: boolean}
+      unevaluatedProperties: false
+      example:
+        slug: alimento-demo
+        displayName: Alimento de demonstração
+        description: Produto fictício de demonstração.
+        category: FOOD
+        producerId: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+        active: false
+        skus:
+          - id: 40c9f97b-4f7d-4eae-843f-1f227c7fbd46
+            skuCode: DEMO-200G
+            salesUnit: Pacote
+            netContentGrams: 200
+            minimumShelfLifeDays: 30
+            fragile: false
+            lengthMm: 180
+            widthMm: 120
+            heightMm: 40
+            grossWeightGrams: 220
+            active: true
+    ProductSku:
+      type: object
+      additionalProperties: false
+      required: [id, skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, active, createdAt, updatedAt]
+      properties:
+        id: {type: string, format: uuid}
+        skuCode: {type: string}
+        salesUnit: {type: string}
+        netContentGrams: {type: [integer, 'null'], minimum: 1}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 1}
+        fragile: {type: boolean}
+        lengthMm: {type: integer, minimum: 1}
+        widthMm: {type: integer, minimum: 1}
+        heightMm: {type: integer, minimum: 1}
+        grossWeightGrams: {type: integer, minimum: 1}
+        active: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    Product:
+      type: object
+      additionalProperties: false
+      required: [id, slug, displayName, description, category, producerId, demonstration, active, image, skus, createdAt, updatedAt]
+      example:
+        id: 40c9f97b-4f7d-4eae-843f-1f227c7fbd46
+        slug: alimento-demo
+        displayName: Alimento de demonstração
+        description: Produto fictício de demonstração.
+        category: FOOD
+        producerId: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+        demonstration: true
+        active: true
+        image: null
+        skus:
+          - id: 50c9f97b-4f7d-4eae-843f-1f227c7fbd46
+            skuCode: DEMO-200G
+            salesUnit: Pacote
+            netContentGrams: 200
+            minimumShelfLifeDays: 30
+            fragile: false
+            lengthMm: 180
+            widthMm: 120
+            heightMm: 40
+            grossWeightGrams: 220
+            active: true
+            createdAt: '2026-09-21T12:00:00Z'
+            updatedAt: '2026-09-21T12:00:00Z'
+        createdAt: '2026-09-21T12:00:00Z'
+        updatedAt: '2026-09-21T12:00:00Z'
+      properties:
+        id: {type: string, format: uuid}
+        slug: {type: string}
+        displayName: {type: string}
+        description: {type: string, description: 'Texto editorial fictício, identificado como demonstração.'}
+        category: {$ref: '#/components/schemas/ProductCategory'}
+        producerId: {type: string, format: uuid}
+        demonstration: {type: boolean, const: true}
+        active: {type: boolean}
+        image: {$ref: '#/components/schemas/ProductImageNullable'}
+        skus:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/ProductSku'}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    ProductPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      example:
+        content:
+          - id: 40c9f97b-4f7d-4eae-843f-1f227c7fbd46
+            slug: alimento-demo
+            displayName: Alimento de demonstração
+            description: Produto fictício de demonstração.
+            category: FOOD
+            producerId: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+            demonstration: true
+            active: true
+            image: null
+            skus:
+              - id: 50c9f97b-4f7d-4eae-843f-1f227c7fbd46
+                skuCode: DEMO-200G
+                salesUnit: Pacote
+                netContentGrams: 200
+                minimumShelfLifeDays: 30
+                fragile: false
+                lengthMm: 180
+                widthMm: 120
+                heightMm: 40
+                grossWeightGrams: 220
+                active: true
+                createdAt: '2026-09-21T12:00:00Z'
+                updatedAt: '2026-09-21T12:00:00Z'
+            createdAt: '2026-09-21T12:00:00Z'
+            updatedAt: '2026-09-21T12:00:00Z'
+        page: 0
+        size: 20
+        totalElements: 1
+        totalPages: 1
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/Product'}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1, maximum: 50}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
+    PublicProduct:
+      type: object
+      additionalProperties: false
+      required: [slug, displayName, description, category, demonstration, image, producer, skus]
+      example:
+        slug: alimento-demo
+        displayName: Alimento de demonstração
+        description: Produto fictício de demonstração.
+        category: FOOD
+        demonstration: true
+        image: null
+        producer:
+          displayName: Produtor de demonstração
+          originLabel: Localidade ampla (demonstração)
+          description: Texto editorial fictício de demonstração.
+          demonstration: true
+        skus:
+          - skuCode: DEMO-200G
+            salesUnit: Pacote
+            netContentGrams: 200
+            minimumShelfLifeDays: 30
+            fragile: false
+            lengthMm: 180
+            widthMm: 120
+            heightMm: 40
+            grossWeightGrams: 220
+      properties:
+        slug: {type: string}
+        displayName: {type: string}
+        description: {type: string, description: 'Texto editorial fictício, identificado como demonstração.'}
+        category: {$ref: '#/components/schemas/ProductCategory'}
+        demonstration: {type: boolean, const: true}
+        image: {$ref: '#/components/schemas/PublicProductImageNullable'}
+        producer: {$ref: '#/components/schemas/PublicProducer'}
+        skus:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/PublicProductSku'}
+    ProductImage:
+      type: object
+      additionalProperties: false
+      required: [id, url, altText]
+      properties:
+        id: {type: string, format: uuid}
+        url: {type: string, format: uri-reference}
+        altText: {type: string, minLength: 1, maxLength: 250}
+    ProductImageNullable:
+      oneOf:
+        - {$ref: '#/components/schemas/ProductImage'}
+        - type: 'null'
+    PublicProductImage:
+      type: object
+      additionalProperties: false
+      required: [id, url, altText]
+      properties:
+        id: {type: string, format: uuid}
+        url: {type: string, format: uri-reference}
+        altText: {type: string, minLength: 1, maxLength: 250}
+    PublicProductImageNullable:
+      oneOf:
+        - {$ref: '#/components/schemas/PublicProductImage'}
+        - type: 'null'
+    PublicProducer:
+      type: object
+      additionalProperties: false
+      required: [displayName, originLabel, description, demonstration]
+      properties:
+        displayName: {type: string}
+        originLabel: {type: string, description: 'Localidade ampla fictícia, identificada como demonstração.'}
+        description: {type: string, description: 'Texto editorial fictício, sem alegações verificáveis.'}
+        demonstration: {type: boolean, const: true}
+    PublicProductSku:
+      type: object
+      additionalProperties: false
+      required: [skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams]
+      properties:
+        skuCode: {type: string}
+        salesUnit: {type: string}
+        netContentGrams: {type: [integer, 'null'], minimum: 1}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 1}
+        fragile: {type: boolean}
+        lengthMm: {type: integer, minimum: 1}
+        widthMm: {type: integer, minimum: 1}
+        heightMm: {type: integer, minimum: 1}
+        grossWeightGrams: {type: integer, minimum: 1}
+    ProducerWrite:
+      type: object
+      additionalProperties: false
+      required: [slug, displayName, originLabel, description]
+      example:
+        slug: produto-demo
+        displayName: Produtor de demonstração
+        originLabel: Localidade ampla fictícia — demonstração
+        description: Texto editorial fictício para demonstração.
+      properties:
+        slug: {type: string, minLength: 1, maxLength: 80, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'}
+        displayName: {type: string, minLength: 1, maxLength: 120}
+        originLabel: {type: string, minLength: 1, maxLength: 300, description: 'Localidade ampla fictícia, rotulada como demonstração.'}
+        description: {type: string, minLength: 1, maxLength: 2000, description: 'Texto editorial fictício, rotulado como demonstração.'}
+    ProducerUpdate:
+      type: object
+      additionalProperties: false
+      required: [slug, displayName, originLabel, description, active]
+      example:
+        slug: produto-demo
+        displayName: Produtor de demonstração
+        originLabel: Localidade ampla fictícia — demonstração
+        description: Texto editorial fictício para demonstração.
+        active: false
+      properties:
+        slug: {type: string, minLength: 1, maxLength: 80, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'}
+        displayName: {type: string, minLength: 1, maxLength: 120}
+        originLabel: {type: string, minLength: 1, maxLength: 300, description: 'Localidade ampla fictícia, rotulada como demonstração.'}
+        description: {type: string, minLength: 1, maxLength: 2000, description: 'Texto editorial fictício, rotulado como demonstração.'}
+        active: {type: boolean}
+    Producer:
+      type: object
+      additionalProperties: false
+      required: [id, slug, displayName, originLabel, description, demonstration, active, createdAt, updatedAt]
+      example:
+        id: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+        slug: produto-demo
+        displayName: Produtor de demonstração
+        originLabel: Localidade ampla fictícia — demonstração
+        description: Texto editorial fictício para demonstração.
+        demonstration: true
+        active: true
+        createdAt: '2026-09-21T12:00:00Z'
+        updatedAt: '2026-09-21T12:00:00Z'
+      properties:
+        id: {type: string, format: uuid}
+        slug: {type: string}
+        displayName: {type: string}
+        originLabel: {type: string, description: 'Localidade ampla fictícia, rotulada como demonstração.'}
+        description: {type: string, description: 'Texto editorial fictício, rotulado como demonstração.'}
+        demonstration: {type: boolean, const: true}
+        active: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    ProducerPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      example:
+        content:
+          - id: 10c9f97b-4f7d-4eae-843f-1f227c7fbd45
+            slug: produto-demo
+            displayName: Produtor de demonstração
+            originLabel: Localidade ampla fictícia — demonstração
+            description: Texto editorial fictício para demonstração.
+            demonstration: true
+            active: true
+            createdAt: '2026-09-21T12:00:00Z'
+            updatedAt: '2026-09-21T12:00:00Z'
+        page: 0
+        size: 20
+        totalElements: 1
+        totalPages: 1
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/Producer'}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1, maximum: 50}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
+    InventoryLotCreate:
+      type: object
+      required: [physicalUnits, receivedAt]
+      properties:
+        physicalUnits: {type: integer, minimum: 1}
+        expiresOn: {type: [string, 'null'], format: date}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 0}
+        receivedAt: {type: string, format: date-time}
+    InventoryAdjustment:
+      type: object
+      required: [actorId, physicalUnits, expectedVersion, reason]
+      properties:
+        actorId: {type: string, format: uuid}
+        physicalUnits: {type: integer, minimum: 0}
+        expectedVersion: {type: integer, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 500}
+    InventoryLot:
+      type: object
+      required: [id, skuCode, physicalUnits, reservedUnits, freeUnits, blocked, version]
+      properties:
+        id: {type: string, format: uuid}
+        skuCode: {type: string}
+        physicalUnits: {type: integer, minimum: 0}
+        reservedUnits: {type: integer, minimum: 0}
+        freeUnits: {type: integer, minimum: 0}
+        blocked: {type: boolean}
+        expiresOn: {type: [string, 'null'], format: date}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 0}
+        version: {type: integer, minimum: 0}

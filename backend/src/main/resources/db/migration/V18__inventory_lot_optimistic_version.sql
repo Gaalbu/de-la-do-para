@@ -1,0 +1,2 @@
+ALTER TABLE inventory_lots
+    ADD COLUMN version INTEGER NOT NULL DEFAULT 0;

@@ -1,0 +1,400 @@
+<section class="admin" aria-labelledby="admin-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Painel administrativo</p>
+      <h1 id="admin-title">Produtos</h1>
+      <p>Gerencie produtos de demonstração, variantes e medidas de embalagem.</p>
+    </div>
+    <nav aria-label="Administração do catálogo">
+      <a routerLink="/admin">Produtores</a>
+      <a routerLink="/">Voltar à vitrine</a>
+    </nav>
+  </header>
+
+  <aside class="demo-notice" aria-label="Aviso sobre dados de demonstração">
+    <strong>Conteúdo de demonstração</strong>
+    <p>
+      Descrições são fictícias. Medidas são dados de catálogo e não comprovam proteção de transporte
+      nem condições reais de conservação.
+    </p>
+  </aside>
+
+  <div class="layout">
+    <section class="product-list" aria-labelledby="list-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="list-title">Catálogo</h2>
+          <p>{{ totalElements() }} {{ totalElements() === 1 ? 'produto' : 'produtos' }}</p>
+        </div>
+        <button type="button" class="secondary" (click)="startCreate()">Novo produto</button>
+      </div>
+
+      @if (loading()) {
+        <p role="status">Carregando catálogo…</p>
+      } @else if (listError()) {
+        <p role="alert" class="error">{{ listError() }}</p>
+        <button type="button" class="secondary" (click)="loadProducts()">Tentar novamente</button>
+      } @else if (products().length === 0) {
+        <p class="empty">Ainda não há produtos cadastrados.</p>
+      } @else {
+        <ul class="product-cards">
+          @for (product of products(); track product.id) {
+            <li>
+              <article class="product-card" [class.inactive]="!product.active">
+                <div class="card-title">
+                  <div>
+                    <h3>{{ product.displayName }}</h3>
+                    <p class="producer-name">{{ producerName(product.producerId) }}</p>
+                  </div>
+                  <span class="status" [class.status-inactive]="!product.active">
+                    {{ product.active ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </div>
+                <p class="product-meta">
+                  {{ categoryLabel(product.category) }} · {{ product.skus.length }}
+                  {{ product.skus.length === 1 ? 'variante' : 'variantes' }}
+                </p>
+                <p>{{ product.description }}</p>
+                <p class="demo-tag">Demonstração</p>
+                <button type="button" class="text-button" (click)="startEdit(product)">
+                  Editar
+                </button>
+              </article>
+            </li>
+          }
+        </ul>
+        <nav class="pagination" aria-label="Paginação de produtos">
+          <button
+            type="button"
+            class="secondary"
+            (click)="changePage(page() - 1)"
+            [disabled]="page() === 0"
+          >
+            Anterior
+          </button>
+          <span>Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+          <button
+            type="button"
+            class="secondary"
+            (click)="changePage(page() + 1)"
+            [disabled]="page() + 1 >= totalPages()"
+          >
+            Próxima
+          </button>
+        </nav>
+      }
+    </section>
+
+    <section class="editor" aria-labelledby="editor-title">
+      <h2 id="editor-title">{{ editing() ? 'Editar produto' : 'Novo produto' }}</h2>
+      <p class="form-intro">
+        Cada variante representa uma unidade vendida com sua própria embalagem.
+      </p>
+      <form (ngSubmit)="save()" #productForm="ngForm" novalidate>
+        <label for="product-slug">Identificador</label>
+        <input
+          id="product-slug"
+          name="product-slug"
+          [(ngModel)]="form.slug"
+          required
+          pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+          maxlength="100"
+          aria-describedby="product-slug-help"
+        />
+        <small id="product-slug-help">Minúsculas, números e hífens.</small>
+
+        <label for="product-name">Nome de exibição</label>
+        <input
+          id="product-name"
+          name="product-name"
+          [(ngModel)]="form.displayName"
+          required
+          maxlength="180"
+        />
+
+        <label for="product-description">Descrição fictícia de demonstração</label>
+        <textarea
+          id="product-description"
+          name="product-description"
+          [(ngModel)]="form.description"
+          required
+          maxlength="2000"
+          rows="3"
+        ></textarea>
+
+        <label for="product-category">Categoria</label>
+        <select
+          id="product-category"
+          name="product-category"
+          [(ngModel)]="form.category"
+          (ngModelChange)="categoryChanged()"
+          required
+        >
+          <option value="FOOD">Alimento</option>
+          <option value="CRAFT">Artesanato</option>
+        </select>
+
+        <label for="product-producer">Produtor</label>
+        <select
+          id="product-producer"
+          name="product-producer"
+          [(ngModel)]="form.producerId"
+          required
+        >
+          <option value="" disabled>Selecione um produtor ativo</option>
+          @for (producer of selectableProducers(); track producer.id) {
+            <option [value]="producer.id">{{ producer.displayName }}</option>
+          }
+        </select>
+        @if (producersError()) {
+          <small role="alert" class="error">{{ producersError() }}</small>
+          <button type="button" class="text-button" (click)="loadProducers()">
+            Tentar carregar produtores novamente
+          </button>
+        }
+
+        <div class="sku-heading">
+          <h3>Variantes e embalagem</h3>
+          <button type="button" class="secondary" (click)="addSku()">Adicionar variante</button>
+        </div>
+        @for (sku of form.skus; track sku.id ?? $index; let index = $index) {
+          <fieldset class="sku-editor">
+            <legend>Variante {{ index + 1 }}</legend>
+            <label [for]="'sku-code-' + index">Código SKU</label>
+            <input
+              [id]="'sku-code-' + index"
+              [name]="'sku-code-' + index"
+              [(ngModel)]="sku.skuCode"
+              required
+              pattern="[A-Za-z0-9][A-Za-z0-9._-]*"
+              maxlength="80"
+            />
+
+            <label [for]="'sales-unit-' + index">Unidade de venda</label>
+            <input
+              [id]="'sales-unit-' + index"
+              [name]="'sales-unit-' + index"
+              [(ngModel)]="sku.salesUnit"
+              required
+              maxlength="80"
+            />
+
+            @if (form.category === 'FOOD') {
+              <div class="food-fields">
+                <label [for]="'net-content-' + index">Conteúdo líquido (g)</label>
+                <input
+                  type="number"
+                  [id]="'net-content-' + index"
+                  [name]="'net-content-' + index"
+                  [(ngModel)]="sku.netContentGrams"
+                  required
+                  min="1"
+                  step="1"
+                />
+                <label [for]="'shelf-life-' + index">Validade mínima na chegada (dias)</label>
+                <input
+                  type="number"
+                  [id]="'shelf-life-' + index"
+                  [name]="'shelf-life-' + index"
+                  [(ngModel)]="sku.minimumShelfLifeDays"
+                  required
+                  min="1"
+                  step="1"
+                />
+              </div>
+            } @else {
+              <p class="craft-note">
+                Artesanato não recebe campos de conteúdo ou validade alimentar.
+              </p>
+            }
+
+            <div class="measure-grid">
+              <label [for]="'length-' + index">Comprimento (mm)</label>
+              <input
+                type="number"
+                [id]="'length-' + index"
+                [name]="'length-' + index"
+                [(ngModel)]="sku.lengthMm"
+                required
+                min="1"
+                step="1"
+              />
+              <label [for]="'width-' + index">Largura (mm)</label>
+              <input
+                type="number"
+                [id]="'width-' + index"
+                [name]="'width-' + index"
+                [(ngModel)]="sku.widthMm"
+                required
+                min="1"
+                step="1"
+              />
+              <label [for]="'height-' + index">Altura (mm)</label>
+              <input
+                type="number"
+                [id]="'height-' + index"
+                [name]="'height-' + index"
+                [(ngModel)]="sku.heightMm"
+                required
+                min="1"
+                step="1"
+              />
+              <label [for]="'weight-' + index">Peso bruto (g)</label>
+              <input
+                type="number"
+                [id]="'weight-' + index"
+                [name]="'weight-' + index"
+                [(ngModel)]="sku.grossWeightGrams"
+                required
+                min="1"
+                step="1"
+              />
+            </div>
+
+            <label class="active-control" [for]="'sku-fragile-' + index">
+              <input
+                type="checkbox"
+                [id]="'sku-fragile-' + index"
+                [name]="'sku-fragile-' + index"
+                [(ngModel)]="sku.fragile"
+              />
+              Item frágil
+            </label>
+
+            @if (editing() && sku.id) {
+              <label class="active-control" [for]="'sku-active-' + index">
+                <input
+                  type="checkbox"
+                  [id]="'sku-active-' + index"
+                  [name]="'sku-active-' + index"
+                  [(ngModel)]="sku.active"
+                />
+                Variante ativa
+              </label>
+            }
+            @if (form.skus.length > 1) {
+              <button type="button" class="text-button" (click)="removeSku(index)">
+                Remover variante do formulário
+              </button>
+            }
+          </fieldset>
+        }
+
+        @if (editing(); as product) {
+          <section class="image-editor" aria-labelledby="image-editor-title">
+            <h3 id="image-editor-title">Imagem principal</h3>
+            @if (product.image) {
+              <img class="image-preview" [src]="product.image.url" [alt]="product.image.altText" />
+              <button
+                type="button"
+                class="text-button"
+                (click)="removeImage()"
+                [disabled]="imageSaving()"
+              >
+                Remover imagem
+              </button>
+            } @else if (imagePreview()) {
+              <img class="image-preview" [src]="imagePreview()" alt="Prévia da imagem escolhida" />
+            }
+            <label for="product-image-file">Arquivo JPEG ou PNG</label>
+            <input
+              id="product-image-file"
+              type="file"
+              accept="image/jpeg,image/png"
+              (change)="selectImage($event)"
+            />
+            <small>Uma imagem por produto, até 5 MiB.</small>
+            <label for="image-alt-text">Texto alternativo</label>
+            <input
+              id="image-alt-text"
+              name="altText"
+              [(ngModel)]="imageAltText"
+              maxlength="250"
+              required
+            />
+            <label for="image-source">Origem / URL de referência</label>
+            <input
+              id="image-source"
+              name="source"
+              [(ngModel)]="imageSource"
+              maxlength="1500"
+              required
+            />
+            <label for="image-license">Licença</label>
+            <input
+              id="image-license"
+              name="license"
+              [(ngModel)]="imageLicense"
+              maxlength="200"
+              required
+            />
+            <label for="image-creator">Autoria (opcional)</label>
+            <input id="image-creator" name="creator" [(ngModel)]="imageCreator" maxlength="200" />
+            <label for="image-attribution">Atribuição (opcional)</label>
+            <input
+              id="image-attribution"
+              name="attribution"
+              [(ngModel)]="imageAttribution"
+              maxlength="500"
+            />
+            <label class="active-control" for="image-rights-reviewed">
+              <input
+                id="image-rights-reviewed"
+                name="rightsReviewed"
+                type="checkbox"
+                [(ngModel)]="imageRightsReviewed"
+              />
+              Revisei os direitos de uso desta imagem
+            </label>
+            <button
+              type="button"
+              class="secondary"
+              (click)="uploadImage()"
+              [disabled]="imageSaving() || !imageFile()"
+            >
+              {{ imageSaving() ? 'Salvando imagem…' : 'Salvar imagem principal' }}
+            </button>
+            @if (imageError()) {
+              <p role="alert" class="error">{{ imageError() }}</p>
+            }
+          </section>
+        }
+
+        @if (editing()) {
+          <p class="form-intro">
+            Omissão de uma variante na edição a desativa; produtos e referências permanecem
+            guardados.
+          </p>
+          @if (form.active) {
+            <button type="button" class="danger-action" (click)="confirmDeactivation()">
+              Desativar produto
+            </button>
+          } @else {
+            <button type="button" class="secondary" (click)="form.active = true">
+              Reativar produto
+            </button>
+          }
+        }
+
+        @if (saveError()) {
+          <p role="alert" class="error">{{ saveError() }}</p>
+        }
+        @if (notice()) {
+          <p role="status" class="success">{{ notice() }}</p>
+        }
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            [disabled]="saving() || productForm.invalid || selectableProducers().length === 0"
+          >
+            {{ saving() ? 'Salvando…' : editing() ? 'Salvar alterações' : 'Criar produto' }}
+          </button>
+          @if (editing()) {
+            <button type="button" class="secondary" (click)="startCreate()">Cancelar edição</button>
+          }
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
