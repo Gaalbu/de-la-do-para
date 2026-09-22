@@ -24,6 +24,28 @@
       {{ checkout.errorMessage() }}
     </p>
   } @else if (checkout.options(); as options) {
+    @if (checkout.pickupOptions(); as pickup) {
+      <section aria-labelledby="pickup-title">
+        <h2 id="pickup-title">Retirada</h2>
+        @if (pickup.status === 'AVAILABLE') {
+          @for (option of pickup.options; track option.id) {
+            <article class="option">
+              <div>
+                <strong>{{ option.name }}</strong>
+                <span>Preparo: até {{ option.preparationDays }} dia útil</span>
+                <small>{{ option.openingHours }}</small>
+              </div>
+              <div class="option-action">
+                <strong>Sem frete</strong>
+                <span>Disponível após o preparo</span>
+              </div>
+            </article>
+          }
+        } @else {
+          <p class="state">A retirada não está disponível para todos os itens deste carrinho.</p>
+        }
+      </section>
+    }
     @if (options.length) {
       <section aria-labelledby="options-title">
         <h2 id="options-title">Opções disponíveis</h2>
