@@ -49,6 +49,18 @@ public class CheckoutSnapshotService {
         return deliveryOptions.findAvailable(snapshotId, snapshotVersion, destinationPostalCode);
     }
 
+    @Transactional(readOnly = true)
+    public ShippingQuote selectDeliveryOption(
+            String sessionId, UUID snapshotId, long snapshotVersion, UUID quoteId, String inputFingerprint) {
+        var sessionKey = GuestCartService.hashSession(sessionId);
+        var snapshot =
+                snapshots.findByIdAndGuestSessionKey(snapshotId, sessionKey).orElseThrow();
+        if (snapshot.getCartVersion() != snapshotVersion) {
+            throw new SnapshotVersionConflictException();
+        }
+        return deliveryOptions.select(snapshotId, snapshotVersion, quoteId, inputFingerprint);
+    }
+
     @Transactional
     public CheckoutSnapshotEntity start(String sessionId) {
         var sessionKey = GuestCartService.hashSession(sessionId);

@@ -61,4 +61,36 @@ class CheckoutControllerTest {
 
         assertThat(response.options()).containsExactly(quote);
     }
+
+    @Test
+    void returnsValidatedDeliverySelection() {
+        var service = mock(CheckoutSnapshotService.class);
+        var snapshotId = UUID.randomUUID();
+        var quoteId = UUID.randomUUID();
+        var quote = new ShippingQuote(
+                quoteId,
+                snapshotId,
+                4,
+                "66053000",
+                "fingerprint",
+                "pac",
+                "PAC",
+                1000,
+                5,
+                1,
+                List.of(1),
+                Instant.parse("2026-09-22T12:00:00Z"),
+                Instant.parse("2026-09-22T13:00:00Z"));
+        when(service.selectDeliveryOption("session-id", snapshotId, 4, quoteId, "fingerprint"))
+                .thenReturn(quote);
+        var controller = new CheckoutController(service);
+        var request = new MockHttpServletRequest();
+        request.setSession(new MockHttpSession(null, "session-id"));
+
+        var response = controller.selectDeliveryOption(
+                snapshotId, 4, new CheckoutController.SelectionRequest(quoteId, "fingerprint"), request);
+
+        assertThat(response.quoteId()).isEqualTo(quoteId);
+        assertThat(response.inputFingerprint()).isEqualTo("fingerprint");
+    }
 }

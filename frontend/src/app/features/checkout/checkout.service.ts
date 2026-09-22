@@ -9,6 +9,7 @@ export interface CheckoutSnapshot {
 
 export interface ShippingQuote {
   id: string;
+  inputFingerprint: string;
   serviceName: string;
   priceCents: number;
   deliveryDays: number;
@@ -29,11 +30,13 @@ export class CheckoutService {
   readonly error = signal(false);
   readonly snapshot = signal<CheckoutSnapshot | null>(null);
   readonly options = signal<ShippingQuote[] | null>(null);
+  readonly selectedOption = signal<ShippingQuote | null>(null);
 
   async quote(postalCode: string): Promise<boolean> {
     this.loading.set(true);
     this.error.set(false);
     this.options.set(null);
+    this.selectedOption.set(null);
     try {
       const snapshot = await firstValueFrom(
         this.http.post<CheckoutSnapshot>('/api/v1/checkout/snapshots', {}),
@@ -51,6 +54,28 @@ export class CheckoutService {
       return false;
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async select(option: ShippingQuote): Promise<boolean> {
+    const snapshot = this.snapshot();
+    if (!snapshot) return false;
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `/api/v1/checkout/${snapshot.snapshotId}/delivery-selection`,
+          {
+            quoteId: option.id,
+            inputFingerprint: option.inputFingerprint,
+          },
+          { params: { snapshotVersion: snapshot.snapshotVersion } },
+        ),
+      );
+      this.selectedOption.set(option);
+      return true;
+    } catch {
+      this.error.set(true);
+      return false;
     }
   }
 }

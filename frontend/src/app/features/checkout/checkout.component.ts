@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { CheckoutService } from './checkout.service';
+import { CheckoutService, ShippingQuote } from './checkout.service';
 
 @Component({
   selector: 'app-checkout',
@@ -15,6 +15,10 @@ export class CheckoutComponent {
 
   async quote(): Promise<void> {
     await this.checkout.quote(this.postalCode);
+  }
+
+  async select(option: ShippingQuote): Promise<void> {
+    await this.checkout.select(option);
   }
 
   formatPrice(cents: number): string {

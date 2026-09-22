@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,10 +46,25 @@ public class CheckoutController {
                         request.getSession(true).getId(), snapshotId, snapshotVersion, postalCode));
     }
 
+    @PostMapping("/{snapshotId}/delivery-selection")
+    public SelectionResponse selectDeliveryOption(
+            @PathVariable UUID snapshotId,
+            @RequestParam long snapshotVersion,
+            @RequestBody SelectionRequest body,
+            HttpServletRequest request) {
+        var quote = snapshots.selectDeliveryOption(
+                request.getSession(true).getId(), snapshotId, snapshotVersion, body.quoteId(), body.inputFingerprint());
+        return new SelectionResponse(quote.id(), quote.snapshotVersion(), quote.inputFingerprint());
+    }
+
     public record SnapshotResponse(UUID snapshotId, long snapshotVersion) {}
 
     public record DeliveryOptionsResponse(
             UUID snapshotId, long snapshotVersion, java.util.List<ShippingQuote> options) {}
+
+    public record SelectionRequest(UUID quoteId, String inputFingerprint) {}
+
+    public record SelectionResponse(UUID quoteId, long snapshotVersion, String inputFingerprint) {}
 
     @ExceptionHandler(java.util.NoSuchElementException.class)
     ResponseEntity<Problem> missing() {
@@ -63,6 +79,16 @@ public class CheckoutController {
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<Problem> invalid(IllegalArgumentException exception) {
         return problem(HttpStatus.BAD_REQUEST, "CHECKOUT_003", exception.getMessage());
+    }
+
+    @ExceptionHandler(br.com.deladopara.shipping.application.DeliveryOptionsService.SelectionConflictException.class)
+    ResponseEntity<Problem> selectionConflict() {
+        return problem(HttpStatus.CONFLICT, "CHECKOUT_004", "cotação não pertence à seleção atual");
+    }
+
+    @ExceptionHandler(br.com.deladopara.shipping.application.DeliveryOptionsService.SelectionExpiredException.class)
+    ResponseEntity<Problem> selectionExpired() {
+        return problem(HttpStatus.GONE, "CHECKOUT_005", "cotação de entrega expirada");
     }
 
     private ResponseEntity<Problem> problem(HttpStatus status, String codigo, String detail) {

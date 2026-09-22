@@ -45,6 +45,7 @@ describe('CheckoutComponent', () => {
         options: [
           {
             id: 'quote-1',
+            inputFingerprint: 'fingerprint-1',
             serviceName: 'Sandbox PAC',
             priceCents: 2590,
             deliveryDays: 5,
@@ -60,6 +61,47 @@ describe('CheckoutComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Sandbox PAC');
     expect(text).toMatch(/R\$\s*25,90/);
+  });
+
+  it('selects a displayed delivery option through the server', async () => {
+    const fixture = TestBed.createComponent(CheckoutComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.postalCode = '66053-000';
+    const quote = component.quote();
+    http
+      .expectOne('/api/v1/checkout/snapshots')
+      .flush({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    await Promise.resolve();
+    http
+      .expectOne((request) => request.urlWithParams.includes('delivery-options'))
+      .flush({
+        snapshotId: 'snapshot-1',
+        snapshotVersion: 3,
+        options: [
+          {
+            id: 'quote-1',
+            inputFingerprint: 'fingerprint-1',
+            serviceName: 'Sandbox PAC',
+            priceCents: 2590,
+            deliveryDays: 5,
+            preparationDays: 2,
+            expiresAt: '2026-09-22T13:00:00Z',
+          },
+        ],
+      });
+    await quote;
+    fixture.detectChanges();
+
+    const selection = component.select(component.checkout.options()![0]);
+    const request = http.expectOne((candidate) =>
+      candidate.urlWithParams.includes('delivery-selection'),
+    );
+    request.flush({ quoteId: 'quote-1', snapshotVersion: 3, inputFingerprint: 'fingerprint-1' });
+    await selection;
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Selecionada');
   });
 
   it('shows a recoverable error when the snapshot cannot be created', async () => {
