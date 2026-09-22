@@ -483,3 +483,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | PR #48 CI 7/7 verde e merged em `67c641e`; C38 pendente de docs:check, diff check e revisão da spec. |
 | Remoto | C37 merged; C38 ainda local, sem commit/PR. |
 | Próximo passo | Rodar gates documentais, commitar e abrir PR C38; depois C39 só após o contrato ser revisado. |
+
+## Sessão 2026-09-22 — C38 concluído e C39 persistência de carrinho
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@8505626`; branch `feat/cart-persistence` |
+| Tarefa | C38 merged; iniciar C39 — persistir carrinho convidado/versionado |
+| Mudanças | C38 PR #49 especifica ownership, conflitos e snapshots. C39 adiciona migration V20 para `carts`/`cart_items`, restrições de proprietário/status/quantidade, entidades JPA, repository e agregado de domínio com versão otimista e transição para checkout. API de mutações permanece reservada ao C39a. |
+| Verificação | PR #49 CI 7/7 verde e merged em `8505626`; `CartTest`, `InfrastructureIT`, Spotless e compilação backend verdes. |
+| Remoto | C38 merged; C39 ainda local, sem commit/PR. |
+| Próximo passo | Adicionar integração PostgreSQL do repository e converter o agregado em serviço transacional antes de abrir PR C39. |
