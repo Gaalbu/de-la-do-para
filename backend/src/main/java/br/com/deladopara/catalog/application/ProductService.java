@@ -11,8 +11,12 @@ import br.com.deladopara.catalog.adapter.web.dto.ProductSkuWriteRequest;
 import br.com.deladopara.catalog.adapter.web.dto.ProductUpdateRequest;
 import br.com.deladopara.catalog.adapter.web.dto.ProductWriteRequest;
 import br.com.deladopara.catalog.adapter.web.dto.PublicProductResponse;
+import br.com.deladopara.catalog.adapter.web.dto.StorefrontProductPageResponse;
+import br.com.deladopara.catalog.adapter.web.dto.StorefrontProductResponse;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
+import br.com.deladopara.inventory.adapter.persistence.InventoryLotRepository;
+import br.com.deladopara.pricing.application.SkuPriceService;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -35,18 +39,24 @@ public class ProductService {
     private final ProducerRepository producers;
     private final Clock clock;
     private final ProductImageRepository images;
+    private final SkuPriceService prices;
+    private final InventoryLotRepository lots;
 
     public ProductService(
             ProductRepository products,
             ProductSkuRepository skus,
             ProducerRepository producers,
             Clock clock,
-            ProductImageRepository images) {
+            ProductImageRepository images,
+            SkuPriceService prices,
+            InventoryLotRepository lots) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.clock = clock;
         this.images = images;
+        this.prices = prices;
+        this.lots = lots;
     }
 
     @Transactional(readOnly = true)
@@ -77,11 +87,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Product> findStorefrontProducts(StorefrontQuery query) {
+    public StorefrontProductPageResponse findStorefrontProducts(StorefrontQuery query) {
         if (query == null) {
             throw new InvalidProductInputException("consulta pública é obrigatória");
         }
-        return products.findAvailableForStorefront(
+        var result = products.findAvailableForStorefront(
                 query.producerSlug(),
                 query.category() == null ? null : query.category().name(),
                 query.minPriceCents(),
@@ -89,6 +99,46 @@ public class ProductService {
                 LocalDate.now(clock),
                 query.sort().name(),
                 PageRequest.of(query.page(), query.size()));
+        var pageProducts = result.getContent();
+        var productIds = pageProducts.stream().map(Product::getId).toList();
+        var loadedSkus = productIds.isEmpty()
+                ? List.<ProductSku>of()
+                : skus.findAllByProductIdInOrderByProductIdAscSkuCodeAsc(productIds).stream()
+                        .filter(ProductSku::isActive)
+                        .toList();
+        var skuIds = loadedSkus.stream().map(ProductSku::getId).toList();
+        var currentPrices = prices.findCurrentPrices(skuIds);
+        var availableOn = LocalDate.now(clock);
+        var availableUnits = lots.findAllBySkuIdInOrderBySkuIdAscReceivedAtAscIdAsc(skuIds).stream()
+                .filter(lot -> !lot.isBlocked()
+                        && (lot.getExpiresOn() == null || !lot.getExpiresOn().isBefore(availableOn)))
+                .collect(Collectors.groupingBy(
+                        lot -> lot.getSku().getId(),
+                        Collectors.summingInt(lot -> lot.getPhysicalUnits() - lot.getReservedUnits())));
+        var skusByProduct = loadedSkus.stream()
+                .collect(Collectors.groupingBy(sku -> sku.getProduct().getId()));
+        var content = pageProducts.stream()
+                .map(product -> new StorefrontProductResponse(
+                        product.getSlug(),
+                        product.getDisplayName(),
+                        product.getCategory(),
+                        new StorefrontProductResponse.PublicProducer(
+                                product.getProducer().getDisplayName(),
+                                product.getProducer().getOriginLabel()),
+                        skusByProduct.getOrDefault(product.getId(), List.of()).stream()
+                                .filter(sku -> currentPrices.containsKey(sku.getId()))
+                                .map(sku -> new StorefrontProductResponse.StorefrontSku(
+                                        sku.getSkuCode(),
+                                        sku.getSalesUnit(),
+                                        currentPrices
+                                                .get(sku.getId())
+                                                .unitPrice()
+                                                .cents(),
+                                        availableUnits.getOrDefault(sku.getId(), 0)))
+                                .toList()))
+                .toList();
+        return new StorefrontProductPageResponse(
+                content, result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
     }
 
     @Transactional(readOnly = true)
