@@ -642,3 +642,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Verificação local: backend focado com `-DargLine=-Xint` passou; frontend `test:ci` 9 arquivos/22 testes, lint e formatação passaram; contrato OpenAPI válido com 11 warnings preexistentes do lint; `git diff --check` passou.
 - Limitação conhecida: `./mvnw -q -DargLine=-Xint verify` ainda termina por SIGSEGV do GraalVM durante a verificação da JVM; o relatório foi preservado em `backend/hs_err_pid54502.log`.
 - Próximo passo: rodar `aislop`, commitar/publicar a extensão no PR #61 e aguardar o CI remoto; nenhum merge automático.
+
+### Evidência adicional da seleção C44
+
+- O serviço de checkout ganhou teste explícito de seleção somente para snapshot pertencente à sessão e versão atual; o teste verifica a delegação server-owned ao serviço de cotações.
+- O CI remoto `35768644650` terminou verde em 7/7 no commit `5c9eb3a`, incluindo backend real com PostgreSQL/Kafka e frontend com browser smoke.
+- A nova cobertura local passou em nova execução com `-DargLine=-Xint`; houve uma falha intermitente adicional de SIGSEGV do GraalVM durante uma execução anterior, preservada como `backend/hs_err_pid56795.log`.
