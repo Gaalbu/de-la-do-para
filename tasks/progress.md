@@ -571,3 +571,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Próximo passo: expor `GET /api/v1/checkout/{snapshotId}/delivery-options`,
   validando ownership pela sessão, versão, CEP e validade das cotações antes de
   iniciar a UI de endereço/seleção.
+
+## Sessão 2026-09-22 — C44 opções de entrega por snapshot (local, pronto para publicação)
+
+- Adicionado `GET /api/v1/checkout/{snapshotId}/delivery-options` com `snapshotVersion` e `postalCode`.
+- `CheckoutSnapshotService` valida ownership pelo hash da sessão e versão exata antes de delegar a `DeliveryOptionsService`, que mantém apenas cotações persistidas, do destino normalizado e não expiradas.
+- Erros contratuais: snapshot ausente/pertencente a outra sessão (404), versão obsoleta (409) e CEP inválido (400), com `ProblemDetail` e correlação.
+- OpenAPI atualizado com `DeliveryOptions`/`ShippingQuote`; testes unitários do serviço e controller adicionados.
+- Verificação: `./mvnw -q -DargLine=-Xint verify` terminou sem falhas/erros nos relatórios Surefire/Failsafe; `npm run contracts:check` exit 0 (11 avisos Redocly preexistentes); `./mvnw -q spotless:apply` exit 0; `git diff --check` OK; `npx aislop scan --changes --json` 100/100, zero achados. Uma execução paralela anterior deixou `hs_err_pid27759.log` e SIGSEGV do GraalVM; o gate com `-Xint` foi usado e os relatórios finais ficaram verdes.
+- Remoto: ainda sem commit/PR desta extensão; alterações permanecem locais sobre `feat/checkout-address-contract`.
+- Próximo passo: revisar/stagear somente os cinco arquivos da fatia, commitar e abrir PR C44; depois validar o CI remoto antes de iniciar a UI de endereço/seleção.

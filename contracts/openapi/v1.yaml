@@ -711,6 +711,24 @@ paths:
         '404': {$ref: '#/components/responses/Problem404'}
         '422': {$ref: '#/components/responses/Problem422'}
 
+  /api/v1/checkout/{snapshotId}/delivery-options:
+    get:
+      operationId: listCheckoutDeliveryOptions
+      summary: Consultar opções de entrega do snapshot
+      security: []
+      parameters:
+        - {in: path, name: snapshotId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: snapshotVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+        - {in: query, name: postalCode, required: true, schema: {type: string, pattern: '^\\d{5}-?\\d{3}$'}}
+      responses:
+        '200':
+          description: Opções persistidas e ainda válidas
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/DeliveryOptions'}}
+        '400': {$ref: '#/components/responses/Problem400'}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
   /api/v1/cart/items:
     put:
       operationId: replaceGuestCartItems
@@ -1263,6 +1281,34 @@ components:
       properties:
         snapshotId: {type: string, format: uuid}
         snapshotVersion: {type: integer, format: int64, minimum: 0}
+    DeliveryOptions:
+      type: object
+      additionalProperties: false
+      required: [snapshotId, snapshotVersion, options]
+      properties:
+        snapshotId: {type: string, format: uuid}
+        snapshotVersion: {type: integer, format: int64, minimum: 0}
+        options:
+          type: array
+          items: {$ref: '#/components/schemas/ShippingQuote'}
+    ShippingQuote:
+      type: object
+      additionalProperties: false
+      required: [id, snapshotId, snapshotVersion, destinationPostalCode, inputFingerprint, serviceId, serviceName, priceCents, deliveryDays, preparationDays, packageSequences, createdAt, expiresAt]
+      properties:
+        id: {type: string, format: uuid}
+        snapshotId: {type: string, format: uuid}
+        snapshotVersion: {type: integer, format: int64, minimum: 0}
+        destinationPostalCode: {type: string}
+        inputFingerprint: {type: string}
+        serviceId: {type: string}
+        serviceName: {type: string}
+        priceCents: {type: integer, format: int64, minimum: 0}
+        deliveryDays: {type: integer, minimum: 1}
+        preparationDays: {type: integer, minimum: 0}
+        packageSequences: {type: array, items: {type: integer, minimum: 1}}
+        createdAt: {type: string, format: date-time}
+        expiresAt: {type: string, format: date-time}
     PublicProductSku:
       type: object
       additionalProperties: false

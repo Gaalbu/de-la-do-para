@@ -1,10 +1,19 @@
 package br.com.deladopara.checkout.adapter.web;
 
 import br.com.deladopara.checkout.application.CheckoutSnapshotService;
+import br.com.deladopara.shipping.application.ShippingQuote;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
+import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,5 +32,44 @@ public class CheckoutController {
         return new SnapshotResponse(snapshot.getId(), snapshot.getCartVersion());
     }
 
+    @GetMapping("/{snapshotId}/delivery-options")
+    public DeliveryOptionsResponse deliveryOptions(
+            @PathVariable UUID snapshotId,
+            @RequestParam long snapshotVersion,
+            @RequestParam String postalCode,
+            HttpServletRequest request) {
+        return new DeliveryOptionsResponse(
+                snapshotId,
+                snapshotVersion,
+                snapshots.findDeliveryOptions(
+                        request.getSession(true).getId(), snapshotId, snapshotVersion, postalCode));
+    }
+
     public record SnapshotResponse(UUID snapshotId, long snapshotVersion) {}
+
+    public record DeliveryOptionsResponse(
+            UUID snapshotId, long snapshotVersion, java.util.List<ShippingQuote> options) {}
+
+    @ExceptionHandler(java.util.NoSuchElementException.class)
+    ResponseEntity<Problem> missing() {
+        return problem(HttpStatus.NOT_FOUND, "CHECKOUT_001", "snapshot de checkout não encontrado");
+    }
+
+    @ExceptionHandler(CheckoutSnapshotService.SnapshotVersionConflictException.class)
+    ResponseEntity<Problem> stale() {
+        return problem(HttpStatus.CONFLICT, "CHECKOUT_002", "versão do snapshot está desatualizada");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<Problem> invalid(IllegalArgumentException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "CHECKOUT_003", exception.getMessage());
+    }
+
+    private ResponseEntity<Problem> problem(HttpStatus status, String codigo, String detail) {
+        return ResponseEntity.status(status)
+                .contentType(MediaType.parseMediaType("application/problem+json"))
+                .body(new Problem("Erro", status.value(), detail, codigo, MDC.get("correlationId")));
+    }
+
+    record Problem(String title, int status, String detail, String codigo, String correlationId) {}
 }
