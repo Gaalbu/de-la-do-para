@@ -666,3 +666,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - A resposta de `delivery-options` agora expõe `inputFingerprint` no envelope, conforme `SPEC-checkout`, mantendo também o valor em cada cotação para a seleção explícita.
 - Controller testado com fingerprint retornado e OpenAPI atualizado; `contracts:lint` válido com os 11 avisos preexistentes.
 - Próximo passo: publicar a correção e acompanhar o CI; retirada segue separada até existir contrato e origem server-side.
+
+### Evidência remota da extensão C44
+
+- O commit `96740d3` passou no CI remoto `35769337883` em 7/7: backend, frontend/browser smoke, contracts, docs, security, commit-policy e quality-gate.
+- PR #61 permanece aberta e mergeable, sem merge automático.
+- C44 continua em implementação: entrega/cotação/seleção estão cobertas; retirada depende da origem server-side de ponto, janela e compatibilidade descrita na spec.
