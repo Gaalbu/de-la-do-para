@@ -589,3 +589,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - CI remoto `35766151122` verde em 6/6: backend, frontend, contracts, docs, security e commit-policy. Avisos de Node.js 20 nas actions foram reportados pelo runner, sem falha de gate.
 - PR permanece aberta/mergeable, sem merge automático.
 - Próximo passo: iniciar a UI C44 de endereço e seleção de modalidade em branch empilhada, preservando a decisão de merge humano do PR #60.
+
+## Sessão 2026-09-22 — C44 UI inicial de endereço e cotação (local)
+
+- Branch `feat/checkout-address-ui`, empilhada sobre `feat/checkout-address-contract` após CI remoto verde.
+- Criados `CheckoutService` e página `/checkout`: cria snapshot, envia o CEP ao endpoint, exibe carregamento/erro/nenhuma opção/opções válidas e não calcula frete localmente.
+- Carrinho ganhou link explícito para continuar à entrega; nenhum pedido, cobrança, reserva ou endereço inferido foi implementado.
+- Teste do serviço cobre a ordem snapshot → consulta server-owned, incluindo `snapshotVersion` e `postalCode`.
+- Verificação local: frontend `test:ci` 8 arquivos/17 testes verdes, `format:check` OK, `lint` OK e `build` SSR OK; `npx aislop scan --changes --json` 100/100, zero achados; `git diff --check` OK.
+- Remoto: ainda não publicado; UI permanece local até revisão/validação visual e E2E da jornada real.
+- Próximo passo: adicionar teste de componente/jornada para os estados da tela e executar a jornada em navegador real antes de abrir PR empilhada.
