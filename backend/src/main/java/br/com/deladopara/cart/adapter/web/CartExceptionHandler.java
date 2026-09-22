@@ -8,7 +8,6 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,7 +24,7 @@ public class CartExceptionHandler {
         return problem(HttpStatus.NOT_FOUND, "CART_003", "carrinho não encontrado");
     }
 
-    @ExceptionHandler({CartInvalidInputException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler(CartInvalidInputException.class)
     ResponseEntity<Problem> invalid() {
         return problem(HttpStatus.BAD_REQUEST, "CART_001", "dados do carrinho inválidos");
     }
