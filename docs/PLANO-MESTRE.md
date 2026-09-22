@@ -1487,6 +1487,11 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C22, C27, C30, C33. **Alvos:** `B/storefront`, DTOs de consulta e testes; M.
 - **Aceite:** filtros combináveis e ordenação estável; disponibilidade correta; paginação limitada e sem leitura cruzada de repositories.
 - **Verificar:** BI(StorefrontQueries), C e consulta vazia/limites/filtro inválido.
+- **Estado atual:** a primeira fatia de pricing foi integrada em `b77bd3c`:
+  `SkuPrice`, migration V19, repositório e serviço batch para preços correntes por
+  SKU, com teste unitário e integração PostgreSQL/Flyway. A consulta storefront
+  produto+preço+disponibilidade, filtros, ordenação e paginação ainda não foi
+  implementada.
 
 ### C35 — `feat(storefront-ui): browse filter and paginate products`
 
