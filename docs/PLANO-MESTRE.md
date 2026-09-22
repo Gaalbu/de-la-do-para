@@ -1554,7 +1554,8 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C42 — `feat(shipping): quote sandbox freight through an adapter`
 
-- [ ] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M.
+- [x] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. PR pendente de CI.
+- Boundary sandbox implementado sem rede: contrato do adapter, configuração com timeout/credencial, parser Jackson com cobertura integral dos pacotes, custo/prazo positivos e validade futura; sem expor credenciais ou alterar carrinho.
 - **Aceite:** cotação respeita todos os pacotes/peso/dimensões/destino; parse valida cobertura/custos/prazos; timeout/credencial expirada/serviço ausente tratados.
 - **Verificar:** testes WireMock e uma cotação SB sanitizada; nenhuma chamada externa no teste comum.
 

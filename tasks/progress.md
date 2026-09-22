@@ -522,3 +522,11 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Implementado `PackageComposer` determinístico: separação FOOD/CRAFT, frágeis isolados, proteção D58/D60, caixas P/M/G D59 e alocação única de unidades.
 - Testes cobrem separação, fragilidade, menor caixa e unidade incompatível.
 - Próximo passo: C42, adapter de cotação sandbox.
+
+## Sessão 2026-09-22 — C42 adapter de cotação sandbox
+
+- Implementados `FreightQuoteAdapter`, `ShippingQuoteRequest`, `CarrierQuote` e `ShippingAdapterProperties`.
+- `MelhorEnvioSandboxAdapter` interpreta somente payload sandbox fornecido pelo chamador; não faz chamadas externas em testes comuns.
+- Valida cobertura exata de todos os pacotes, custo, prazo, validade e campos obrigatórios; falhas são normalizadas sem expor credenciais.
+- Testes focados e checkstyle/Spotless passaram localmente.
+- Próximo passo: commitar, abrir PR e aguardar os gates remotos antes de considerar C42 concluído.
