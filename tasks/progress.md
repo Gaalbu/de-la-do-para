@@ -606,3 +606,11 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Com CEP sintético `66053-000`, a UI exibiu o estado recuperável “Não foi possível consultar este CEP” porque não havia API em `127.0.0.1:8080`; portanto não há alegação de cotação integrada nesta sessão.
 - `docker compose ps` e `GET /api/v1/status` confirmaram que o backend/stack local não estavam em execução. A alteração incidental de `frontend/angular.json` (analytics=false criada pelo CLI) foi revertida.
 - Próximo passo permanece: iniciar stack autorizada ou usar backend local para jornada integrada, adicionar teste de componente e só então publicar a PR da UI.
+
+### Evidência runtime integrada C44
+
+- Compose local subiu com PostgreSQL, Kafka, Mailpit e WireMock saudáveis; backend iniciou com `POSTGRES_PASSWORD=dlp-local-dev` e `-Dspring-boot.run.jvmArguments=-Xint`.
+- `GET /actuator/health` respondeu 200 e Flyway confirmou schema v22; o primeiro boot sem `-Xint` repetiu o SIGSEGV do GraalVM já conhecido.
+- Navegador real com proxy `/api`: `/cart` respondeu 200 com carrinho vazio; a tela `/checkout` enviou CEP sintético `66053-000`, exibiu carregamento e retornou ao estado de erro recuperável quando não havia snapshot de carrinho elegível.
+- Não foi criado dado administrativo apenas para fabricar sucesso: o caminho de opções disponíveis continua sem evidência integrada até existir fixture de catálogo/carrinho aprovada.
+- Serviços locais foram encerrados com `docker compose --profile local down`, sem remover volumes; próximo passo é adicionar teste de componente/jornada e publicar a UI em PR empilhada.
