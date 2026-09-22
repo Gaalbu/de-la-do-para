@@ -599,3 +599,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Verificação local: frontend `test:ci` 8 arquivos/17 testes verdes, `format:check` OK, `lint` OK e `build` SSR OK; `npx aislop scan --changes --json` 100/100, zero achados; `git diff --check` OK.
 - Remoto: ainda não publicado; UI permanece local até revisão/validação visual e E2E da jornada real.
 - Próximo passo: adicionar teste de componente/jornada para os estados da tela e executar a jornada em navegador real antes de abrir PR empilhada.
+
+### Evidência adicional da jornada C44
+
+- Navegador real em `http://127.0.0.1:4200/checkout`: página, formulário rotulado `CEP`, botão `Consultar` desabilitado sem valor e navegação para `/cart` foram observados no accessibility tree.
+- Com CEP sintético `66053-000`, a UI exibiu o estado recuperável “Não foi possível consultar este CEP” porque não havia API em `127.0.0.1:8080`; portanto não há alegação de cotação integrada nesta sessão.
+- `docker compose ps` e `GET /api/v1/status` confirmaram que o backend/stack local não estavam em execução. A alteração incidental de `frontend/angular.json` (analytics=false criada pelo CLI) foi revertida.
+- Próximo passo permanece: iniciar stack autorizada ou usar backend local para jornada integrada, adicionar teste de componente e só então publicar a PR da UI.
