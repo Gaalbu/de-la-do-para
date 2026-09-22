@@ -516,3 +516,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Regras D17/D18 e limites C41a–C43 permanecem separados, sem inventar
   adapter ou capacidade física.
 - Próximo passo: C41a, composição determinística de pacotes.
+## Sessão 2026-09-22 — C41a composição de pacotes
+
+- C41 foi mergeado no PR #53 (`e95e2b8`).
+- Implementado `PackageComposer` determinístico: separação FOOD/CRAFT, frágeis isolados, proteção D58/D60, caixas P/M/G D59 e alocação única de unidades.
+- Testes cobrem separação, fragilidade, menor caixa e unidade incompatível.
+- Próximo passo: C42, adapter de cotação sandbox.

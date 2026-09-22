@@ -1548,7 +1548,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C41a — `feat(shipping): plan multi-package shipments without losing quantities`
 
-- [ ] **Depende:** C21, C41. **Alvos:** composição de pacotes, regras de embalagem e testes; M.
+- [x] **Depende:** C21, C41. **Alvos:** composição de pacotes, regras de embalagem e testes; M. Implementado nesta entrega.
 - **Aceite:** dividir a compra conforme embalagens/restrições aprovadas; cada unidade alocada uma vez; peso/dimensões e identidade de pacote preservados.
 - **Verificar:** BT(ParcelComposition), V21; limites de caixa/peso, artesanato frágil, item incompatível e repetição determinística do mesmo snapshot.
 
