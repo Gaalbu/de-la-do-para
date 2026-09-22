@@ -1371,15 +1371,15 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C21 — `feat(catalog): persist products and shippable SKUs`
 
-- [ ] **Depende:** C18. **Alvos:** produto/SKU, repositório, migration e teste; M.
+- [x] **Depende:** C18. **Alvos:** produto/SKU, repositório, migration e teste; M.
 - **Aceite:** SKU identificável, embalagem e vínculo ao produtor; dados inválidos rejeitados; remoção lógica não quebra snapshots futuros.
-- **Verificar:** `ProductRepositoryIT` com PostgreSQL/Testcontainers, testes de categoria/embalagem; SKU repetido e dimensão inválida rejeitados, múltiplas variantes e IDs preservados ao editar/desativar.
+- **Verificar:** `ProductRepositoryIT` com PostgreSQL/Testcontainers, testes de categoria/embalagem; SKU repetido e dimensão inválida rejeitados, múltiplas variantes e IDs preservados ao editar/desativar — C21 commitada em `7e009a0`, PR #33 aberta sobre C20; validação local aprovada.
 
 ### C22 — `feat(catalog): add product administration contracts`
 
-- [ ] **Depende:** C15, C21. **Alvos:** aplicação/controller/DTOs de produto e testes; M.
+- [x] **Depende:** C15, C21. **Alvos:** aplicação/controller/DTOs de produto e testes; M.
 - **Aceite:** criar/editar/desativar produto; desativado some da oferta pública; erros HTTP seguem contrato.
-- **Verificar:** BI(ProductApi), C e permissões.
+- **Verificar:** `ProductAdminApiIT`, cobertura de rotas do OpenAPI, geração TypeScript; CSRF/papel admin, variantes, desativação fora da consulta pública e `Problem Details` — gate backend completo, contrato e docs aprovados localmente.
 
 ### C23 — `feat(catalog-ui): manage products and packaging details`
 

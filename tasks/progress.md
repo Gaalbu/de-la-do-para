@@ -302,7 +302,7 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Mudanças | Página administrativa lista/pagina produtores ativos e inativos, cria, edita e desativa/restaura; formulário acessível com required/pattern/maxlength, avisos contra endereço/coordenadas/alegações e estados de loading/erro/sucesso. Sem ação de exclusão. Corrigido guard SSR: sessão baseada em cookie só é consultada no browser; API segue responsável por autorização. |
 | Verificação | `./scripts/verify.sh frontend` passou: lint, format, 6 testes Angular, build SSR, Playwright 2/2. `verify.sh docs`, `contracts` (10 avisos Redocly), `security` (0 vulnerabilidades runtime; 4 high dev-only preexistentes em js-yaml) passaram; `git diff --check` OK; aislop 100/100 sem findings. |
 | Remoto | Commit `02bf308` enviado; PR #32 aberto/mergeable sobre `feat/c18-producer-persistence`; CI `35637344901` 7/7 verde. PR #31 (C18/C19) aberto/mergeable e CI 7/7 verde. |
-| Próximo passo | C21 — persistência de produtos e SKUs sobre a branch C20; sem merge automático. |
+| Próximo passo | C21 — persistência de produtos/SKUs na branch empilhada sobre C20. |
 | Perguntas | Nenhuma. |
 
 ## Sessão 2026-09-21 — C21 persistência de produtos e SKUs
@@ -313,6 +313,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Decisões | D65: produtores somente por admin, sem conta própria; produtores referenciados ficam sem exclusão física, podem ser desativados; exibição usa somente localidade ampla e texto editorial fictício identificados como demonstração. C21 protege produto/SKUs referenciados por FK restritiva; snapshots independentes pertencem à futura capacidade de pedidos. Fixture real/sintética do catálogo permanece em C26. |
 | Mudanças | Entidades `Product` e `ProductSku`, repositórios sem operação de exclusão física, migration V14 com unicidade case-insensitive, invariantes de categoria/conteúdo/validade e dimensões/peso. SKU representa unidade vendida, com variantes distintas por conteúdo/embalagem. Desativar produto preserva identidades e relações. Spec esclarece limites de snapshots e fixture; rastreabilidade e plano atualizados. |
 | Verificação | `./mvnw -Dit.test=ProducerPersistenceIT,ProducerRepositoryIT,ProducerAdminApiIT,ProductRepositoryIT verify` passou: 15 testes unitários, 10 integração, PostgreSQL 18.6/Testcontainers, Flyway V14, Spotless e Checkstyle sem violações. `npm run docs:check --prefix frontend` passou (24 Markdown); `git diff --check` OK. |
-| Remoto | C20 PR #32 permanece aberto/mergeable; CI `35637344901` 7/7 verde. C21 ainda não commitada/publicada. |
-| Próximo passo | Executar `aislop`, revisar diff e concluir rastreabilidade; depois criar commit, publicar branch/PR empilhada em C20, sem merge automático. |
+| Remoto | C20 PR #32 aberto/mergeable, CI `35637344901` 7/7 verde. C21 commit `7e009a0` publicado em PR #33, empilhada sobre C20; retry do CI `35639675604` concluiu 7/7 verde após 502 transitório do Maven Central. |
+| Próximo passo | C22 — API de administração e consulta pública sobre C21; sem merge automático. |
+| Perguntas | Nenhuma. |
+
+## Sessão 2026-09-21 — C22 API de produtos (verificada localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `feat/c22-product-api-contracts`, empilhada sobre C21/C20; `.angular/` preexistente não rastreado preservado |
+| Decisões | Produtos ativos só aparecem publicamente quando produtor e ao menos um SKU também estão ativos. PATCH integral; SKU omitido desativado logicamente. Nenhuma rota DELETE. Escritas só admin com CSRF. |
+| Mudanças | Teste HTTP RED confirmou rota ausente; OpenAPI agora define rotas/admin/public e schemas. Implementados `ProductService`, controllers, DTOs, mapeamento Problem Details, autorização pública explícita GET e migration V15 para estado ativo do SKU. Documento API/spec atualizados. |
+| Verificação | `./scripts/verify.sh backend` passou: 15 unitários, 15 integrações incluindo PostgreSQL 18.6/Testcontainers, Flyway V15 e harness Kafka, Spotless e Checkstyle. Rodada final `-Dit.test=ProductAdminApiIT verify` passou 15 unitários + 4 integrações, cobrindo FOOD/CRAFT (campos alimentares nulos), rollback, 401/403/CSRF/404/409, inatividade de produtor/produto/SKUs e ausência de DELETE. `contracts:check` passou com geração TypeScript, `tsc` e eventos (10 avisos Redocly preexistentes); `docs:check` (24 Markdown) e `git diff --check` passaram. |
+| Remoto | C22 commitado localmente; C21 PR #33 aberta. CI C21 `35639675604` 7/7 verde após retry de HTTP 502 transitório no Maven Central. |
+| Próximo passo | Publicar PR C22 empilhada sobre #33, aguardar CI; depois C23 UI de produtos. |
 | Perguntas | Nenhuma. |

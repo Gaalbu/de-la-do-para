@@ -56,6 +56,9 @@ public class ProductSku {
     @Column(name = "gross_weight_grams", nullable = false)
     private int grossWeightGrams;
 
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -82,6 +85,7 @@ public class ProductSku {
         }
         this.id = id;
         this.createdAt = now;
+        this.active = true;
         this.productCategory = product == null ? null : product.getCategory();
         updatePackaging(
                 product,
@@ -109,8 +113,12 @@ public class ProductSku {
             int heightMm,
             int grossWeightGrams,
             Instant now) {
-        if (product == null || !product.isActive() || !product.getProducer().isActive()) {
-            throw new IllegalArgumentException("SKU requires an active product and producer");
+        if (product == null) {
+            throw new IllegalArgumentException("SKU requires a product");
+        }
+        if (this.product == null
+                && (!product.isActive() || !product.getProducer().isActive())) {
+            throw new IllegalArgumentException("New SKU requires an active product and producer");
         }
         if (this.product != null && !this.product.getId().equals(product.getId())) {
             throw new IllegalArgumentException("SKU cannot be reassigned to a different product");
@@ -201,6 +209,18 @@ public class ProductSku {
 
     public int getGrossWeightGrams() {
         return grossWeightGrams;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active, Instant now) {
+        if (now == null) {
+            throw new IllegalArgumentException("Update time is required");
+        }
+        this.active = active;
+        this.updatedAt = now;
     }
 
     public Instant getCreatedAt() {

@@ -58,6 +58,7 @@ HTTP, conforme `docs/spec-template.md` §8–§9.
 |---|---|---|
 | Saúde do processo e probes | `docs/observability.md` | API real em C12 (`/actuator/health`, `/liveness`, `/readiness`) |
 | Administração de produtores fictícios | `contracts/openapi/v1.yaml` (`listAdminProducers`, `createAdminProducer`, `getAdminProducer`, `updateAdminProducer`) | Executável em C19; requer sessão admin + CSRF para escritas; `demonstration: true`; sem operação DELETE |
+| Administração e consulta de produtos/SKUs | `contracts/openapi/v1.yaml` (`listAdminProducts`, `createAdminProduct`, `getAdminProduct`, `updateAdminProduct`, `getPublicProduct`) | Implementado localmente em C22; escritas requerem admin + CSRF; consulta pública omite produto, produtor e variantes inativos. Fixture de demonstração chega em C26. |
 | Seed de saúde | `contracts/openapi/examples/status.http` | Executável agora via **stub de contrato** no WireMock (`:18443`); não implementado na API real; usar os endpoints Actuator de C12 |
 | Checkout idempotente | mesmo arquivo (comentado) | Futuro — ilustrativo, não executar |
 
