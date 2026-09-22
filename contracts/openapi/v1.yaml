@@ -681,6 +681,7 @@ paths:
           description: Carrinho não encontrado
           content:
             application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+
     delete:
       operationId: clearGuestCart
       summary: Limpar carrinho convidado
@@ -696,6 +697,19 @@ paths:
           description: Versão concorrente ou carrinho em checkout
           content:
             application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+
+  /api/v1/checkout/snapshots:
+    post:
+      operationId: startCheckoutSnapshot
+      summary: Congelar o carrinho convidado para o checkout
+      security: []
+      responses:
+        '200':
+          description: Identidade do snapshot criado
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/CheckoutSnapshot'}}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '422': {$ref: '#/components/responses/Problem422'}
 
   /api/v1/cart/items:
     put:
@@ -744,6 +758,12 @@ components:
       content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
     Problem409:
       description: Conflito de versão
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
+    Problem404:
+      description: Recurso não encontrado
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
+    Problem422:
+      description: Operação sem modalidade compatível
       content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
     HealthUp:
       description: Processo disponível; não comprova integrações sandbox.
@@ -1236,6 +1256,13 @@ components:
             properties:
               skuId: {type: string, format: uuid}
               quantity: {type: integer, minimum: 1}
+    CheckoutSnapshot:
+      type: object
+      additionalProperties: false
+      required: [snapshotId, snapshotVersion]
+      properties:
+        snapshotId: {type: string, format: uuid}
+        snapshotVersion: {type: integer, format: int64, minimum: 0}
     PublicProductSku:
       type: object
       additionalProperties: false

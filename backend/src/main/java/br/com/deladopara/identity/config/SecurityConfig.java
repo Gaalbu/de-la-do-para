@@ -33,7 +33,8 @@ public class SecurityConfig {
                                 "/api/v1/accounts/recovery",
                                 "/api/v1/accounts/reset",
                                 "/api/v1/sessions",
-                                "/api/v1/cart/**")
+                                "/api/v1/cart/**",
+                                "/api/v1/checkout/**")
                         .permitAll()
                         .requestMatchers("/actuator/**")
                         .permitAll()
