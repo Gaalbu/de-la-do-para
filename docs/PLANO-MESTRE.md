@@ -1563,6 +1563,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 - [x] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M. Implementação local pendente de PR/CI.
 - Persistidos snapshotId/version, destino normalizado, fingerprint, serviço, custo, prazos, pacotes e validade; a entidade exige identidade do snapshot e rejeita validade inválida.
+- Serviço transacional grava apenas cotações ainda válidas e serializa a cobertura dos pacotes; endpoint de checkout permanece dependente do snapshot e da origem de cotação.
 - **Aceite:** cotação vinculada a itens/endereço/composição dos pacotes; alteração invalida; custo total e prazos selecionados são verificados no servidor.
 - **Verificar:** BI(ShippingQuote), C e V12.
 
