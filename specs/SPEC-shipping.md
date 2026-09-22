@@ -89,7 +89,8 @@ disponibilidade, preço, fingerprint e validade dentro da transação de checkou
 
 ## Pendências deliberadas
 
-- C41a define algoritmo e limites persistentes de composição de caixas.
+- C41a implementa o algoritmo puro e determinístico de composição; persistência
+  da composição fica para o snapshot de checkout (C43).
 - C42 define adapters, timeout, credenciais e parser do sandbox.
 - C43 define persistência e aceitação vinculada ao snapshot.
 - O calendário de feriados/pontos facultativos será conferido em fontes
