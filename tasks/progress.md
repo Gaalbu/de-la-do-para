@@ -695,3 +695,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - A opção disponível usa somente o ponto e a janela aprovados na spec, sem aceitar retirada, pedido, cobrança ou reserva.
 - Testes focados de pickup/snapshot/controller passaram com `-DargLine=-Xint`; OpenAPI será validado antes da publicação.
 - O construtor Spring do serviço de snapshot foi anotado explicitamente para selecionar a dependência de pickup em runtime; a repetição local seguinte encontrou apenas o SIGSEGV intermitente conhecido do GraalVM durante Surefire.
+### C44 — carregar retirada no checkout
+
+- O serviço Angular agora consulta `/pickup-options` em paralelo à cotação de entrega, sempre usando o mesmo snapshot e sua versão.
+- A tela exibe o ponto fictício de Belém, janela de atendimento, preparo e ausência de frete; indisponibilidade para algum SKU é apresentada de forma recuperável.
+- Testes de serviço cobrem o carregamento da origem de retirada e a associação ao snapshot.
+- Validação local: lint, `format:check`, build e `aislop` 100/100 passaram. `ng test --watch=false` ficou bloqueado por `TS1127` em `node_modules/typescript/lib/lib.dom.d.ts`, fora da alteração.
+- Próximo passo: criar o contrato de seleção da modalidade de retirada antes de tornar a opção selecionável/persistida; não combinar entrega e retirada automaticamente.

@@ -45,9 +45,46 @@ describe('CheckoutService', () => {
         },
       ],
     });
+    const pickup = http.expectOne((request) =>
+      request.urlWithParams.includes('/api/v1/checkout/snapshot-1/pickup-options'),
+    );
+    expect(pickup.request.params.get('snapshotVersion')).toBe('3');
+    pickup.flush({ status: 'AVAILABLE', options: [], unavailableSkuIds: [] });
 
     expect(await quote).toBe(true);
     expect(service.options()?.[0].priceCents).toBe(2590);
+    expect(service.pickupOptions()?.status).toBe('AVAILABLE');
+  });
+
+  it('loads the server-owned pickup origin for the same snapshot', async () => {
+    const quote = service.quote('66053-000');
+    http
+      .expectOne('/api/v1/checkout/snapshots')
+      .flush({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    http
+      .expectOne((request) => request.urlWithParams.includes('delivery-options'))
+      .flush({
+        snapshotId: 'snapshot-1',
+        snapshotVersion: 3,
+        inputFingerprint: null,
+        options: [],
+      });
+    const pickup = http.expectOne((request) => request.urlWithParams.includes('pickup-options'));
+    pickup.flush({
+      status: 'AVAILABLE',
+      options: [
+        {
+          id: 'PONTO-DEMO-BELEM',
+          name: 'Ponto de demonstração — Belém',
+          openingHours: 'segunda a sexta',
+          preparationDays: 1,
+        },
+      ],
+      unavailableSkuIds: [],
+    });
+
+    expect(await quote).toBe(true);
+    expect(service.pickupOptions()?.options[0].id).toBe('PONTO-DEMO-BELEM');
   });
 
   it('posts the selected server quote with the snapshot contract', async () => {

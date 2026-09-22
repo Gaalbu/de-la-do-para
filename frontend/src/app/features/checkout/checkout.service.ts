@@ -25,6 +25,19 @@ export interface DeliveryOptions {
   options: ShippingQuote[];
 }
 
+export interface PickupOption {
+  id: string;
+  name: string;
+  openingHours: string;
+  preparationDays: number;
+}
+
+export interface PickupOptions {
+  status: 'AVAILABLE' | 'UNAVAILABLE';
+  options: PickupOption[];
+  unavailableSkuIds: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CheckoutService {
   private readonly http = inject(HttpClient);
@@ -35,6 +48,7 @@ export class CheckoutService {
   );
   readonly snapshot = signal<CheckoutSnapshot | null>(null);
   readonly options = signal<ShippingQuote[] | null>(null);
+  readonly pickupOptions = signal<PickupOptions | null>(null);
   readonly selectedOption = signal<ShippingQuote | null>(null);
 
   async quote(postalCode: string): Promise<boolean> {
@@ -44,18 +58,28 @@ export class CheckoutService {
       'Não foi possível consultar este CEP. Confira os dados e tente novamente.',
     );
     this.options.set(null);
+    this.pickupOptions.set(null);
     this.selectedOption.set(null);
     try {
       const snapshot = await firstValueFrom(
         this.http.post<CheckoutSnapshot>('/api/v1/checkout/snapshots', {}),
       );
-      const response = await firstValueFrom(
-        this.http.get<DeliveryOptions>(`/api/v1/checkout/${snapshot.snapshotId}/delivery-options`, {
-          params: { snapshotVersion: snapshot.snapshotVersion, postalCode },
-        }),
-      );
+      const [response, pickup] = await Promise.all([
+        firstValueFrom(
+          this.http.get<DeliveryOptions>(
+            `/api/v1/checkout/${snapshot.snapshotId}/delivery-options`,
+            { params: { snapshotVersion: snapshot.snapshotVersion, postalCode } },
+          ),
+        ),
+        firstValueFrom(
+          this.http.get<PickupOptions>(`/api/v1/checkout/${snapshot.snapshotId}/pickup-options`, {
+            params: { snapshotVersion: snapshot.snapshotVersion },
+          }),
+        ),
+      ]);
       this.snapshot.set(snapshot);
       this.options.set(response.options);
+      this.pickupOptions.set(pickup);
       return true;
     } catch {
       this.error.set(true);
