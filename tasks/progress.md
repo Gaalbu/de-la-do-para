@@ -683,3 +683,8 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 - CI `35770235622` encontrou fixtures Angular administrativas sem o novo campo obrigatório `pickupEligible`; a fixture de produto foi atualizada.
 - Frontend local passou novamente: 9 arquivos/23 testes, lint e formatação OK. O backend remoto ainda estava executando antes da falha de qualidade causada pelo frontend.
+
+### Correção do gate backend da V23
+
+- CI `35770500417` confirmou migration V23 e 22 testes backend sem falhas; o único erro foi Spotless em `ProductSkuPackagingTest`.
+- Formatação corrigida localmente; `spotless:check`, `git diff --check` e `aislop` passaram. Commit corretivo será publicado para reexecutar o CI.

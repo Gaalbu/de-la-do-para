@@ -33,10 +33,15 @@ class ProductSkuPackagingTest {
     void keepsPickupEligibilityAsExplicitSkuData() {
         var now = Instant.parse("2026-09-21T12:00:00Z");
         var product = new Product(
-                UUID.randomUUID(), "demo-food", "Alimento de demonstração", "Registro fictício.",
-                Product.Category.FOOD, producer(now), now);
-        var sku = new ProductSku(UUID.randomUUID(), product, "DEMO-200G", "Pacote", 200, 30,
-                false, 180, 120, 40, 220, true, now);
+                UUID.randomUUID(),
+                "demo-food",
+                "Alimento de demonstração",
+                "Registro fictício.",
+                Product.Category.FOOD,
+                producer(now),
+                now);
+        var sku = new ProductSku(
+                UUID.randomUUID(), product, "DEMO-200G", "Pacote", 200, 30, false, 180, 120, 40, 220, true, now);
 
         assertThat(sku.isPickupEligible()).isTrue();
     }
