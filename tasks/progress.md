@@ -694,3 +694,4 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Implementado `GET /api/v1/checkout/{snapshotId}/pickup-options`: valida ownership e versão do snapshot, resolve os SKUs persistidos e retorna `AVAILABLE` apenas quando todos estão ativos e `pickupEligible`; caso contrário retorna `UNAVAILABLE` com os SKUs incompatíveis.
 - A opção disponível usa somente o ponto e a janela aprovados na spec, sem aceitar retirada, pedido, cobrança ou reserva.
 - Testes focados de pickup/snapshot/controller passaram com `-DargLine=-Xint`; OpenAPI será validado antes da publicação.
+- O construtor Spring do serviço de snapshot foi anotado explicitamente para selecionar a dependência de pickup em runtime; a repetição local seguinte encontrou apenas o SIGSEGV intermitente conhecido do GraalVM durante Surefire.
