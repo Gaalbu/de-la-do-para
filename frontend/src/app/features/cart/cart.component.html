@@ -1,0 +1,35 @@
+<section class="cart" aria-labelledby="cart-title">
+  <p><a routerLink="/">← Voltar à vitrine</a></p>
+  <h1 id="cart-title">Seu carrinho</h1>
+  @if (cartService.loading()) {
+    <p role="status">Carregando carrinho…</p>
+  } @else if (cartService.error()) {
+    <div class="state" role="alert">
+      <strong>Não foi possível carregar o carrinho.</strong
+      ><button type="button" (click)="cartService.load()">Tentar novamente</button>
+    </div>
+  } @else if (!cartService.cart()?.items?.length) {
+    <div class="state">
+      <strong>Seu carrinho está vazio.</strong><a routerLink="/">Explorar a vitrine</a>
+    </div>
+  } @else {
+    <p class="version">Versão {{ cartService.cart()!.version }} · atualizada nesta sessão</p>
+    <div class="items">
+      @for (item of cartService.cart()!.items; track item.skuId) {
+        <article class="item">
+          <div>
+            <strong>{{ item.skuId }}</strong
+            ><span>SKU do catálogo</span>
+          </div>
+          <div class="quantity" aria-label="Quantidade">
+            <button type="button" (click)="decrement(item.skuId)">−</button
+            ><span>{{ item.quantity }}</span
+            ><button type="button" (click)="increment(item.skuId)">+</button>
+          </div>
+          <button class="remove" type="button" (click)="remove(item.skuId)">Remover</button>
+        </article>
+      }
+    </div>
+    <button class="clear" type="button" (click)="clear()">Limpar carrinho</button>
+  }
+</section>

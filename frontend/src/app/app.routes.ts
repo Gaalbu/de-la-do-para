@@ -13,6 +13,10 @@ export const routes: Routes = [
       import('./features/identity/pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'cart',
+    loadComponent: () => import('./features/cart/cart.component').then((m) => m.CartComponent),
+  },
+  {
     path: 'products/:slug',
     loadComponent: () =>
       import('./features/storefront/product-detail.component').then(

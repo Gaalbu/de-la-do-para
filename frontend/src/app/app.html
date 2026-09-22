@@ -2,6 +2,7 @@
   <a routerLink="/" class="brand">De Lá do Pará</a>
   <nav aria-label="Principal">
     <a routerLink="/">Vitrine</a>
+    <a routerLink="/cart">Carrinho ({{ cartService.cart()?.items?.length ?? 0 }})</a>
     @if (identity.account(); as account) {
       <span>{{ account.email }} ({{ account.role }})</span>
       @if (account.role === 'ADMIN') {

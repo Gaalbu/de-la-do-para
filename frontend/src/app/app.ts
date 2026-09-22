@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { IdentityService } from './features/identity/services/identity.service';
+import { CartService } from './features/cart/cart.service';
 
 @Component({
   imports: [RouterOutlet, RouterLink],
@@ -14,11 +15,13 @@ export class App implements OnInit {
   protected readonly title = signal('De Lá do Pará');
 
   readonly identity = inject(IdentityService);
+  readonly cartService = inject(CartService);
   private readonly platformId = inject(PLATFORM_ID);
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       void this.identity.fetchCurrent();
+      void this.cartService.load();
     }
   }
 
