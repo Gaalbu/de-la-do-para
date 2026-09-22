@@ -13,6 +13,7 @@ import br.com.deladopara.support.PostgresTestContainer;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ class SkuPriceRepositoryIT {
     private final ProductRepository products;
     private final ProducerRepository producers;
 
+    @Autowired
     SkuPriceRepositoryIT(
             SkuPriceRepository prices,
             ProductSkuRepository skus,
