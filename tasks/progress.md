@@ -551,3 +551,4 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Criada `specs/SPEC-checkout.md` para fixar endereço, entrega/retirada, resposta
   `AVAILABLE`/`UNAVAILABLE`, invalidação e erros antes da UI.
 - Próximo passo: implementar a origem/API de delivery-options e então a tela C44.
+- Implementado `DeliveryOptionsService`: normaliza CEP, consulta apenas cotações persistidas do snapshot/versão ainda válidas e reconstrói a cobertura de pacotes; sem endpoint público até existir validação de ownership do snapshot.
