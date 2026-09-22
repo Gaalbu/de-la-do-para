@@ -552,3 +552,22 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
   `AVAILABLE`/`UNAVAILABLE`, invalidação e erros antes da UI.
 - Próximo passo: implementar a origem/API de delivery-options e então a tela C44.
 - Implementado `DeliveryOptionsService`: normaliza CEP, consulta apenas cotações persistidas do snapshot/versão ainda válidas e reconstrói a cobertura de pacotes; sem endpoint público até existir validação de ownership do snapshot.
+
+## Sessão 2026-09-22 — C44 snapshot de checkout
+
+- Implementado o primeiro slice executável do C44: `POST /api/v1/checkout/snapshots`
+  congela o carrinho convidado da sessão em migration V22 e retorna
+  `snapshotId`/`snapshotVersion`; a sessão é armazenada somente como hash.
+- Rota, schema OpenAPI e autorização pública foram atualizados; o snapshot
+  rejeita carrinho inexistente ou vazio e permanece imutável.
+- Verificação: testes focados `CheckoutSnapshotServiceTest,CheckoutControllerTest`,
+  `./mvnw -q -DargLine=-Xint verify` com PostgreSQL/Testcontainers e Flyway V22,
+  `npm run contracts:lint` (válido, 11 avisos Redocly preexistentes),
+  `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados).
+  A execução completa de `contracts:check` encontrou o SIGSEGV intermitente do
+  TypeScript durante `tsc`, após a geração de tipos; não é tratado como gate verde.
+- Commit local: `864db49` (`feat(checkout): create guest checkout snapshots`),
+  ainda não publicado.
+- Próximo passo: expor `GET /api/v1/checkout/{snapshotId}/delivery-options`,
+  validando ownership pela sessão, versão, CEP e validade das cotações antes de
+  iniciar a UI de endereço/seleção.
