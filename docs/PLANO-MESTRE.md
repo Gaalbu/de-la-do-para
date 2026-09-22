@@ -1570,6 +1570,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 ### C44 — `feat(checkout-ui): collect address and select delivery or pickup`
 
 - [ ] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M.
+- Contrato preliminar criado em `specs/SPEC-checkout.md`: endereço sem inferência, opções persistidas, estado recuperável de cotação indisponível e invalidação por snapshot/endereço/modalidade.
 - **Aceite:** visitante compara modalidades, pacotes, prazos e custo total; cotação indisponível tem recuperação; CEP/endereço são validados sem inventar dados.
 - **Verificar:** F/E/A; troca de endereço/carrinho força nova cotação.
 

@@ -544,3 +544,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
   serializa a cobertura dos pacotes e conserva snapshot/version/fingerprint.
 - Teste unitário confirma a gravação com identidade do snapshot e sequência dos pacotes.
 - Próximo passo: publicar a extensão e depois implementar a origem de cotação do checkout.
+
+## Sessão 2026-09-22 — C44 contrato de checkout
+
+- O serviço de persistência do C43 foi mergeado no PR #57 (`542ce2c`), com CI completo.
+- Criada `specs/SPEC-checkout.md` para fixar endereço, entrega/retirada, resposta
+  `AVAILABLE`/`UNAVAILABLE`, invalidação e erros antes da UI.
+- Próximo passo: implementar a origem/API de delivery-options e então a tela C44.
