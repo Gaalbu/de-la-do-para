@@ -7,7 +7,9 @@ import br.com.deladopara.catalog.domain.Producer;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
 import br.com.deladopara.support.PostgresTestContainer;
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,58 @@ class ProductRepositoryIT {
         this.skus = skus;
         this.producers = producers;
         this.jdbc = jdbc;
+    }
+
+    @Test
+    @Transactional
+    void storefrontQueryRequiresCurrentPriceAndFreeInventory() {
+        var now = Instant.parse("2026-09-22T12:00:00Z");
+        var producer = new Producer(
+                UUID.randomUUID(),
+                "storefront-producer-" + UUID.randomUUID().toString().substring(0, 8),
+                "Produtor público",
+                "Belém (demonstração)",
+                "Texto fictício.",
+                now);
+        producers.save(producer);
+        var product = foodProduct(producer, now);
+        products.save(product);
+        var sku = new ProductSku(
+                UUID.randomUUID(), product, "STOREFRONT-200G", "Pacote", 200, 30, false, 180, 120, 40, 220, now);
+        skus.saveAndFlush(sku);
+        jdbc.update(
+                "INSERT INTO pricing_sku_prices (sku_id, unit_price_cents, currency, updated_at) VALUES (?, ?, ?, ?)",
+                sku.getId(),
+                2_500,
+                "BRL",
+                Timestamp.from(now));
+        jdbc.update(
+                "INSERT INTO inventory_lots "
+                        + "(id, sku_id, physical_units, reserved_units, blocked, expires_on, "
+                        + "minimum_shelf_life_days, received_at, created_at, updated_at, version) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                UUID.randomUUID(),
+                sku.getId(),
+                4,
+                3,
+                false,
+                null,
+                null,
+                Timestamp.from(now),
+                Timestamp.from(now),
+                Timestamp.from(now),
+                0);
+
+        var result = products.findAvailableForStorefront(
+                producer.getSlug(),
+                Product.Category.FOOD.name(),
+                2_000L,
+                3_000L,
+                LocalDate.of(2026, 9, 22),
+                "PRICE_ASC",
+                org.springframework.data.domain.PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).extracting(Product::getId).containsExactly(product.getId());
     }
 
     @Test

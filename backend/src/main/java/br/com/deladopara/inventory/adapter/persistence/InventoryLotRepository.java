@@ -11,4 +11,6 @@ public interface InventoryLotRepository extends Repository<InventoryLotEntity, U
     java.util.Optional<InventoryLotEntity> findById(UUID id);
 
     List<InventoryLotEntity> findAllBySkuIdOrderByReceivedAtAscIdAsc(UUID skuId);
+
+    List<InventoryLotEntity> findAllBySkuIdInOrderBySkuIdAscReceivedAtAscIdAsc(List<UUID> skuIds);
 }
