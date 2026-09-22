@@ -25,6 +25,11 @@ Um link quebrado ou exemplo fora do schema reprova o job; a verificação é
 reproduzível localmente e na CI sem acesso à rede, e cada endpoint futuro
 herda a checagem pelo mesmo gate.
 
+O gate `frontend` gera os tipos OpenAPI antes de compilar. A geração é
+necessária porque os artefatos em `frontend/src/generated/` são derivados e
+ignorados pelo Git; assim, o job funciona em checkout limpo sem depender do
+estado de outro job ou de uma execução local prévia de `contracts:check`.
+
 `security` verifica segredos (`scripts/check-secrets.sh`) e dependências
 (`npm audit --omit=dev --audit-level=high` para runtime; audit completo
 informativo). Achado controlado com fixture `AKIA...` falha como esperado;

@@ -1383,9 +1383,9 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C23 — `feat(catalog-ui): manage products and packaging details`
 
-- [ ] **Depende:** C20, C22. **Alvos:** `F/admin/products`, formulário e teste; M.
+- [x] **Depende:** C20, C22. **Alvos:** `F/admin/products`, formulário e teste; M.
 - **Aceite:** admin gerencia alimento/artesanato com campos próprios; seleção de produtor; confirmação ao desativar.
-- **Verificar:** F/E; preencher, corrigir erro e editar um produto de cada tipo.
+- **Verificar:** `./scripts/verify.sh frontend` aprovado: lint, formato, 10 testes Angular, build SSR e Playwright 3/3. Jornada cobre preencher alimento, recuperar conflito, editar alimento e artesanato e confirmar desativação; API do E2E simulada, API real coberta em C22.
 
 ### C24 — `feat(media): store validated product images locally`
 
