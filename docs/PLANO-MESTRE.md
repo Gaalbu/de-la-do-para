@@ -1530,7 +1530,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C39a — `feat(cart): expose authorized guest cart mutations`
 
-- [ ] **Depende:** C39. **Alvos:** aplicação/controller/DTOs de carrinho e testes; M.
+- [x] **Depende:** C39. **Alvos:** aplicação/controller/DTOs de carrinho e testes; M. Implementado nesta entrega.
 - **Aceite:** adicionar/alterar/remover/limpar pela API; sessão convidada isolada; conflito de versão segue contrato.
 - **Verificar:** BI(GuestCartApi), C e tentativa de alterar carrinho de outro visitante.
 

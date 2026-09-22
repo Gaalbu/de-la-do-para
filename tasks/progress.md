@@ -494,3 +494,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | PR #49 CI 7/7 verde e merged em `8505626`; `CartTest`, `InfrastructureIT`, Spotless e compilação backend verdes. |
 | Remoto | C38 merged; C39 ainda local, sem commit/PR. |
 | Próximo passo | Adicionar integração PostgreSQL do repository e converter o agregado em serviço transacional antes de abrir PR C39. |
+## Sessão 2026-09-22 — C39a API de carrinho convidado
+
+- C39 foi mergeado no PR #50 (`f126e94`).
+- Implementada API pública de carrinho: `GET /api/v1/cart`, substituição de itens, remoção por SKU e limpeza.
+- Sessão HTTP é persistida somente como SHA-256; mutações exigem CSRF e `expectedVersion`.
+- Duplicidade de SKU, SKU inativo/inexistente, versão obsoleta e concorrência JPA retornam erros contratuais.
+- Teste `GuestCartApiIT` cobre reload, mutação, conflito e remoção; próximo passo é C40 (UI persistente) após publicar o PR.
