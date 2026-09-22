@@ -6,8 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import br.com.deladopara.catalog.domain.Producer;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
+import br.com.deladopara.inventory.adapter.persistence.InventoryLotEntity;
+import br.com.deladopara.inventory.adapter.persistence.InventoryLotRepository;
+import br.com.deladopara.pricing.adapter.persistence.SkuPriceEntity;
+import br.com.deladopara.pricing.adapter.persistence.SkuPriceRepository;
+import br.com.deladopara.pricing.domain.Money;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +31,55 @@ class ProductRepositoryIT {
     private final ProductSkuRepository skus;
     private final ProducerRepository producers;
     private final JdbcTemplate jdbc;
+    private final SkuPriceRepository prices;
+    private final InventoryLotRepository lots;
 
     @Autowired
     ProductRepositoryIT(
-            ProductRepository products, ProductSkuRepository skus, ProducerRepository producers, JdbcTemplate jdbc) {
+            ProductRepository products,
+            ProductSkuRepository skus,
+            ProducerRepository producers,
+            JdbcTemplate jdbc,
+            SkuPriceRepository prices,
+            InventoryLotRepository lots) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.jdbc = jdbc;
+        this.prices = prices;
+        this.lots = lots;
+    }
+
+    @Test
+    @Transactional
+    void storefrontQueryRequiresCurrentPriceAndFreeInventory() {
+        var now = Instant.parse("2026-09-22T12:00:00Z");
+        var producer = new Producer(
+                UUID.randomUUID(),
+                "storefront-producer-" + UUID.randomUUID().toString().substring(0, 8),
+                "Produtor público",
+                "Belém (demonstração)",
+                "Texto fictício.",
+                now);
+        producers.save(producer);
+        var product = foodProduct(producer, now);
+        products.save(product);
+        var sku = new ProductSku(
+                UUID.randomUUID(), product, "STOREFRONT-200G", "Pacote", 200, 30, false, 180, 120, 40, 220, now);
+        skus.save(sku);
+        prices.save(new SkuPriceEntity(sku.getId(), Money.brl(2_500), now));
+        lots.save(new InventoryLotEntity(UUID.randomUUID(), sku, 4, 3, false, null, null, now, now));
+
+        var result = products.findAvailableForStorefront(
+                producer.getSlug(),
+                Product.Category.FOOD.name(),
+                2_000L,
+                3_000L,
+                LocalDate.of(2026, 9, 22),
+                "PRICE_ASC",
+                org.springframework.data.domain.PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).extracting(Product::getId).containsExactly(product.getId());
     }
 
     @Test

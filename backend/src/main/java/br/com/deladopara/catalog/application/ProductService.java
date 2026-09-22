@@ -15,6 +15,7 @@ import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
 import java.sql.SQLException;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -73,6 +74,21 @@ public class ProductService {
                 .toList();
         return new ProductPageResponse(
                 content, result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Product> findStorefrontProducts(StorefrontQuery query) {
+        if (query == null) {
+            throw new InvalidProductInputException("consulta pública é obrigatória");
+        }
+        return products.findAvailableForStorefront(
+                query.producerSlug(),
+                query.category() == null ? null : query.category().name(),
+                query.minPriceCents(),
+                query.maxPriceCents(),
+                LocalDate.now(clock),
+                query.sort().name(),
+                PageRequest.of(query.page(), query.size()));
     }
 
     @Transactional(readOnly = true)
