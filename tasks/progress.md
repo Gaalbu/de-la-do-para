@@ -747,5 +747,5 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | C46 — persistir eventos de saída na mesma transação do efeito local |
 | Mudanças | Adicionadas a entidade de domínio versionada, migration Flyway V24 com JSONB/estado/índice de pendentes, entidade JPA, repository e writer com transação `MANDATORY`. O slice não publica Kafka nem implementa consumidores, retries ou quarentena. |
 | Verificação | `OutboxEventTest` passou; `OutboxEventPersistenceIT` passou com PostgreSQL 18.6/Testcontainers (3 testes); backend executou 25 testes sem falhas; Spotless e `aislop` 100/100 passaram após formatação. |
-| Remoto | Ainda não publicado; PR será aberta após commit e revisão final. |
-| Próximo passo | Commitar/publicar o slice C46, conferir todos os gates remotos e só então decidir o merge; C47–C49 continuam separados. |
+| Remoto | PR #66 merged em `116f612`; CI `35781856327` passou integralmente (backend, frontend, contratos, docs, segurança, política e quality-gate). |
+| Próximo passo | Manter C47–C49 separados até a revisão humana da C45 definir os valores de lease/backoff/tentativas/retenção; atualizar a matriz do plano com esta integração. |

@@ -1591,7 +1591,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C46 — `feat(eventing): persist outbound events in the business transaction`
 
-- [ ] **Depende:** C09, C45. **Alvos:** outbox writer/model/repository, migration e teste; M.
+- [x] **Depende:** C09, C45. **Alvos:** outbox writer/model/repository, migration e teste; M. Implementado e merged na PR #66 (`116f612`).
 - **Aceite:** evento nasce na transação do efeito local; rollback elimina ambos; payload versionado e correlação persistidos.
 - **Verificar:** BI(TransactionalOutbox), incluindo V04.
 - **Estado atual:** a implementação local do slice de persistência está em
