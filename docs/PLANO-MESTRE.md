@@ -1396,7 +1396,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - **Aceite:** upload autenticado com limite de tamanho/tipo e nome interno seguro; imagem opcional por produto persiste em diretório local configurável; conteúdo acessível com descrição alternativa.
 - **Verificar:** `CatalogMediaApiIT`, testes de validação/armazenamento, contrato, build/UI, Playwright e gates de segurança/docs. Um adapter novo lê o arquivo persistido. Não buscar URLs arbitrárias no servidor.
 - **Decisões C24:** uma imagem principal por produto; JPEG/PNG até 5 MiB, escolhidos pelo usuário em 21/09/2026. A spec define limites técnicos de decodificação e metadados de licença/atribuição.
-- **Verificado:** processamento JPEG/PNG com limite 5 MiB, metadados e migration V16; rotas admin/pública com sessão/CSRF e verificação de estado; formulário de upload/prévia/remoção; `APP_MEDIA_DIRECTORY` padrão `./data/media`. Backend completo (31 testes unitários, 18 integrações, PostgreSQL 18.6, Spotless e Checkstyle), frontend (11 Angular, SSR e Playwright 3/3), contrato, docs, segurança e `aislop` passaram. PR #36 HEAD `9491996` aberta, MERGEABLE/CLEAN; CI `35656338034` 7/7 verde; sem merge automático.
+- **Verificado:** processamento JPEG/PNG com limite 5 MiB, metadados e migration V16; rotas admin/pública com sessão/CSRF e verificação de estado; formulário de upload/prévia/remoção; `APP_MEDIA_DIRECTORY` padrão `./data/media`. Backend completo (31 testes unitários, 18 integrações, PostgreSQL 18.6, Spotless e Checkstyle), frontend (11 Angular, SSR e Playwright 3/3), contrato, docs, segurança e `aislop` passaram. PR #36 foi merged no commit `b66326b`; CI `35656338034` passou 7/7.
 - **Divisão operacional:** C24a validação/armazenamento e metadados; C24b API/contratos; C24c administração e acessibilidade; C24d persistência local, documentação e gates. Cada fatia mantém o build executável.
 
 ### C24a — `docs(logistics): record individual delivery and coupon policy decisions`
@@ -1413,11 +1413,11 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C17, C24a. **Alvos:** `specs/SPEC-inventory.md`, matriz de estoque; S.
 - **Aceite:** saldo físico/reservado/disponível; reserva de 15 minutos; lotes, validade na chegada, bloqueio e ajuste administrativo definidos.
 - **Verificar:** DOC; D27/D54 definem as margens e D67 aprova a fixture sintética com limite e um dia abaixo; não reabrir Q04. Conferir calendário oficial de feriados antes de usar datas concretas.
-- **Estado atual:** `specs/SPEC-inventory.md` preparada com vocabulário, invariantes, fronteira de validade, fixture D67 e critérios INV-001–008. FEFO, comportamento de lote bloqueado com reserva ativa e calendário anual continuam propostas/pendências para revisão; C25 ainda não está concluída. PR #37 aberta, MERGEABLE/CLEAN; CI inicial `35658857246` 7/7 verde.
+- **Estado atual:** `specs/SPEC-inventory.md` preparada com vocabulário, invariantes, fronteira de validade, fixture D67 e critérios INV-001–008. FEFO, comportamento de lote bloqueado com reserva ativa e calendário anual continuam propostas/pendências para revisão; C25 ainda não está concluída. PR #37 foi merged em `c8a97d8`; CI `35658857246` passou 7/7.
 
 ### C26 — `feat(inventory): persist lots and stock movements`
 
-- [ ] **Depende:** C21, C25. **Alvos:** modelo/repositório de estoque, migration e testes; M.
+- [x] **Depende:** C21, C25. **Alvos:** modelo/repositório de estoque, migration e testes; M. Implementado e merged no PR #39 (`b251da4`).
 - **Aceite:** entrada/ajuste com motivo e histórico; lote vencido/bloqueado distinguido; constraint evita saldo impossível.
 - **Verificar:** BI(StockLedger); ajustar duas vezes não apaga movimento anterior.
 - **Estado atual:** migration V17, entidades JPA e repositórios de lotes/movimentações
@@ -1427,7 +1427,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C27 — `feat(inventory): expose authorized stock adjustments`
 
-- [ ] **Depende:** C15, C26. **Alvos:** aplicação/API/DTOs de estoque e testes; M.
+- [x] **Depende:** C15, C26. **Alvos:** aplicação/API/DTOs de estoque e testes; M. Implementado e merged no PR #39 (`b251da4`).
 - **Aceite:** consulta de saldo e ajuste versionado; conflito concorrente sinalizado; papel e motivo obrigatórios.
 - **Verificar:** BI(StockAdjustmentApi), C e duas alterações concorrentes.
 - **Estado atual:** endpoint administrativo de consulta por SKU e ajuste físico por
@@ -1436,13 +1436,13 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C28 — `feat(inventory-ui): manage lots and inspect stock history`
 
-- [ ] **Depende:** C23, C27. **Alvos:** `F/admin/inventory`, formulário/histórico e teste; M.
+- [x] **Depende:** C23, C27. **Alvos:** `F/admin/inventory`, formulário/histórico e teste; M. Implementado e merged no PR #39 (`b251da4`).
 - **Aceite:** admin registra lote, corrige saldo e vê motivo; não apresenta reservado como disponível.
 - **Verificar:** F/E; comparar histórico antes/depois de ajuste.
 - **Estado atual:** tela `/admin/inventory` implementada com seleção de SKU,
   recebimento de lote, consulta de físico/reservado/disponível e ajuste com
-  versão retornada pelo backend. Build e 11 testes frontend passaram; o CI do
-  PR #39 ainda precisa concluir no SHA publicado.
+  versão retornada pelo backend. Build e 11 testes frontend passaram; PR #39 foi
+  merged em `b251da4` com CI remoto concluído.
 
 ### C29 — `docs(pricing): specify money discounts and coupon eligibility`
 
@@ -1453,7 +1453,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C30 — `feat(pricing): calculate canonical purchase totals`
 
-- [x] **Depende:** C21, C29. **Alvos:** tipos/cálculo monetário, aplicação de preço e testes; M. Implementado em `a7a0551`, PR #38 aberta.
+- [x] **Depende:** C21, C29. **Alvos:** tipos/cálculo monetário, aplicação de preço e testes; M. Implementado e merged no PR #38 (`eb5e4d5`).
 - **Aceite:** servidor calcula total determinístico; arredondamento explícito; preço do navegador não é confiado.
 - **Verificar:** BT(PurchaseTotal), incluindo fronteiras de arredondamento e moeda inválida. BT inicial verde; API de checkout e contador global permanecem fora desta fatia.
 
@@ -1554,14 +1554,14 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C42 — `feat(shipping): quote sandbox freight through an adapter`
 
-- [x] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. PR pendente de CI.
+- [x] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. Implementado e merged no PR #55 (`66a433c`).
 - Boundary sandbox implementado sem rede: contrato do adapter, configuração com timeout/credencial, parser Jackson com cobertura integral dos pacotes, custo/prazo positivos e validade futura; sem expor credenciais ou alterar carrinho.
 - **Aceite:** cotação respeita todos os pacotes/peso/dimensões/destino; parse valida cobertura/custos/prazos; timeout/credencial expirada/serviço ausente tratados.
 - **Verificar:** testes WireMock e uma cotação SB sanitizada; nenhuma chamada externa no teste comum.
 
 ### C43 — `feat(shipping): bind delivery quotes to purchase snapshots`
 
-- [x] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M. Implementação local pendente de PR/CI.
+- [x] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M. Implementado e merged nos PRs #56 (`8cbfbf0`) e #57 (`542ce2c`).
 - Persistidos snapshotId/version, destino normalizado, fingerprint, serviço, custo, prazos, pacotes e validade; a entidade exige identidade do snapshot e rejeita validade inválida.
 - Serviço transacional grava apenas cotações ainda válidas e serializa a cobertura dos pacotes; endpoint de checkout permanece dependente do snapshot e da origem de cotação.
 - **Aceite:** cotação vinculada a itens/endereço/composição dos pacotes; alteração invalida; custo total e prazos selecionados são verificados no servidor.
@@ -1569,7 +1569,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C44 — `feat(checkout-ui): collect address and select delivery or pickup`
 
-- [x] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M. Implementado na PR #61; CI `35772388503` verde.
+- [x] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M. Implementado e integrado nos PRs #60–#62; merge final no commit `4551e24`, com CI `35772388503` verde.
 - Contrato preliminar criado em `specs/SPEC-checkout.md`: endereço sem inferência, opções persistidas, estado recuperável de cotação indisponível e invalidação por snapshot/endereço/modalidade.
 - **Aceite:** visitante compara modalidades, pacotes, prazos e custo total; cotação indisponível tem recuperação; CEP/endereço são validados sem inventar dados.
 - **Verificar:** F/E/A; troca de endereço/carrinho força nova cotação.
