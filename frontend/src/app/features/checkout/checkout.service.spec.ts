@@ -134,4 +134,26 @@ describe('CheckoutService', () => {
     expect(service.errorMessage()).toContain('mudou ou expirou');
     expect(service.selectedOption()).toBeNull();
   });
+
+  it('posts the selected pickup option with the snapshot contract', async () => {
+    service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    const option = {
+      id: 'PONTO-DEMO-BELEM',
+      point: 'Ponto de demonstração — Belém',
+      window: 'segunda a sexta',
+      preparationDays: 1,
+    };
+    const selection = service.selectPickup(option);
+    const request = http.expectOne((candidate) =>
+      candidate.urlWithParams.includes('pickup-selection'),
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.params.get('snapshotVersion')).toBe('3');
+    expect(request.request.body).toEqual({ pickupOptionId: 'PONTO-DEMO-BELEM' });
+    request.flush(option);
+
+    expect(await selection).toBe(true);
+    expect(service.selectedPickupOption()).toEqual(option);
+    expect(service.selectedOption()).toBeNull();
+  });
 });

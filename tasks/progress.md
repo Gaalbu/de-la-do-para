@@ -702,3 +702,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Testes de serviço cobrem o carregamento da origem de retirada e a associação ao snapshot.
 - Validação local: lint, `format:check`, build e `aislop` 100/100 passaram. `ng test --watch=false` ficou bloqueado por `TS1127` em `node_modules/typescript/lib/lib.dom.d.ts`, fora da alteração.
 - Próximo passo: criar o contrato de seleção da modalidade de retirada antes de tornar a opção selecionável/persistida; não combinar entrega e retirada automaticamente.
+
+### C44 — seleção explícita de retirada
+
+- Adicionado `POST /api/v1/checkout/{snapshotId}/pickup-selection`, que revalida ownership, versão, elegibilidade dos SKUs e o identificador da opção no servidor.
+- A UI permite selecionar a retirada e limpa a seleção de entrega, e vice-versa; nenhuma combinação de modalidades é criada.
+- O contrato OpenAPI e os testes de serviço cobrem a rejeição de retirada indisponível e a seleção vinculada ao snapshot.
+- Validação local: backend focado, lint/formatação/build frontend com `NG_BUILD_MAX_WORKERS=2`, contrato OpenAPI e `aislop` pendentes da publicação final.

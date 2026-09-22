@@ -66,6 +66,17 @@ public class CheckoutController {
         return snapshots.findPickupOptions(request.getSession(true).getId(), snapshotId, snapshotVersion);
     }
 
+    @PostMapping("/{snapshotId}/pickup-selection")
+    public PickupSelectionResponse selectPickupOption(
+            @PathVariable UUID snapshotId,
+            @RequestParam long snapshotVersion,
+            @RequestBody PickupSelectionRequest body,
+            HttpServletRequest request) {
+        var option = snapshots.selectPickupOption(
+                request.getSession(true).getId(), snapshotId, snapshotVersion, body.pickupOptionId());
+        return new PickupSelectionResponse(option.id(), option.point(), option.window(), option.preparationDays());
+    }
+
     public record SnapshotResponse(UUID snapshotId, long snapshotVersion) {}
 
     public record DeliveryOptionsResponse(
@@ -74,6 +85,10 @@ public class CheckoutController {
     public record SelectionRequest(UUID quoteId, String inputFingerprint) {}
 
     public record SelectionResponse(UUID quoteId, long snapshotVersion, String inputFingerprint) {}
+
+    public record PickupSelectionRequest(String pickupOptionId) {}
+
+    public record PickupSelectionResponse(String id, String point, String window, int preparationDays) {}
 
     @ExceptionHandler(java.util.NoSuchElementException.class)
     ResponseEntity<Problem> missing() {
@@ -98,6 +113,11 @@ public class CheckoutController {
     @ExceptionHandler(br.com.deladopara.shipping.application.DeliveryOptionsService.SelectionExpiredException.class)
     ResponseEntity<Problem> selectionExpired() {
         return problem(HttpStatus.GONE, "CHECKOUT_005", "cotação de entrega expirada");
+    }
+
+    @ExceptionHandler(PickupOptionsService.PickupSelectionConflictException.class)
+    ResponseEntity<Problem> pickupSelectionConflict() {
+        return problem(HttpStatus.CONFLICT, "CHECKOUT_006", "opção de retirada não pertence à seleção atual");
     }
 
     private ResponseEntity<Problem> problem(HttpStatus status, String codigo, String detail) {

@@ -29,7 +29,10 @@
         <h2 id="pickup-title">Retirada</h2>
         @if (pickup.status === 'AVAILABLE') {
           @for (option of pickup.options; track option.id) {
-            <article class="option">
+            <article
+              class="option"
+              [class.selected]="checkout.selectedPickupOption()?.id === option.id"
+            >
               <div>
                 <strong>{{ option.point }}</strong>
                 <span>Preparo: até {{ option.preparationDays }} dia útil</span>
@@ -37,7 +40,15 @@
               </div>
               <div class="option-action">
                 <strong>Sem frete</strong>
-                <span>Disponível após o preparo</span>
+                <button
+                  type="button"
+                  (click)="selectPickup(option)"
+                  [disabled]="checkout.selectedPickupOption()?.id === option.id"
+                >
+                  {{
+                    checkout.selectedPickupOption()?.id === option.id ? 'Selecionada' : 'Selecionar'
+                  }}
+                </button>
               </div>
             </article>
           }
