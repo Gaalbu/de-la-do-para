@@ -2,6 +2,8 @@ package br.com.deladopara.catalog.adapter.web.dto;
 
 import br.com.deladopara.catalog.domain.Product;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record PublicProductResponse(
         String slug,
@@ -15,6 +17,15 @@ public record PublicProductResponse(
 
     public static PublicProductResponse from(
             Product product, List<ProductSkuResponse> skus, ProductImageResponse image) {
+        return from(product, skus, image, Map.of(), Map.of());
+    }
+
+    public static PublicProductResponse from(
+            Product product,
+            List<ProductSkuResponse> skus,
+            ProductImageResponse image,
+            Map<UUID, Long> prices,
+            Map<UUID, Integer> availableUnits) {
         var producer = product.getProducer();
         return new PublicProductResponse(
                 product.getSlug(),
@@ -35,7 +46,9 @@ public record PublicProductResponse(
                                 sku.lengthMm(),
                                 sku.widthMm(),
                                 sku.heightMm(),
-                                sku.grossWeightGrams()))
+                                sku.grossWeightGrams(),
+                                prices.get(sku.id()),
+                                availableUnits.getOrDefault(sku.id(), 0)))
                         .toList());
     }
 
@@ -50,5 +63,7 @@ public record PublicProductResponse(
             int lengthMm,
             int widthMm,
             int heightMm,
-            int grossWeightGrams) {}
+            int grossWeightGrams,
+            Long priceCents,
+            int availableUnits) {}
 }

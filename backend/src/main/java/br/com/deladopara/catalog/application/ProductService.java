@@ -157,7 +157,13 @@ public class ProductService {
         var image = images.findByProduct_Id(product.getId())
                 .map(br.com.deladopara.catalog.adapter.web.dto.ProductImageResponse::from)
                 .orElse(null);
-        return PublicProductResponse.from(product, activeSkus, image);
+        var skuIds = activeSkus.stream().map(ProductSkuResponse::id).toList();
+        return PublicProductResponse.from(
+                product,
+                activeSkus,
+                image,
+                pricing.currentPriceCents(skuIds),
+                availability.freeUnits(skuIds, LocalDate.now(clock)));
     }
 
     @Transactional

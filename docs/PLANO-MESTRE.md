@@ -1496,7 +1496,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C35 — `feat(storefront-ui): browse filter and paginate products`
 
-- [ ] **Depende:** C07, C24, C34. **Alvos:** `F/storefront/catalog`, filtros/listagem e testes; M. Implementação local em `feat/next-catalog-work` pendente de PR/CI.
+- [x] **Depende:** C07, C24, C34. **Alvos:** `F/storefront/catalog`, filtros/listagem e testes; M. Implementado em `c28a120`, PR #46 merged.
 - **Aceite:** catálogo mobile, filtros na URL e estado vazio/erro; busca antiga cancelada não sobrescreve resultado novo.
 - **Verificar:** F/E; reload e voltar/avançar preservam filtro.
 

@@ -13,6 +13,13 @@ export const routes: Routes = [
       import('./features/identity/pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'products/:slug',
+    loadComponent: () =>
+      import('./features/storefront/product-detail.component').then(
+        (m) => m.ProductDetailComponent,
+      ),
+  },
+  {
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./features/admin/admin.component').then((m) => m.AdminComponent),
