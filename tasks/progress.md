@@ -537,3 +537,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Criada migration V21 e entidade/repository de `shipping_quotes`, vinculando a cotação ao `snapshot_id`/versão e preservando fingerprint, destino, pacotes, custo, prazos e validade.
 - Criado agregado `ShippingQuote` com invariantes de identidade, valores e expiração; teste cobre validade inválida.
 - Próximo passo: commitar, abrir PR e validar a migration com o backend completo.
+
+## Sessão 2026-09-22 — C43 serviço de persistência da cotação
+
+- Adicionado `ShippingQuoteService`, que persiste somente cotações ainda válidas,
+  serializa a cobertura dos pacotes e conserva snapshot/version/fingerprint.
+- Teste unitário confirma a gravação com identidade do snapshot e sequência dos pacotes.
+- Próximo passo: publicar a extensão e depois implementar a origem de cotação do checkout.
