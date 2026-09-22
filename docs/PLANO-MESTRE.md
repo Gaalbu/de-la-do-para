@@ -1583,6 +1583,11 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C04, C05, C11. **Alvos:** `specs/SPEC-eventing.md`, envelope/schema e ADR de retry; M.
 - **Aceite:** outbox/consumo/claims e ACK delimitados; ordem/versão/retenção definidas; nenhuma promessa global de exactly once.
 - **Verificar:** DOC/C; enumerar pontos de queda antes/depois de cada commit/ACK.
+- **Estado atual:** `SPEC-eventing.md` foi preparada em revisão sobre o envelope
+  JSON Schema existente e o ADR-0002. Os pontos de queda, deduplicação,
+  quarentena e limites de entrega estão explicitados; lease, backoff, número
+  de tentativas e retenção continuam propostas. C45 só será concluída após
+  revisão humana e validação do contrato; C04 ainda não tem homologação real.
 
 ### C46 — `feat(eventing): persist outbound events in the business transaction`
 

@@ -32,6 +32,21 @@ Máquina de estados e reconciliação absorvem os limites dos provedores
 (C04): `externalReference` sem unicidade provada, `minutesToExpire` finito,
 UNKNOWN permanente possível → análise administrativa.
 
+## Base verificada
+
+As garantias de transporte usadas pela decisão foram conferidas na
+documentação do Kafka: a semântica padrão é `at-least-once`, offsets devem ser
+confirmados após o processamento e transações Kafka não equivalem a uma
+garantia global entre Kafka, PostgreSQL e provedores HTTP.
+
+- [Kafka Design — Message Delivery Semantics](https://kafka.apache.org/40/design/design/)
+- [KafkaConsumer 4.2 — commitSync](https://kafka.apache.org/42/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html)
+- [Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox)
+
+Os valores de lease, backoff, tentativas e retenção continuam propostas em
+revisão na [SPEC-eventing](../../specs/SPEC-eventing.md); não são garantias já
+implementadas.
+
 ## Evidência
 
 Plano §5; `docs/integrations/asaas.md` (at-least-once oficial, persist-then-

@@ -727,3 +727,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `npm --prefix frontend run docs:check` passou: 25 Markdown, nenhum link quebrado; `git diff --check` passou. Não houve alteração de comportamento. |
 | Remoto | Evidência consultada via GitHub: PRs #30–#39 e #42–#59 merged; #60–#62 integrados em `main` (`4551e24`). Esta reconciliação ainda não foi publicada. |
 | Próximo passo | Rodar `aislop`, revisar o diff e publicar esta reconciliação em PR. Depois, C24a requer revisão das pendências de calendário/contador global; C45 continua bloqueada pela ausência de homologação real de C04. |
+
+## Sessão 2026-09-22 — C45 especificação de eventing em revisão
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main` em `68f682f`; branch `docs/c45-eventing-spec` |
+| Tarefa | C45 — delimitar outbox, consumo, replay, retry e retenção; rascunho em revisão |
+| Mudanças | Criado `specs/SPEC-eventing.md`; refinado `docs/adr/0002-outbox-idempotencia.md`; adicionada a linha C45 à matriz de rastreio. O envelope existente continua canônico; nenhuma implementação C46–C49 foi antecipada. |
+| Verificação | Fontes oficiais do Kafka e padrão Transactional Outbox consultados; testes locais de docs/contracts e `aislop` ainda serão executados após a revisão do diff. |
+| Remoto | Ainda não publicado. A homologação C04 permanece separada e não foi alegada. |
+| Próximo passo | Executar `docs:check`, `contracts:check`, `git diff --check` e `aislop`; então abrir PR C45. A revisão humana deve decidir os valores propostos de lease/backoff/tentativas/retenção antes de C46. |
