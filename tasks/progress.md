@@ -749,3 +749,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `OutboxEventTest` passou; `OutboxEventPersistenceIT` passou com PostgreSQL 18.6/Testcontainers (3 testes); backend executou 25 testes sem falhas; Spotless e `aislop` 100/100 passaram após formatação. |
 | Remoto | PR #66 merged em `116f612`; CI `35781856327` passou integralmente (backend, frontend, contratos, docs, segurança, política e quality-gate). |
 | Próximo passo | Manter C47–C49 separados até a revisão humana da C45 definir os valores de lease/backoff/tentativas/retenção; atualizar a matriz do plano com esta integração. |
+
+## Sessão 2026-09-22 — C47 primeira fatia do publisher Kafka
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main` em `9c23e7c`; branch `feat/eventing-publisher` |
+| Tarefa | C47 — reivindicar e publicar eventos da outbox após ACK do broker |
+| Mudanças | Claim PostgreSQL com `FOR UPDATE SKIP LOCKED`, lease recuperável e contador de tentativas; broker Kafka com chave `aggregateId`, envelope canônico e `acks=all`/idempotência do produtor; perfil `worker` com configuração obrigatória, sem defaults para as propostas da C45. |
+| Verificação | `OutboxPublisherTest`, `KafkaOutboxEventBrokerTest` e `OutboxPublisherPersistenceIT` passaram; o teste real publicou/consumiu Kafka 4.3.1 e confirmou `PUBLISHED`; backend completo passou com 90 testes unitários e 27 de integração, Spotless e Checkstyle. |
+| Remoto | Ainda não publicado; a fatia não declara C47 concluída. |
+| Próximo passo | Revisar queda/reinício do worker e os valores operacionais da C45 antes de ampliar para retry/quarentena ou marcar C47 como concluída. |

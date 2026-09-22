@@ -83,6 +83,23 @@ management:
       enabled: true
 
 ---
+
+spring:
+  config:
+    activate:
+      on-profile: worker
+
+app:
+  eventing:
+    publisher:
+      bootstrap-servers: ${APP_EVENTING_BOOTSTRAP_SERVERS}
+      topic: ${APP_EVENTING_TOPIC}
+      lease: ${APP_EVENTING_LEASE}
+      batch-size: ${APP_EVENTING_BATCH_SIZE}
+      poll-delay: ${APP_EVENTING_POLL_DELAY}
+
+---
+
 spring:
   config:
     activate:
