@@ -27,8 +27,8 @@ export interface DeliveryOptions {
 
 export interface PickupOption {
   id: string;
-  name: string;
-  openingHours: string;
+  point: string;
+  window: string;
   preparationDays: number;
 }
 
