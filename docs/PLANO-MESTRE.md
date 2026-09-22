@@ -1524,7 +1524,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C39 — `feat(cart): persist guest carts and versioned item changes`
 
-- [ ] **Depende:** C15, C26, C30, C38. **Alvos:** agregado/repository de carrinho, migration e testes; M.
+- [x] **Depende:** C15, C26, C30, C38. **Alvos:** agregado/repository de carrinho, migration e testes; M. Implementado e merged no PR #50 (`f126e94`).
 - **Aceite:** itens e proprietário persistidos; quantidade válida; mudanças concorrentes usam versão explícita.
 - **Verificar:** BI(GuestCartPersistence), constraints e atualização concorrente.
 

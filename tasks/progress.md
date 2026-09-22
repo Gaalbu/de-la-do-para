@@ -711,3 +711,8 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Validação local: backend focado, lint/formatação/build frontend com `NG_BUILD_MAX_WORKERS=2`, contrato OpenAPI e `aislop` pendentes da publicação final.
 - Jornada Playwright adicionada para comparar entrega/retirada, selecionar retirada e confirmar que as quatro requisições server-owned ocorrem na ordem esperada; suíte E2E completa passou (4 testes).
 - CI `35772388503` passou integralmente: backend, frontend/browser smoke, contratos, docs, segurança, política de commits e quality-gate. O aceite C44/G3 está validado; C45 é o próximo item elegível do plano, após revisão/integração humana da PR #61.
+
+### Reconciliação do plano após os merges
+
+- C39 estava marcado como pendente apesar de o PR #50 (`f126e94`) estar merged e a migration V20 estar presente em `main`.
+- O item foi marcado como concluído sem alteração de comportamento; a evidência permanece no histórico remoto e nos testes de persistência/conflito do carrinho.
