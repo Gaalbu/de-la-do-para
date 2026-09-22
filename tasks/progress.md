@@ -614,3 +614,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Navegador real com proxy `/api`: `/cart` respondeu 200 com carrinho vazio; a tela `/checkout` enviou CEP sintético `66053-000`, exibiu carregamento e retornou ao estado de erro recuperável quando não havia snapshot de carrinho elegível.
 - Não foi criado dado administrativo apenas para fabricar sucesso: o caminho de opções disponíveis continua sem evidência integrada até existir fixture de catálogo/carrinho aprovada.
 - Serviços locais foram encerrados com `docker compose --profile local down`, sem remover volumes; próximo passo é adicionar teste de componente/jornada e publicar a UI em PR empilhada.
+
+## Sessão 2026-09-22 — C44 UI testada e pronta para PR
+
+- Adicionado `checkout.component.spec.ts`: botão de consulta permanece desabilitado sem CEP e a tela renderiza somente opção de entrega retornada pelo servidor.
+- Verificação: `npm run test:ci` 9 arquivos/19 testes verdes; `npm run lint` e `npm run format:check` OK; `npx aislop scan --changes --json` 100/100, zero achados.
+- A UI continua em `feat/checkout-address-ui`, empilhada sobre PR #60; caminho de sucesso permanece coberto por mocks de contrato no teste, enquanto a jornada integrada real confirmou apenas o erro correto para carrinho vazio.
+- Próximo passo: commitar, publicar e abrir PR empilhada; não fazer merge automático.
