@@ -634,3 +634,11 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Acrescentado teste de componente para `404` ao criar snapshot; a tela mantém o formulário e expõe `role="alert"` para nova tentativa.
 - Verificação: frontend `test:ci` 9 arquivos/20 testes verdes, lint e formatação OK; `aislop` 100/100 e `git diff --check` OK.
 - PR #61 receberá esta extensão; CI será reexecutado no novo head. PRs #60/#61 continuam abertos, sem merge automático.
+
+## Sessão 2026-09-22 — C44 seleção server-owned de cotação
+
+- Implementada a seleção de uma cotação via `POST /api/v1/checkout/{snapshotId}/delivery-selection`, validando ownership da sessão, `snapshotVersion`, `inputFingerprint` e expiração; o fluxo não cria pedido, cobrança ou reserva.
+- A tela `/checkout` agora envia a seleção server-owned e mostra a modalidade selecionada; testes cobrem contrato HTTP, serviço e componente.
+- Verificação local: backend focado com `-DargLine=-Xint` passou; frontend `test:ci` 9 arquivos/22 testes, lint e formatação passaram; contrato OpenAPI válido com 11 warnings preexistentes do lint; `git diff --check` passou.
+- Limitação conhecida: `./mvnw -q -DargLine=-Xint verify` ainda termina por SIGSEGV do GraalVM durante a verificação da JVM; o relatório foi preservado em `backend/hs_err_pid54502.log`.
+- Próximo passo: rodar `aislop`, commitar/publicar a extensão no PR #61 e aguardar o CI remoto; nenhum merge automático.

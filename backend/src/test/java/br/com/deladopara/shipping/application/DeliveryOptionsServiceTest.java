@@ -1,6 +1,7 @@
 package br.com.deladopara.shipping.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -46,5 +47,32 @@ class DeliveryOptionsServiceTest {
         assertThat(service.findAvailable(snapshotId, 3, "66053-000"))
                 .extracting(ShippingQuote::serviceId)
                 .containsExactly("sandbox-pac");
+    }
+
+    @Test
+    void rejectsSelectionWhenFingerprintDoesNotMatch() {
+        var repository = Mockito.mock(ShippingQuoteRepository.class);
+        var now = Instant.parse("2026-09-22T12:00:00Z");
+        var snapshotId = UUID.randomUUID();
+        var quote = new ShippingQuote(
+                UUID.randomUUID(),
+                snapshotId,
+                3,
+                "66053000",
+                "fingerprint",
+                "pac",
+                "PAC",
+                1000,
+                5,
+                1,
+                List.of(1),
+                now,
+                now.plusSeconds(3600));
+        when(repository.findByIdAndSnapshotIdAndSnapshotVersion(eq(quote.id()), eq(snapshotId), eq(3L)))
+                .thenReturn(java.util.Optional.of(new ShippingQuoteEntity(quote, "[1]")));
+        var service = new DeliveryOptionsService(repository, new ObjectMapper(), Clock.fixed(now, ZoneOffset.UTC));
+
+        assertThatThrownBy(() -> service.select(snapshotId, 3, quote.id(), "other-fingerprint"))
+                .isInstanceOf(DeliveryOptionsService.SelectionConflictException.class);
     }
 }
