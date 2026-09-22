@@ -84,7 +84,7 @@
             ><span>{{ product.producer.originLabel }}</span>
           </div>
           <h2>
-            {{ product.displayName }}
+            <a [routerLink]="['/products', product.slug]">{{ product.displayName }}</a>
           </h2>
           <p class="producer">{{ product.producer.displayName }}</p>
           <p class="price">A partir de {{ formatPrice(lowestPrice(product)) }}</p>

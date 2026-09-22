@@ -1011,6 +1011,8 @@ components:
             widthMm: 120
             heightMm: 40
             grossWeightGrams: 220
+            priceCents: 2500
+            availableUnits: 4
       properties:
         slug: {type: string}
         displayName: {type: string}
@@ -1096,7 +1098,7 @@ components:
     PublicProductSku:
       type: object
       additionalProperties: false
-      required: [skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams]
+      required: [skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, priceCents, availableUnits]
       properties:
         skuCode: {type: string}
         salesUnit: {type: string}
@@ -1107,6 +1109,8 @@ components:
         widthMm: {type: integer, minimum: 1}
         heightMm: {type: integer, minimum: 1}
         grossWeightGrams: {type: integer, minimum: 1}
+        priceCents: {type: [integer, 'null'], format: int64, minimum: 1}
+        availableUnits: {type: integer, minimum: 0}
     ProducerWrite:
       type: object
       additionalProperties: false

@@ -448,5 +448,16 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | C34 concluída no PR #45; iniciar C35 com catálogo público navegável |
 | Mudanças | C34 expõe `GET /api/v1/products` com filtros combináveis, ordenação/paginação, preço corrente e saldo livre por SKU; `StorefrontAvailability` e `StorefrontPricing` mantêm fronteiras acíclicas. C35 adiciona a página Angular da vitrine na rota `/`, filtros e ordenação persistidos em query params, estados de carregamento/vazio/erro, cards editoriais responsivos e paginação limitada. |
 | Verificação | Backend remoto do PR #45 verde em todos os checks; frontend local `format:check`, `lint`, build SSR e `storefront.component.spec.ts` (3 testes) verdes. |
-| Remoto | C34 merged em `923c882`; C35 ainda local, sem commit/PR. |
-| Próximo passo | Rodar gate final/aislop disponível, commitar e abrir PR do C35; depois seguir para C36 (detalhe público/procedência). |
+| Remoto | C34 merged em `923c882`; C35 PR #46 merged em `c28a120`. |
+| Próximo passo | Concluir C36 com detalhe público/procedência, preço e disponibilidade por SKU; depois seguir para C37. |
+
+## Sessão 2026-09-22 — C36 detalhe público e procedência
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@c28a120`; branch `feat/storefront-product-detail` |
+| Tarefa | C36 — iniciar detalhe público do produto e procedência |
+| Mudanças | Backend amplia o DTO público com preço corrente e saldo livre por SKU; contrato OpenAPI atualizado. Frontend adiciona `/products/:slug`, descrição, origem/produtor, imagem, preço e estado explícito de SKU indisponível ou produto não disponível. |
+| Verificação | `ProductAdminApiIT` verde; `contracts:check` verde; frontend `format:check`, `lint`, teste da vitrine (3 testes) e build SSR verdes. |
+| Remoto | C35 merged em `c28a120`; C36 ainda local, sem commit/PR. |
+| Próximo passo | Adicionar teste específico do detalhe público, rodar gate final/aislop disponível, commitar e abrir PR C36. |

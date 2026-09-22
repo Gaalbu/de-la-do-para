@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 type Category = 'FOOD' | 'CRAFT';
@@ -30,6 +30,7 @@ interface StorefrontPage {
 }
 
 @Component({
+  imports: [RouterLink],
   selector: 'app-storefront',
   styleUrl: './storefront.component.css',
   templateUrl: './storefront.component.html',
