@@ -2,6 +2,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { vi } from 'vitest';
 import { ProductAdminComponent } from './product-admin.component';
 
 const producer = {
@@ -25,6 +26,7 @@ const product = {
   producerId: producer.id,
   demonstration: true as const,
   active: true,
+  image: null,
   skus: [
     {
       id: '2a511f63-dfe6-4ac0-86ca-d00a858293f7',
@@ -219,5 +221,36 @@ describe('ProductAdminComponent', () => {
     });
     await saving;
     expect(fixture.componentInstance.notice()).toContain('atualizado');
+  });
+
+  it('uploads one validated primary image and updates the product descriptor', async () => {
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const fixture = createLoadedFixture();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.startEdit(product);
+    component.imageAltText = 'Produto sobre fundo claro';
+    component.imageSource = 'https://example.test/fonte';
+    component.imageLicense = 'CC0';
+    component.imageRightsReviewed = true;
+    const file = new File(['png bytes'], 'produto.png', { type: 'image/png' });
+    component.selectImage({ target: { files: [file] } } as unknown as Event);
+
+    const uploading = component.uploadImage();
+    const request = http.expectOne(`/api/v1/admin/products/${product.id}/image`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toBeInstanceOf(FormData);
+    expect((request.request.body as FormData).get('rightsReviewed')).toBe('true');
+    const image = {
+      id: 'a0511f63-dfe6-4ac0-86ca-d00a858293f7',
+      url: '/api/v1/product-images/a0511f63-dfe6-4ac0-86ca-d00a858293f7',
+      altText: 'Produto sobre fundo claro',
+    };
+    request.flush(image);
+    await uploading;
+    expect(component.editing()?.image).toEqual(image);
+    expect(component.products()[0].image).toEqual(image);
+    expect(component.notice()).toBe('Imagem principal salva.');
   });
 });

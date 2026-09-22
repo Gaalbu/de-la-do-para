@@ -63,6 +63,16 @@ export class ProductAdminComponent implements OnInit {
   readonly producersError = signal<string | null>(null);
   readonly saveError = signal<string | null>(null);
   readonly notice = signal<string | null>(null);
+  readonly imageFile = signal<File | null>(null);
+  readonly imagePreview = signal<string | null>(null);
+  readonly imageSaving = signal(false);
+  readonly imageError = signal<string | null>(null);
+  imageAltText = '';
+  imageSource = '';
+  imageLicense = '';
+  imageCreator = '';
+  imageAttribution = '';
+  imageRightsReviewed = false;
   readonly editing = signal<Product | null>(null);
   form: ProductForm = blankForm();
 
@@ -132,6 +142,8 @@ export class ProductAdminComponent implements OnInit {
     this.form = blankForm();
     this.saveError.set(null);
     this.notice.set(null);
+    this.clearImageSelection();
+    this.imageError.set(null);
   }
 
   startEdit(product: Product): void {
@@ -159,6 +171,95 @@ export class ProductAdminComponent implements OnInit {
     };
     this.saveError.set(null);
     this.notice.set(null);
+    this.clearImageSelection();
+    this.imageError.set(null);
+  }
+
+  selectImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.clearImageSelection();
+    this.imageFile.set(file);
+    this.imageError.set(null);
+    if (file) this.imagePreview.set(URL.createObjectURL(file));
+  }
+
+  async uploadImage(): Promise<void> {
+    const product = this.editing();
+    const file = this.imageFile();
+    if (!product || !file) return;
+    if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      this.imageError.set('Escolha um JPEG ou PNG de até 5 MiB.');
+      return;
+    }
+    if (
+      !this.imageAltText.trim() ||
+      !this.imageSource.trim() ||
+      !this.imageLicense.trim() ||
+      !this.imageRightsReviewed
+    ) {
+      this.imageError.set(
+        'Preencha texto alternativo, origem, licença e confirme a revisão dos direitos.',
+      );
+      return;
+    }
+    const data = new FormData();
+    data.set('file', file);
+    data.set('altText', this.imageAltText.trim());
+    data.set('source', this.imageSource.trim());
+    data.set('license', this.imageLicense.trim());
+    data.set('creator', this.imageCreator.trim());
+    data.set('attribution', this.imageAttribution.trim());
+    data.set('rightsReviewed', 'true');
+    this.imageSaving.set(true);
+    this.imageError.set(null);
+    try {
+      const image = await firstValueFrom(
+        this.http.put<Product['image']>(`/api/v1/admin/products/${product.id}/image`, data, {
+          withCredentials: true,
+        }),
+      );
+      this.products.update((items) =>
+        items.map((item) => (item.id === product.id ? { ...item, image } : item)),
+      );
+      this.editing.set({ ...product, image });
+      this.notice.set('Imagem principal salva.');
+      this.clearImageSelection();
+    } catch {
+      this.imageError.set(
+        'Não foi possível salvar a imagem. Verifique o arquivo e os direitos de uso.',
+      );
+    } finally {
+      this.imageSaving.set(false);
+    }
+  }
+
+  async removeImage(): Promise<void> {
+    const product = this.editing();
+    if (!product?.image) return;
+    this.imageSaving.set(true);
+    this.imageError.set(null);
+    try {
+      await firstValueFrom(
+        this.http.delete(`/api/v1/admin/products/${product.id}/image`, { withCredentials: true }),
+      );
+      this.products.update((items) =>
+        items.map((item) => (item.id === product.id ? { ...item, image: null } : item)),
+      );
+      this.editing.set({ ...product, image: null });
+      this.notice.set('Imagem principal removida.');
+    } catch {
+      this.imageError.set('Não foi possível remover a imagem. Tente novamente.');
+    } finally {
+      this.imageSaving.set(false);
+    }
+  }
+
+  private clearImageSelection(): void {
+    const preview = this.imagePreview();
+    if (preview) URL.revokeObjectURL(preview);
+    this.imagePreview.set(null);
+    this.imageFile.set(null);
   }
 
   categoryChanged(): void {
@@ -214,9 +315,10 @@ export class ProductAdminComponent implements OnInit {
       })),
     };
     try {
+      let saved: Product;
       if (editing) {
         const update: ProductUpdate = { ...payload, active: this.form.active };
-        await firstValueFrom(
+        saved = await firstValueFrom(
           this.http.patch<Product>(`/api/v1/admin/products/${editing.id}`, update, {
             withCredentials: true,
           }),
@@ -227,7 +329,7 @@ export class ProductAdminComponent implements OnInit {
             : 'Produto desativado. O cadastro e suas referências foram preservados.',
         );
       } else {
-        await firstValueFrom(
+        saved = await firstValueFrom(
           this.http.post<Product>('/api/v1/admin/products', payload, { withCredentials: true }),
         );
         this.notice.set('Produto criado. Conteúdo marcado como demonstração.');
@@ -236,9 +338,8 @@ export class ProductAdminComponent implements OnInit {
       if (this.listError()) {
         this.saveError.set('Alteração salva, mas a lista não foi atualizada. Tente recarregar.');
       } else if (!editing) {
-        this.editing.set(null);
-        this.form = blankForm();
-        this.saveError.set(null);
+        this.startEdit(saved);
+        this.notice.set('Produto criado. Agora você pode adicionar a imagem principal.');
       }
     } catch {
       this.saveError.set('Não foi possível salvar. Confira os dados ou tente novamente.');

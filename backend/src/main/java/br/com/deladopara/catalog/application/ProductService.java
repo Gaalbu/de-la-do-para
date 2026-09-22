@@ -1,6 +1,7 @@
 package br.com.deladopara.catalog.application;
 
 import br.com.deladopara.catalog.adapter.persistence.ProducerRepository;
+import br.com.deladopara.catalog.adapter.persistence.ProductImageRepository;
 import br.com.deladopara.catalog.adapter.persistence.ProductRepository;
 import br.com.deladopara.catalog.adapter.persistence.ProductSkuRepository;
 import br.com.deladopara.catalog.adapter.web.dto.ProductPageResponse;
@@ -32,13 +33,19 @@ public class ProductService {
     private final ProductSkuRepository skus;
     private final ProducerRepository producers;
     private final Clock clock;
+    private final ProductImageRepository images;
 
     public ProductService(
-            ProductRepository products, ProductSkuRepository skus, ProducerRepository producers, Clock clock) {
+            ProductRepository products,
+            ProductSkuRepository skus,
+            ProducerRepository producers,
+            Clock clock,
+            ProductImageRepository images) {
         this.products = products;
         this.skus = skus;
         this.producers = producers;
         this.clock = clock;
+        this.images = images;
     }
 
     @Transactional(readOnly = true)
@@ -52,10 +59,17 @@ public class ProductService {
         var loadedSkus = productIds.isEmpty()
                 ? List.<ProductSku>of()
                 : skus.findAllByProductIdInOrderByProductIdAscSkuCodeAsc(productIds);
+        var imagesByProduct = images.findAllByProduct_IdIn(productIds).stream()
+                .collect(Collectors.toMap(
+                        image -> image.getProductId(),
+                        br.com.deladopara.catalog.adapter.web.dto.ProductImageResponse::from));
         var skusByProduct = loadedSkus.stream()
                 .collect(Collectors.groupingBy(sku -> sku.getProduct().getId()));
         var content = pageProducts.stream()
-                .map(product -> response(product, skusByProduct.getOrDefault(product.getId(), List.of())))
+                .map(product -> response(
+                        product,
+                        skusByProduct.getOrDefault(product.getId(), List.of()),
+                        imagesByProduct.get(product.getId())))
                 .toList();
         return new ProductPageResponse(
                 content, result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
@@ -64,7 +78,10 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductResponse get(UUID id) {
         var product = products.findById(id).orElseThrow(ProductNotFoundException::new);
-        return response(product, skus.findAllByProductIdOrderBySkuCode(id));
+        var image = images.findByProduct_Id(id)
+                .map(br.com.deladopara.catalog.adapter.web.dto.ProductImageResponse::from)
+                .orElse(null);
+        return response(product, skus.findAllByProductIdOrderBySkuCode(id), image);
     }
 
     @Transactional(readOnly = true)
@@ -81,7 +98,10 @@ public class ProductService {
         if (activeSkus.isEmpty()) {
             throw new ProductNotFoundException();
         }
-        return PublicProductResponse.from(product, activeSkus);
+        var image = images.findByProduct_Id(product.getId())
+                .map(br.com.deladopara.catalog.adapter.web.dto.ProductImageResponse::from)
+                .orElse(null);
+        return PublicProductResponse.from(product, activeSkus, image);
     }
 
     @Transactional
@@ -109,7 +129,7 @@ public class ProductService {
                 var sku = newSku(product, skuRequest, now);
                 skus.saveAndFlush(sku);
             }
-            return response(product, skus.findAllByProductIdOrderBySkuCode(product.getId()));
+            return response(product, skus.findAllByProductIdOrderBySkuCode(product.getId()), null);
         } catch (IllegalArgumentException exception) {
             throw new InvalidProductInputException(exception.getMessage());
         } catch (DataIntegrityViolationException exception) {
@@ -143,7 +163,10 @@ public class ProductService {
             updateSkus(product, existingSkus, request.skus(), now);
             product.setActive(Boolean.TRUE.equals(request.active()), now);
             products.saveAndFlush(product);
-            return response(product, skus.findAllByProductIdOrderBySkuCode(id));
+            var image = images.findByProduct_Id(id)
+                    .map(br.com.deladopara.catalog.adapter.web.dto.ProductImageResponse::from)
+                    .orElse(null);
+            return response(product, skus.findAllByProductIdOrderBySkuCode(id), image);
         } catch (IllegalArgumentException exception) {
             throw new InvalidProductInputException(exception.getMessage());
         } catch (DataIntegrityViolationException exception) {
@@ -222,9 +245,12 @@ public class ProductService {
         return sku;
     }
 
-    private static ProductResponse response(Product product, List<ProductSku> productSkus) {
+    private static ProductResponse response(
+            Product product,
+            List<ProductSku> productSkus,
+            br.com.deladopara.catalog.adapter.web.dto.ProductImageResponse image) {
         return ProductResponse.from(
-                product, productSkus.stream().map(ProductSkuResponse::from).toList());
+                product, productSkus.stream().map(ProductSkuResponse::from).toList(), image);
     }
 
     private static String normalize(String slug) {

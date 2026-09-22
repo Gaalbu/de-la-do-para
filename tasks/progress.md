@@ -340,3 +340,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | C22 PR #34 aberta, MERGEABLE/CLEAN, CI `35642638538` 7/7 verde. C23 PR #35 aberta sobre #34; run `35649968314` falhou em `frontend` e `quality-gate`; correção local pronta para publicar e reexecutar CI. |
 | Próximo passo | Publicar correção do gate, confirmar CI 7/7 de C23 e seguir implementação C24 na branch empilhada; nenhum merge automático |
 | Perguntas | Nenhuma nova |
+
+## Sessão 2026-09-21 — C24 imagem principal de catálogo (em implementação)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c24-media`, empilhada em C23; `.angular/` preexistente preservado |
+| Decisões | Uma imagem principal opcional por produto; JPEG/PNG; máximo 5 MiB. Limites técnicos internos: 12 MP e 6000 px por lado. |
+| Mudanças | Spec/ADR 0006; processador raster que confere bytes e remove metadados; armazenamento local UUID em `APP_MEDIA_DIRECTORY`; domínio e migration V16; rotas multipart admin, remoção e entrega pública condicionada a produto/produtor/SKU ativos; OpenAPI/DTO; formulário administrativo com prévia, licenciamento, confirmação, upload e remoção; guia local/API atualizado. |
+| Verificação | Backend `verify`: 31 testes unitários e 18 integrações passaram com PostgreSQL 18.6, migrations até V16, Spotless e Checkstyle. Foi necessário `-DargLine=-Xint` após SIGSEGV no compilador C1 de Temurin 25.0.4. `scripts/verify.sh frontend`: geração OpenAPI, lint, formato, 11 testes Angular, build SSR e Playwright 3/3. `docs:check` validou 25 Markdown; `contracts:check` passou com 10 avisos Redocly preexistentes; security detectou zero segredos e audit runtime zero vulnerabilidades; `aislop scan --changes --json`: 100/100, zero achados; `git diff --check` limpo. |
+| Remoto | C24 commit `1d5b2ac` publicado na PR #36: https://github.com/Gaalbu/de-la-do-para/pull/36, base `feat/c23-product-admin-ui`. PR aberta, MERGEABLE/CLEAN; CI `35655927076` 7/7 verde. C23 PR #35 aberta, MERGEABLE/CLEAN, CI `35650869375` 7/7 verde. Nenhum merge automático. |
+| Próximos passos | C24 entregue para revisão remota; acompanhar as PRs empilhadas sem merge automático. |
+| Perguntas | Nenhuma nova; escolhas de imagem e tamanho já aprovadas |
