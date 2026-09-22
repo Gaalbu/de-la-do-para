@@ -735,6 +735,6 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Base | `main` em `68f682f`; branch `docs/c45-eventing-spec` |
 | Tarefa | C45 — delimitar outbox, consumo, replay, retry e retenção; rascunho em revisão |
 | Mudanças | Criado `specs/SPEC-eventing.md`; refinado `docs/adr/0002-outbox-idempotencia.md`; adicionada a linha C45 à matriz de rastreio. O envelope existente continua canônico; nenhuma implementação C46–C49 foi antecipada. |
-| Verificação | Fontes oficiais do Kafka e padrão Transactional Outbox consultados; testes locais de docs/contracts e `aislop` ainda serão executados após a revisão do diff. |
-| Remoto | Ainda não publicado. A homologação C04 permanece separada e não foi alegada. |
-| Próximo passo | Executar `docs:check`, `contracts:check`, `git diff --check` e `aislop`; então abrir PR C45. A revisão humana deve decidir os valores propostos de lease/backoff/tentativas/retenção antes de C46. |
+| Verificação | Fontes oficiais do Kafka e padrão Transactional Outbox consultados; `docs:check` passou; `contracts:check` passou com schema válido aceito e inválido rejeitado e 11 warnings OpenAPI preexistentes; `git diff --check` passou; `aislop` 100/100. |
+| Remoto | PR #65 publicada no commit `de5dfce`; CI `35775567134` passou 7/7; C04 permanece separada e não foi alegada. |
+| Próximo passo | Revisão humana da C45 e decisão dos valores propostos de lease/backoff/tentativas/retenção antes de C46. O roteiro C46–C49 está em `tasks/plan.md`. |
