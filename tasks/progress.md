@@ -417,3 +417,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | Testes focados e `./mvnw -q -DargLine=-Xint verify` verdes; `aislop` 100/100, zero achados |
 | Remoto | Commits até `e81ea6e`; PR #39: https://github.com/Gaalbu/de-la-do-para/pull/39; rodada atual do CI em andamento, PR aberta e mergeable |
 | Limites | FEFO, lotes bloqueados com alocação ativa, persistência, reserva e API continuam fora desta fatia até revisão das regras abertas |
+
+## Sessão 2026-09-22 — C33 especificação da vitrine pública
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@7ee7090`; branch `docs/c33-storefront-spec`; `.angular/` não rastreado preexistente preservado |
+| Tarefa | C33 — `docs(storefront): specify public discovery and rendering` — concluída e merged |
+| Mudanças | `specs/SPEC-storefront.md` define rotas públicas, query strings compartilháveis, filtros/ordenação/paginação, elegibilidade pública de produto/SKU/produtor, saldo livre, SSR sem sessão, estados de erro e critérios de teclado/mobile/reduced-motion conforme C03. |
+| Verificação | `npm run docs:check --prefix frontend` OK (25 Markdown), `git diff --check` OK, `npx aislop scan --changes --json` 100/100; PR #40 CI 7/7 verde, merged em `7ee7090`. |
+| Remoto | PR #40: https://github.com/Gaalbu/de-la-do-para/pull/40 — MERGED; PRs #30–#39 também merged em ordem. |
+| Próximo passo | C34 requer uma fonte de preço por SKU no módulo `pricing`; C30 é apenas cálculo puro e o catálogo explicitamente não deve copiar preço. Não implementar consulta incompleta nem inventar fixture sem decisão/contrato. |
