@@ -12,6 +12,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +24,31 @@ public class CheckoutSnapshotService {
     private final ObjectMapper objectMapper;
     private final Clock clock;
     private final DeliveryOptionsService deliveryOptions;
+    private final PickupOptionsService pickupOptions;
 
+    @Autowired
     public CheckoutSnapshotService(
             CartRepository carts,
             CheckoutSnapshotRepository snapshots,
             ObjectMapper objectMapper,
             Clock clock,
             DeliveryOptionsService deliveryOptions) {
+        this(carts, snapshots, objectMapper, clock, deliveryOptions, null);
+    }
+
+    public CheckoutSnapshotService(
+            CartRepository carts,
+            CheckoutSnapshotRepository snapshots,
+            ObjectMapper objectMapper,
+            Clock clock,
+            DeliveryOptionsService deliveryOptions,
+            PickupOptionsService pickupOptions) {
         this.carts = carts;
         this.snapshots = snapshots;
         this.objectMapper = objectMapper;
         this.clock = clock;
         this.deliveryOptions = deliveryOptions;
+        this.pickupOptions = pickupOptions;
     }
 
     @Transactional(readOnly = true)
@@ -47,6 +61,42 @@ public class CheckoutSnapshotService {
             throw new SnapshotVersionConflictException();
         }
         return deliveryOptions.findAvailable(snapshotId, snapshotVersion, destinationPostalCode);
+    }
+
+    @Transactional(readOnly = true)
+    public ShippingQuote selectDeliveryOption(
+            String sessionId, UUID snapshotId, long snapshotVersion, UUID quoteId, String inputFingerprint) {
+        var sessionKey = GuestCartService.hashSession(sessionId);
+        var snapshot =
+                snapshots.findByIdAndGuestSessionKey(snapshotId, sessionKey).orElseThrow();
+        if (snapshot.getCartVersion() != snapshotVersion) {
+            throw new SnapshotVersionConflictException();
+        }
+        return deliveryOptions.select(snapshotId, snapshotVersion, quoteId, inputFingerprint);
+    }
+
+    @Transactional(readOnly = true)
+    public PickupOptionsService.PickupOptions findPickupOptions(
+            String sessionId, UUID snapshotId, long snapshotVersion) {
+        var sessionKey = GuestCartService.hashSession(sessionId);
+        var snapshot =
+                snapshots.findByIdAndGuestSessionKey(snapshotId, sessionKey).orElseThrow();
+        if (snapshot.getCartVersion() != snapshotVersion) {
+            throw new SnapshotVersionConflictException();
+        }
+        return pickupOptions.evaluate(snapshot.getItems());
+    }
+
+    @Transactional(readOnly = true)
+    public PickupOptionsService.PickupOption selectPickupOption(
+            String sessionId, UUID snapshotId, long snapshotVersion, String optionId) {
+        var sessionKey = GuestCartService.hashSession(sessionId);
+        var snapshot =
+                snapshots.findByIdAndGuestSessionKey(snapshotId, sessionKey).orElseThrow();
+        if (snapshot.getCartVersion() != snapshotVersion) {
+            throw new SnapshotVersionConflictException();
+        }
+        return pickupOptions.select(snapshot.getItems(), optionId);
     }
 
     @Transactional
