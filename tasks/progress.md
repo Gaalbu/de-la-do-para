@@ -628,3 +628,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - CI remoto `35767275847` verde em 7/7: backend, frontend, contracts, docs, security, commit-policy e quality-gate.
 - PR #60 segue aberta/mergeable como base do contrato; nenhum merge automático foi feito.
 - Próximo passo: revisão humana dos PRs #60/#61 e, após integração autorizada, avançar para seleção persistente de modalidade/continuação do checkout conforme C44.
+
+## Sessão 2026-09-22 — C44 erro recuperável coberto
+
+- Acrescentado teste de componente para `404` ao criar snapshot; a tela mantém o formulário e expõe `role="alert"` para nova tentativa.
+- Verificação: frontend `test:ci` 9 arquivos/20 testes verdes, lint e formatação OK; `aislop` 100/100 e `git diff --check` OK.
+- PR #61 receberá esta extensão; CI será reexecutado no novo head. PRs #60/#61 continuam abertos, sem merge automático.
