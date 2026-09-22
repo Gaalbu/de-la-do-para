@@ -6,9 +6,15 @@ import { firstValueFrom } from 'rxjs';
 import { IdentityService } from '../../identity/services/identity.service';
 
 type Lot = {
-  id: string; skuCode: string; physicalUnits: number; reservedUnits: number;
-  freeUnits: number; blocked: boolean; expiresOn: string | null;
-  minimumShelfLifeDays: number | null; version: number;
+  id: string;
+  skuCode: string;
+  physicalUnits: number;
+  reservedUnits: number;
+  freeUnits: number;
+  blocked: boolean;
+  expiresOn: string | null;
+  minimumShelfLifeDays: number | null;
+  version: number;
 };
 type Product = { displayName: string; skus: Array<{ id: string; skuCode: string }> };
 
@@ -34,31 +40,58 @@ export class InventoryAdminComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      const result = await firstValueFrom(this.http.get<{ content: Product[] }>('/api/v1/admin/products?page=0&size=50', { withCredentials: true }));
+      const result = await firstValueFrom(
+        this.http.get<{ content: Product[] }>('/api/v1/admin/products?page=0&size=50', {
+          withCredentials: true,
+        }),
+      );
       this.products.set(result.content);
       const first = result.content[0]?.skus[0]?.id ?? '';
       this.selectedSkuId.set(first);
       if (first) await this.loadLots();
-    } catch { this.error.set('Não foi possível carregar os SKUs.'); }
+    } catch {
+      this.error.set('Não foi possível carregar os SKUs.');
+    }
   }
 
   async loadLots(): Promise<void> {
     if (!this.selectedSkuId()) return;
-    try { this.lots.set(await firstValueFrom(this.http.get<Lot[]>(`/api/v1/admin/inventory/skus/${this.selectedSkuId()}/lots`, { withCredentials: true }))); }
-    catch { this.error.set('Não foi possível carregar os lotes.'); }
+    try {
+      this.lots.set(
+        await firstValueFrom(
+          this.http.get<Lot[]>(`/api/v1/admin/inventory/skus/${this.selectedSkuId()}/lots`, {
+            withCredentials: true,
+          }),
+        ),
+      );
+    } catch {
+      this.error.set('Não foi possível carregar os lotes.');
+    }
   }
 
   async receive(): Promise<void> {
-    this.receiving = true; this.error.set(null);
+    this.receiving = true;
+    this.error.set(null);
     try {
-      await firstValueFrom(this.http.post(`/api/v1/admin/inventory/skus/${this.selectedSkuId()}/lots`, {
-        physicalUnits: this.physicalUnits, expiresOn: this.expiresOn || null,
-        minimumShelfLifeDays: this.minimumShelfLifeDays, receivedAt: this.receivedAt,
-      }, { withCredentials: true }));
+      await firstValueFrom(
+        this.http.post(
+          `/api/v1/admin/inventory/skus/${this.selectedSkuId()}/lots`,
+          {
+            physicalUnits: this.physicalUnits,
+            expiresOn: this.expiresOn || null,
+            minimumShelfLifeDays: this.minimumShelfLifeDays,
+            receivedAt: this.receivedAt,
+          },
+          { withCredentials: true },
+        ),
+      );
       this.notice.set('Lote recebido e registrado no histórico.');
       await this.loadLots();
-    } catch { this.error.set('Não foi possível registrar o lote.'); }
-    finally { this.receiving = false; }
+    } catch {
+      this.error.set('Não foi possível registrar o lote.');
+    } finally {
+      this.receiving = false;
+    }
   }
 
   async adjust(lot: Lot): Promise<void> {
@@ -66,15 +99,28 @@ export class InventoryAdminComponent implements OnInit {
     const reason = window.prompt('Motivo do ajuste');
     if (!Number.isInteger(value) || value < 0 || !reason?.trim()) return;
     try {
-      await firstValueFrom(this.http.patch(`/api/v1/admin/inventory/lots/${lot.id}`, {
-        actorId: this.identity.account()?.id, physicalUnits: value,
-        expectedVersion: lot.version, reason,
-      }, { withCredentials: true }));
-      this.notice.set('Ajuste registrado.'); await this.loadLots();
-    } catch { this.error.set('O lote mudou ou o ajuste foi rejeitado. Recarregue e tente novamente.'); }
+      await firstValueFrom(
+        this.http.patch(
+          `/api/v1/admin/inventory/lots/${lot.id}`,
+          {
+            actorId: this.identity.account()?.id,
+            physicalUnits: value,
+            expectedVersion: lot.version,
+            reason,
+          },
+          { withCredentials: true },
+        ),
+      );
+      this.notice.set('Ajuste registrado.');
+      await this.loadLots();
+    } catch {
+      this.error.set('O lote mudou ou o ajuste foi rejeitado. Recarregue e tente novamente.');
+    }
   }
 
   skuOptions(): Array<{ id: string; label: string }> {
-    return this.products().flatMap((product) => product.skus.map((sku) => ({ id: sku.id, label: `${product.displayName} · ${sku.skuCode}` })));
+    return this.products().flatMap((product) =>
+      product.skus.map((sku) => ({ id: sku.id, label: `${product.displayName} · ${sku.skuCode}` })),
+    );
   }
 }

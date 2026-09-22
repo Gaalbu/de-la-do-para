@@ -27,6 +27,9 @@ export const routes: Routes = [
   {
     path: 'admin/inventory',
     canActivate: [adminGuard],
-    loadComponent: () => import('./features/admin/inventory/inventory-admin.component').then((m) => m.InventoryAdminComponent),
+    loadComponent: () =>
+      import('./features/admin/inventory/inventory-admin.component').then(
+        (m) => m.InventoryAdminComponent,
+      ),
   },
 ];
