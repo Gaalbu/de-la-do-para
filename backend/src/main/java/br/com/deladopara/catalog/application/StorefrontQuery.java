@@ -12,7 +12,9 @@ public record StorefrontQuery(
         int size) {
 
     public StorefrontQuery {
-        producerSlug = producerSlug == null || producerSlug.isBlank() ? null : producerSlug.trim().toLowerCase();
+        producerSlug = producerSlug == null || producerSlug.isBlank()
+                ? null
+                : producerSlug.trim().toLowerCase();
         sort = sort == null ? Sort.RELEVANCE : sort;
         if (minPriceCents != null && minPriceCents < 0
                 || maxPriceCents != null && maxPriceCents < 0
