@@ -1,0 +1,48 @@
+<main class="checkout" aria-labelledby="checkout-title">
+  <p><a routerLink="/cart">← Voltar ao carrinho</a></p>
+  <h1 id="checkout-title">Entrega</h1>
+  <p class="intro">Informe seu CEP para consultar modalidades disponíveis para este carrinho.</p>
+  <form (ngSubmit)="quote()">
+    <label for="postal-code">CEP</label>
+    <div class="address-line">
+      <input
+        id="postal-code"
+        name="postalCode"
+        [(ngModel)]="postalCode"
+        inputmode="numeric"
+        autocomplete="postal-code"
+        placeholder="00000-000"
+        required
+      />
+      <button type="submit" [disabled]="checkout.loading() || !postalCode.trim()">Consultar</button>
+    </div>
+  </form>
+  @if (checkout.loading()) {
+    <p class="state" role="status">Consultando opções…</p>
+  } @else if (checkout.error()) {
+    <p class="state" role="alert">
+      Não foi possível consultar este CEP. Confira os dados e tente novamente.
+    </p>
+  } @else if (checkout.options(); as options) {
+    @if (options.length) {
+      <section aria-labelledby="options-title">
+        <h2 id="options-title">Opções disponíveis</h2>
+        <div class="options">
+          @for (option of options; track option.id) {
+            <article class="option">
+              <div>
+                <strong>{{ option.serviceName }}</strong
+                ><span>{{ option.preparationDays + option.deliveryDays }} dias úteis</span>
+              </div>
+              <strong>{{ formatPrice(option.priceCents) }}</strong>
+            </article>
+          }
+        </div>
+      </section>
+    } @else {
+      <p class="state">
+        Nenhuma modalidade compatível foi encontrada. Você pode alterar o CEP e consultar novamente.
+      </p>
+    }
+  }
+</main>

@@ -1,0 +1,56 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+
+export interface CheckoutSnapshot {
+  snapshotId: string;
+  snapshotVersion: number;
+}
+
+export interface ShippingQuote {
+  id: string;
+  serviceName: string;
+  priceCents: number;
+  deliveryDays: number;
+  preparationDays: number;
+  expiresAt: string;
+}
+
+export interface DeliveryOptions {
+  snapshotId: string;
+  snapshotVersion: number;
+  options: ShippingQuote[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class CheckoutService {
+  private readonly http = inject(HttpClient);
+  readonly loading = signal(false);
+  readonly error = signal(false);
+  readonly snapshot = signal<CheckoutSnapshot | null>(null);
+  readonly options = signal<ShippingQuote[] | null>(null);
+
+  async quote(postalCode: string): Promise<boolean> {
+    this.loading.set(true);
+    this.error.set(false);
+    this.options.set(null);
+    try {
+      const snapshot = await firstValueFrom(
+        this.http.post<CheckoutSnapshot>('/api/v1/checkout/snapshots', {}),
+      );
+      const response = await firstValueFrom(
+        this.http.get<DeliveryOptions>(`/api/v1/checkout/${snapshot.snapshotId}/delivery-options`, {
+          params: { snapshotVersion: snapshot.snapshotVersion, postalCode },
+        }),
+      );
+      this.snapshot.set(snapshot);
+      this.options.set(response.options);
+      return true;
+    } catch {
+      this.error.set(true);
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+}
