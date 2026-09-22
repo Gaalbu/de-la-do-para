@@ -1441,9 +1441,9 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C30 — `feat(pricing): calculate canonical purchase totals`
 
-- [ ] **Depende:** C21, C29. **Alvos:** tipos/cálculo monetário, aplicação de preço e testes; M.
+- [x] **Depende:** C21, C29. **Alvos:** tipos/cálculo monetário, aplicação de preço e testes; M. Implementado em `a7a0551`, PR #38 aberta.
 - **Aceite:** servidor calcula total determinístico; arredondamento explícito; preço do navegador não é confiado.
-- **Verificar:** BT(PurchaseTotal), incluindo fronteiras de arredondamento e moeda inválida.
+- **Verificar:** BT(PurchaseTotal), incluindo fronteiras de arredondamento e moeda inválida. BT inicial verde; API de checkout e contador global permanecem fora desta fatia.
 
 ### C31 — `feat(pricing): reserve coupon usage atomically`
 
