@@ -1,5 +1,6 @@
 package br.com.deladopara.cart.adapter.persistence;
 
+import br.com.deladopara.cart.application.CartConflictException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -86,6 +87,18 @@ public class CartEntity {
 
     public List<CartItemEntity> getItems() {
         return items;
+    }
+
+    public void requireWritable(long expectedVersion) {
+        if (status != Status.OPEN || version != expectedVersion) {
+            throw new CartConflictException();
+        }
+    }
+
+    public void replaceItems(List<CartItemEntity> replacement, Instant now) {
+        items.clear();
+        items.addAll(replacement);
+        updatedAt = now;
     }
 
     public enum Status {

@@ -667,6 +667,76 @@ paths:
               schema: {$ref: '#/components/schemas/InventoryLot'}
         '409': {$ref: '#/components/responses/Problem409'}
 
+  /api/v1/cart:
+    get:
+      operationId: getGuestCart
+      summary: Consultar carrinho convidado
+      security: []
+      responses:
+        '200':
+          description: Carrinho atual da sessão convidada
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Cart'}}
+        '404':
+          description: Carrinho não encontrado
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+    delete:
+      operationId: clearGuestCart
+      summary: Limpar carrinho convidado
+      security: []
+      parameters:
+        - {in: query, name: expectedVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      responses:
+        '200':
+          description: Carrinho limpo
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Cart'}}
+        '409':
+          description: Versão concorrente ou carrinho em checkout
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+
+  /api/v1/cart/items:
+    put:
+      operationId: replaceGuestCartItems
+      summary: Substituir itens do carrinho convidado
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/CartItemsRequest'}}
+      responses:
+        '200':
+          description: Carrinho atualizado
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Cart'}}
+        '400':
+          description: SKU ou quantidade inválida
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+        '409':
+          description: Versão concorrente ou carrinho em checkout
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+  /api/v1/cart/items/{skuId}:
+    delete:
+      operationId: removeGuestCartItem
+      summary: Remover SKU do carrinho convidado
+      security: []
+      parameters:
+        - {in: path, name: skuId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: expectedVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      responses:
+        '200':
+          description: Carrinho atualizado
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Cart'}}
+        '409':
+          description: Versão concorrente ou carrinho em checkout
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+
 components:
   responses:
     Problem400:
@@ -1133,6 +1203,37 @@ components:
         originLabel: {type: string, description: 'Localidade ampla fictícia, identificada como demonstração.'}
         description: {type: string, description: 'Texto editorial fictício, sem alegações verificáveis.'}
         demonstration: {type: boolean, const: true}
+    CartItemsRequest:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, items]
+      properties:
+        expectedVersion: {type: integer, format: int64, minimum: 0}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/CartItemRequest'}
+    CartItemRequest:
+      type: object
+      additionalProperties: false
+      required: [skuId, quantity]
+      properties:
+        skuId: {type: string, format: uuid}
+        quantity: {type: integer, minimum: 1}
+    Cart:
+      type: object
+      additionalProperties: false
+      required: [id, version, items]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 0}
+        items:
+          type: array
+          items:
+            type: object
+            required: [skuId, quantity]
+            properties:
+              skuId: {type: string, format: uuid}
+              quantity: {type: integer, minimum: 1}
     PublicProductSku:
       type: object
       additionalProperties: false
