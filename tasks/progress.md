@@ -754,9 +754,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 | Campo | Conteúdo |
 |---|---|
-| Base | `main` em `9c23e7c`; branch `feat/eventing-publisher` |
+| Base | `main` em `9c23e7c`; integração final em `b07ffbc` |
 | Tarefa | C47 — reivindicar e publicar eventos da outbox após ACK do broker |
 | Mudanças | Claim PostgreSQL com `FOR UPDATE SKIP LOCKED`, lease recuperável e contador de tentativas; broker Kafka com chave `aggregateId`, envelope canônico e `acks=all`/idempotência do produtor; perfil `worker` com configuração obrigatória, sem defaults para as propostas da C45. |
 | Verificação | `OutboxPublisherTest`, `KafkaOutboxEventBrokerTest` e `OutboxPublisherPersistenceIT` passaram; o teste real publicou/consumiu Kafka 4.3.1 e confirmou `PUBLISHED`; backend completo passou com 90 testes unitários e 27 de integração, Spotless e Checkstyle. |
-| Remoto | Ainda não publicado; a fatia não declara C47 concluída. |
+| Remoto | PR #68 merged em `b07ffbc`; CI `35786482536` passou integralmente. A fatia não declara C47 concluída porque reinício/queda e parâmetros operacionais continuam pendentes. |
 | Próximo passo | Revisar queda/reinício do worker e os valores operacionais da C45 antes de ampliar para retry/quarentena ou marcar C47 como concluída. |
