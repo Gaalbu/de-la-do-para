@@ -36,6 +36,20 @@ public class DeliveryOptionsService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ShippingQuote select(UUID snapshotId, long snapshotVersion, UUID quoteId, String inputFingerprint) {
+        var entity = quotes.findByIdAndSnapshotIdAndSnapshotVersion(quoteId, snapshotId, snapshotVersion)
+                .orElseThrow(SelectionConflictException::new);
+        var quote = toDomain(entity);
+        if (!quote.inputFingerprint().equals(inputFingerprint)) {
+            throw new SelectionConflictException();
+        }
+        if (!quote.expiresAt().isAfter(Instant.now(clock))) {
+            throw new SelectionExpiredException();
+        }
+        return quote;
+    }
+
     private ShippingQuote toDomain(ShippingQuoteEntity entity) {
         try {
             var sequences = objectMapper.readValue(entity.getPackageSequences(), new TypeReference<List<Integer>>() {});
@@ -55,4 +69,8 @@ public class DeliveryOptionsService {
         }
         return normalized;
     }
+
+    public static class SelectionConflictException extends RuntimeException {}
+
+    public static class SelectionExpiredException extends RuntimeException {}
 }

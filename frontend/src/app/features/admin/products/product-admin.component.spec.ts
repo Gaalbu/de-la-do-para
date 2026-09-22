@@ -39,6 +39,7 @@ const product = {
       widthMm: 80,
       heightMm: 20,
       grossWeightGrams: 120,
+      pickupEligible: true,
       active: true,
       createdAt: '2026-09-21T12:00:00Z',
       updatedAt: '2026-09-21T12:00:00Z',

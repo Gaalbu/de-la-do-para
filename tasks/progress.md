@@ -589,3 +589,125 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - CI remoto `35766151122` verde em 6/6: backend, frontend, contracts, docs, security e commit-policy. Avisos de Node.js 20 nas actions foram reportados pelo runner, sem falha de gate.
 - PR permanece aberta/mergeable, sem merge automático.
 - Próximo passo: iniciar a UI C44 de endereço e seleção de modalidade em branch empilhada, preservando a decisão de merge humano do PR #60.
+
+## Sessão 2026-09-22 — C44 UI inicial de endereço e cotação (local)
+
+- Branch `feat/checkout-address-ui`, empilhada sobre `feat/checkout-address-contract` após CI remoto verde.
+- Criados `CheckoutService` e página `/checkout`: cria snapshot, envia o CEP ao endpoint, exibe carregamento/erro/nenhuma opção/opções válidas e não calcula frete localmente.
+- Carrinho ganhou link explícito para continuar à entrega; nenhum pedido, cobrança, reserva ou endereço inferido foi implementado.
+- Teste do serviço cobre a ordem snapshot → consulta server-owned, incluindo `snapshotVersion` e `postalCode`.
+- Verificação local: frontend `test:ci` 8 arquivos/17 testes verdes, `format:check` OK, `lint` OK e `build` SSR OK; `npx aislop scan --changes --json` 100/100, zero achados; `git diff --check` OK.
+- Remoto: ainda não publicado; UI permanece local até revisão/validação visual e E2E da jornada real.
+- Próximo passo: adicionar teste de componente/jornada para os estados da tela e executar a jornada em navegador real antes de abrir PR empilhada.
+
+### Evidência adicional da jornada C44
+
+- Navegador real em `http://127.0.0.1:4200/checkout`: página, formulário rotulado `CEP`, botão `Consultar` desabilitado sem valor e navegação para `/cart` foram observados no accessibility tree.
+- Com CEP sintético `66053-000`, a UI exibiu o estado recuperável “Não foi possível consultar este CEP” porque não havia API em `127.0.0.1:8080`; portanto não há alegação de cotação integrada nesta sessão.
+- `docker compose ps` e `GET /api/v1/status` confirmaram que o backend/stack local não estavam em execução. A alteração incidental de `frontend/angular.json` (analytics=false criada pelo CLI) foi revertida.
+- Próximo passo permanece: iniciar stack autorizada ou usar backend local para jornada integrada, adicionar teste de componente e só então publicar a PR da UI.
+
+### Evidência runtime integrada C44
+
+- Compose local subiu com PostgreSQL, Kafka, Mailpit e WireMock saudáveis; backend iniciou com `POSTGRES_PASSWORD=dlp-local-dev` e `-Dspring-boot.run.jvmArguments=-Xint`.
+- `GET /actuator/health` respondeu 200 e Flyway confirmou schema v22; o primeiro boot sem `-Xint` repetiu o SIGSEGV do GraalVM já conhecido.
+- Navegador real com proxy `/api`: `/cart` respondeu 200 com carrinho vazio; a tela `/checkout` enviou CEP sintético `66053-000`, exibiu carregamento e retornou ao estado de erro recuperável quando não havia snapshot de carrinho elegível.
+- Não foi criado dado administrativo apenas para fabricar sucesso: o caminho de opções disponíveis continua sem evidência integrada até existir fixture de catálogo/carrinho aprovada.
+- Serviços locais foram encerrados com `docker compose --profile local down`, sem remover volumes; próximo passo é adicionar teste de componente/jornada e publicar a UI em PR empilhada.
+
+## Sessão 2026-09-22 — C44 UI testada e pronta para PR
+
+- Adicionado `checkout.component.spec.ts`: botão de consulta permanece desabilitado sem CEP e a tela renderiza somente opção de entrega retornada pelo servidor.
+- Verificação: `npm run test:ci` 9 arquivos/19 testes verdes; `npm run lint` e `npm run format:check` OK; `npx aislop scan --changes --json` 100/100, zero achados.
+- A UI continua em `feat/checkout-address-ui`, empilhada sobre PR #60; caminho de sucesso permanece coberto por mocks de contrato no teste, enquanto a jornada integrada real confirmou apenas o erro correto para carrinho vazio.
+- Próximo passo: commitar, publicar e abrir PR empilhada; não fazer merge automático.
+
+## Sessão 2026-09-22 — C44 UI publicada
+
+- Commit `385b503` publicado em `feat/checkout-address-ui`; PR #61 aberta contra `feat/checkout-address-contract`: https://github.com/Gaalbu/de-la-do-para/pull/61.
+- CI remoto `35767275847` verde em 7/7: backend, frontend, contracts, docs, security, commit-policy e quality-gate.
+- PR #60 segue aberta/mergeable como base do contrato; nenhum merge automático foi feito.
+- Próximo passo: revisão humana dos PRs #60/#61 e, após integração autorizada, avançar para seleção persistente de modalidade/continuação do checkout conforme C44.
+
+## Sessão 2026-09-22 — C44 erro recuperável coberto
+
+- Acrescentado teste de componente para `404` ao criar snapshot; a tela mantém o formulário e expõe `role="alert"` para nova tentativa.
+- Verificação: frontend `test:ci` 9 arquivos/20 testes verdes, lint e formatação OK; `aislop` 100/100 e `git diff --check` OK.
+- PR #61 receberá esta extensão; CI será reexecutado no novo head. PRs #60/#61 continuam abertos, sem merge automático.
+
+## Sessão 2026-09-22 — C44 seleção server-owned de cotação
+
+- Implementada a seleção de uma cotação via `POST /api/v1/checkout/{snapshotId}/delivery-selection`, validando ownership da sessão, `snapshotVersion`, `inputFingerprint` e expiração; o fluxo não cria pedido, cobrança ou reserva.
+- A tela `/checkout` agora envia a seleção server-owned e mostra a modalidade selecionada; testes cobrem contrato HTTP, serviço e componente.
+- Verificação local: backend focado com `-DargLine=-Xint` passou; frontend `test:ci` 9 arquivos/22 testes, lint e formatação passaram; contrato OpenAPI válido com 11 warnings preexistentes do lint; `git diff --check` passou.
+- Limitação conhecida: `./mvnw -q -DargLine=-Xint verify` ainda termina por SIGSEGV do GraalVM durante a verificação da JVM; o relatório foi preservado em `backend/hs_err_pid54502.log`.
+- Próximo passo: rodar `aislop`, commitar/publicar a extensão no PR #61 e aguardar o CI remoto; nenhum merge automático.
+
+### Evidência adicional da seleção C44
+
+- O serviço de checkout ganhou teste explícito de seleção somente para snapshot pertencente à sessão e versão atual; o teste verifica a delegação server-owned ao serviço de cotações.
+- O CI remoto `35768644650` terminou verde em 7/7 no commit `5c9eb3a`, incluindo backend real com PostgreSQL/Kafka e frontend com browser smoke.
+- A nova cobertura local passou em nova execução com `-DargLine=-Xint`; houve uma falha intermitente adicional de SIGSEGV do GraalVM durante uma execução anterior, preservada como `backend/hs_err_pid56795.log`.
+
+## Sessão 2026-09-22 — C44 comparação explícita de pacotes
+
+- A UI passou a exibir a cobertura de pacotes retornada pelo servidor junto da modalidade, prazo total e custo; nenhum pacote é inferido no frontend.
+- Verificação: frontend `test:ci` 9 arquivos/22 testes, lint e formatação OK.
+- Próximo passo: publicar essa extensão e continuar a recuperação de seleção inválida/expirada; retirada permanece pendente da origem de opções correspondente no servidor.
+
+## Sessão 2026-09-22 — C44 recuperação de seleção rejeitada
+
+- A UI agora diferencia erro de consulta do CEP de cotação rejeitada por mudança/expiração, preservando a tela e permitindo nova consulta.
+- Teste do serviço cobre resposta `410` server-side sem marcar uma opção como selecionada; frontend passou com 9 arquivos/23 testes, lint e formatação OK.
+- Próximo passo: publicar essa recuperação, conferir o CI remoto e então avaliar a origem server-side de retirada prevista na spec.
+
+## Sessão 2026-09-22 — C44 fingerprint no envelope da cotação
+
+- A resposta de `delivery-options` agora expõe `inputFingerprint` no envelope, conforme `SPEC-checkout`, mantendo também o valor em cada cotação para a seleção explícita.
+- Controller testado com fingerprint retornado e OpenAPI atualizado; `contracts:lint` válido com os 11 avisos preexistentes.
+- Próximo passo: publicar a correção e acompanhar o CI; retirada segue separada até existir contrato e origem server-side.
+
+### Evidência remota da extensão C44
+
+- O commit `96740d3` passou no CI remoto `35769337883` em 7/7: backend, frontend/browser smoke, contracts, docs, security, commit-policy e quality-gate.
+- PR #61 permanece aberta e mergeable, sem merge automático.
+- C44 continua em implementação: entrega/cotação/seleção estão cobertas; retirada depende da origem server-side de ponto, janela e compatibilidade descrita na spec.
+
+## Sessão 2026-09-22 — C44 pré-requisito explícito de retirada
+
+- Adicionado `pickupEligible` ao SKU, com migration V23, DTO administrativo/OpenAPI e default `false`; a política agora é dado explícito e não pode ser inferida pelo nome do produto.
+- Teste de domínio cobre SKU elegível para retirada; testes focados de catálogo passaram com `-DargLine=-Xint`.
+- Próximo passo: ligar esse dado a uma opção server-side de retirada com ponto/janela aprovados, preservando seleção e compatibilidade no servidor.
+
+### Correção após CI do modelo de SKU
+
+- CI `35770235622` encontrou fixtures Angular administrativas sem o novo campo obrigatório `pickupEligible`; a fixture de produto foi atualizada.
+- Frontend local passou novamente: 9 arquivos/23 testes, lint e formatação OK. O backend remoto ainda estava executando antes da falha de qualidade causada pelo frontend.
+
+### Correção do gate backend da V23
+
+- CI `35770500417` confirmou migration V23 e 22 testes backend sem falhas; o único erro foi Spotless em `ProductSkuPackagingTest`.
+- Formatação corrigida localmente; `spotless:check`, `git diff --check` e `aislop` passaram. Commit corretivo será publicado para reexecutar o CI.
+
+## Sessão 2026-09-22 — C44 primeira origem server-side de retirada
+
+- Implementado `GET /api/v1/checkout/{snapshotId}/pickup-options`: valida ownership e versão do snapshot, resolve os SKUs persistidos e retorna `AVAILABLE` apenas quando todos estão ativos e `pickupEligible`; caso contrário retorna `UNAVAILABLE` com os SKUs incompatíveis.
+- A opção disponível usa somente o ponto e a janela aprovados na spec, sem aceitar retirada, pedido, cobrança ou reserva.
+- Testes focados de pickup/snapshot/controller passaram com `-DargLine=-Xint`; OpenAPI será validado antes da publicação.
+- O construtor Spring do serviço de snapshot foi anotado explicitamente para selecionar a dependência de pickup em runtime; a repetição local seguinte encontrou apenas o SIGSEGV intermitente conhecido do GraalVM durante Surefire.
+### C44 — carregar retirada no checkout
+
+- O serviço Angular agora consulta `/pickup-options` em paralelo à cotação de entrega, sempre usando o mesmo snapshot e sua versão.
+- A tela exibe o ponto fictício de Belém, janela de atendimento, preparo e ausência de frete; indisponibilidade para algum SKU é apresentada de forma recuperável.
+- Testes de serviço cobrem o carregamento da origem de retirada e a associação ao snapshot.
+- Validação local: lint, `format:check`, build e `aislop` 100/100 passaram. `ng test --watch=false` ficou bloqueado por `TS1127` em `node_modules/typescript/lib/lib.dom.d.ts`, fora da alteração.
+- Próximo passo: criar o contrato de seleção da modalidade de retirada antes de tornar a opção selecionável/persistida; não combinar entrega e retirada automaticamente.
+
+### C44 — seleção explícita de retirada
+
+- Adicionado `POST /api/v1/checkout/{snapshotId}/pickup-selection`, que revalida ownership, versão, elegibilidade dos SKUs e o identificador da opção no servidor.
+- A UI permite selecionar a retirada e limpa a seleção de entrega, e vice-versa; nenhuma combinação de modalidades é criada.
+- O contrato OpenAPI e os testes de serviço cobrem a rejeição de retirada indisponível e a seleção vinculada ao snapshot.
+- Validação local: backend focado, lint/formatação/build frontend com `NG_BUILD_MAX_WORKERS=2`, contrato OpenAPI e `aislop` pendentes da publicação final.
+- Jornada Playwright adicionada para comparar entrega/retirada, selecionar retirada e confirmar que as quatro requisições server-owned ocorrem na ordem esperada; suíte E2E completa passou (4 testes).
+- CI `35772388503` passou integralmente: backend, frontend/browser smoke, contratos, docs, segurança, política de commits e quality-gate. O aceite C44/G3 está validado; C45 é o próximo item elegível do plano, após revisão/integração humana da PR #61.

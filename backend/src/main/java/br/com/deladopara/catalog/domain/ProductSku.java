@@ -59,6 +59,9 @@ public class ProductSku {
     @Column(name = "active", nullable = false)
     private boolean active;
 
+    @Column(name = "pickup_eligible", nullable = false)
+    private boolean pickupEligible;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -80,12 +83,43 @@ public class ProductSku {
             int heightMm,
             int grossWeightGrams,
             Instant now) {
+        this(
+                id,
+                product,
+                skuCode,
+                salesUnit,
+                netContentGrams,
+                minimumShelfLifeDays,
+                fragile,
+                lengthMm,
+                widthMm,
+                heightMm,
+                grossWeightGrams,
+                false,
+                now);
+    }
+
+    public ProductSku(
+            UUID id,
+            Product product,
+            String skuCode,
+            String salesUnit,
+            Integer netContentGrams,
+            Integer minimumShelfLifeDays,
+            boolean fragile,
+            int lengthMm,
+            int widthMm,
+            int heightMm,
+            int grossWeightGrams,
+            boolean pickupEligible,
+            Instant now) {
         if (id == null || now == null) {
             throw new IllegalArgumentException("SKU identity and creation time are required");
         }
         this.id = id;
         this.createdAt = now;
         this.active = true;
+        this.pickupEligible = pickupEligible;
         this.productCategory = product == null ? null : product.getCategory();
         updatePackaging(
                 product,
@@ -213,6 +247,14 @@ public class ProductSku {
 
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isPickupEligible() {
+        return pickupEligible;
+    }
+
+    public void setPickupEligible(boolean pickupEligible) {
+        this.pickupEligible = pickupEligible;
     }
 
     public void setActive(boolean active, Instant now) {

@@ -729,6 +729,66 @@ paths:
         '404': {$ref: '#/components/responses/Problem404'}
         '409': {$ref: '#/components/responses/Problem409'}
 
+  /api/v1/checkout/{snapshotId}/delivery-selection:
+    post:
+      operationId: selectCheckoutDeliveryOption
+      summary: Validar e selecionar uma cotação de entrega
+      security: []
+      parameters:
+        - {in: path, name: snapshotId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: snapshotVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/DeliverySelectionRequest'}}
+      responses:
+        '200':
+          description: Seleção validada para o snapshot
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/DeliverySelection'}}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+        '410':
+          description: Cotação expirada
+          content:
+            application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
+
+  /api/v1/checkout/{snapshotId}/pickup-options:
+    get:
+      operationId: listCheckoutPickupOptions
+      summary: Consultar opções de retirada do snapshot
+      security: []
+      parameters:
+        - {in: path, name: snapshotId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: snapshotVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      responses:
+        '200':
+          description: Estado e opções de retirada server-owned
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/PickupOptions'}}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
+  /api/v1/checkout/{snapshotId}/pickup-selection:
+    post:
+      operationId: selectCheckoutPickupOption
+      summary: Validar e selecionar uma opção de retirada
+      security: []
+      parameters:
+        - {in: path, name: snapshotId, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: snapshotVersion, required: true, schema: {type: integer, format: int64, minimum: 0}}
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/PickupSelectionRequest'}}
+      responses:
+        '200':
+          description: Opção de retirada validada para o snapshot
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/PickupSelection'}}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
   /api/v1/cart/items:
     put:
       operationId: replaceGuestCartItems
@@ -946,6 +1006,7 @@ components:
         heightMm: {type: integer, minimum: 1}
         grossWeightGrams: {type: integer, minimum: 1}
         active: {type: boolean}
+        pickupEligible: {type: boolean, default: false, description: 'Indica se o SKU pode compor uma opção de retirada retornada pelo servidor.'}
     ProductFields:
       type: object
       required: [slug, displayName, description, category, producerId, skus]
@@ -983,6 +1044,7 @@ components:
             heightMm: 40
             grossWeightGrams: 220
             active: true
+            pickupEligible: false
     ProductUpdate:
       type: object
       allOf:
@@ -1014,7 +1076,7 @@ components:
     ProductSku:
       type: object
       additionalProperties: false
-      required: [id, skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, active, createdAt, updatedAt]
+      required: [id, skuCode, salesUnit, fragile, lengthMm, widthMm, heightMm, grossWeightGrams, active, pickupEligible, createdAt, updatedAt]
       properties:
         id: {type: string, format: uuid}
         skuCode: {type: string}
@@ -1027,6 +1089,7 @@ components:
         heightMm: {type: integer, minimum: 1}
         grossWeightGrams: {type: integer, minimum: 1}
         active: {type: boolean}
+        pickupEligible: {type: boolean}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
     Product:
@@ -1055,6 +1118,7 @@ components:
             heightMm: 40
             grossWeightGrams: 220
             active: true
+            pickupEligible: false
             createdAt: '2026-09-21T12:00:00Z'
             updatedAt: '2026-09-21T12:00:00Z'
         createdAt: '2026-09-21T12:00:00Z'
@@ -1101,6 +1165,7 @@ components:
                 heightMm: 40
                 grossWeightGrams: 220
                 active: true
+                pickupEligible: false
                 createdAt: '2026-09-21T12:00:00Z'
                 updatedAt: '2026-09-21T12:00:00Z'
             createdAt: '2026-09-21T12:00:00Z'
@@ -1284,10 +1349,11 @@ components:
     DeliveryOptions:
       type: object
       additionalProperties: false
-      required: [snapshotId, snapshotVersion, options]
+      required: [snapshotId, snapshotVersion, inputFingerprint, options]
       properties:
         snapshotId: {type: string, format: uuid}
         snapshotVersion: {type: integer, format: int64, minimum: 0}
+        inputFingerprint: {type: [string, 'null']}
         options:
           type: array
           items: {$ref: '#/components/schemas/ShippingQuote'}
@@ -1309,6 +1375,57 @@ components:
         packageSequences: {type: array, items: {type: integer, minimum: 1}}
         createdAt: {type: string, format: date-time}
         expiresAt: {type: string, format: date-time}
+    PickupOptions:
+      type: object
+      additionalProperties: false
+      required: [status, options, unavailableSkuIds]
+      properties:
+        status: {type: string, enum: [AVAILABLE, UNAVAILABLE]}
+        options:
+          type: array
+          items: {$ref: '#/components/schemas/PickupOption'}
+        unavailableSkuIds:
+          type: array
+          items: {type: string, format: uuid}
+    PickupOption:
+      type: object
+      additionalProperties: false
+      required: [id, point, window, preparationDays]
+      properties:
+        id: {type: string}
+        point: {type: string}
+        window: {type: string}
+        preparationDays: {type: integer, minimum: 0}
+    DeliverySelectionRequest:
+      type: object
+      additionalProperties: false
+      required: [quoteId, inputFingerprint]
+      properties:
+        quoteId: {type: string, format: uuid}
+        inputFingerprint: {type: string, minLength: 1}
+    DeliverySelection:
+      type: object
+      additionalProperties: false
+      required: [quoteId, snapshotVersion, inputFingerprint]
+      properties:
+        quoteId: {type: string, format: uuid}
+        snapshotVersion: {type: integer, format: int64, minimum: 0}
+        inputFingerprint: {type: string, minLength: 1}
+    PickupSelectionRequest:
+      type: object
+      additionalProperties: false
+      required: [pickupOptionId]
+      properties:
+        pickupOptionId: {type: string, minLength: 1}
+    PickupSelection:
+      type: object
+      additionalProperties: false
+      required: [id, point, window, preparationDays]
+      properties:
+        id: {type: string}
+        point: {type: string}
+        window: {type: string}
+        preparationDays: {type: integer, minimum: 0}
     PublicProductSku:
       type: object
       additionalProperties: false
