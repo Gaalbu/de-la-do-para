@@ -349,6 +349,49 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Decisões | Uma imagem principal opcional por produto; JPEG/PNG; máximo 5 MiB. Limites técnicos internos: 12 MP e 6000 px por lado. |
 | Mudanças | Spec/ADR 0006; processador raster que confere bytes e remove metadados; armazenamento local UUID em `APP_MEDIA_DIRECTORY`; domínio e migration V16; rotas multipart admin, remoção e entrega pública condicionada a produto/produtor/SKU ativos; OpenAPI/DTO; formulário administrativo com prévia, licenciamento, confirmação, upload e remoção; guia local/API atualizado. |
 | Verificação | Backend `verify`: 31 testes unitários e 18 integrações passaram com PostgreSQL 18.6, migrations até V16, Spotless e Checkstyle. Foi necessário `-DargLine=-Xint` após SIGSEGV no compilador C1 de Temurin 25.0.4. `scripts/verify.sh frontend`: geração OpenAPI, lint, formato, 11 testes Angular, build SSR e Playwright 3/3. `docs:check` validou 25 Markdown; `contracts:check` passou com 10 avisos Redocly preexistentes; security detectou zero segredos e audit runtime zero vulnerabilidades; `aislop scan --changes --json`: 100/100, zero achados; `git diff --check` limpo. |
-| Remoto | C24 commit `1d5b2ac` publicado na PR #36: https://github.com/Gaalbu/de-la-do-para/pull/36, base `feat/c23-product-admin-ui`. PR aberta, MERGEABLE/CLEAN; CI `35655927076` 7/7 verde. C23 PR #35 aberta, MERGEABLE/CLEAN, CI `35650869375` 7/7 verde. Nenhum merge automático. |
+| Remoto | C24 implementação `1d5b2ac`, HEAD de documentação `9491996`, PR #36: https://github.com/Gaalbu/de-la-do-para/pull/36, base `feat/c23-product-admin-ui`. Estado atual reconsultado: PR aberta/MERGEABLE, CI `35656338034` 7/7 verde. C23 PR #35 aberta/MERGEABLE, CI `35650869375` 7/7 verde. Nenhum merge automático. |
 | Próximos passos | C24 entregue para revisão remota; acompanhar as PRs empilhadas sem merge automático. |
+
+## Sessão 2026-09-21 — C24a políticas logísticas e comerciais (proposta para revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c24-media@9491996`; nova branch `docs/c24a-logistics-decisions`, empilhada sem integrar PRs abertas |
+| Tarefa | C24a — consolidar regras já aprovadas e encaminhar lacunas às etapas designadas; D66/D67 aprovadas, revisão final da spec pendente |
+| Mudanças | Criadas `specs/SPEC-logistics.md` e `specs/SPEC-pricing.md`; atualizados C24a em `docs/PLANO-MESTRE.md`, `docs/decisions.md` e rastreio. D21–D31, D33–D37 e D54–D60 resumidas sem reabrir respostas; D66 (guarda por 3 dias úteis + análise manual) e D67 (fixture sintética dos limites D54, clock fixo) aprovadas e registradas. O escopo de C24a foi precisado para deixar design/metas/catálogo em suas specs próprias. Recomendações futuras seguem identificadas como propostas |
+| Verificação | `npm run docs:check --prefix frontend` aprovado: 25 arquivos Markdown, nenhum link quebrado; `git diff --check` aprovado; conferência manual dos pontos citados com D21–D31, D33–D37 e D54–D60. Fontes oficiais federal/estadual e atos municipais de Belém consultados; a cobertura municipal anual permanece a confirmar antes de montar calendário completo. `aislop scan --changes --json`: 100/100, zero achados |
+| Remoto | Ainda sem commit/PR |
+| Próximo passo | Registrar a resposta sobre despacho parcial e apresentar a pendência seguinte; C25 pode usar fixture D67, mas segue após conclusão/revisão de C24a e conferência do calendário municipal |
 | Perguntas | Nenhuma nova; escolhas de imagem e tamanho já aprovadas |
+
+## Sessão 2026-09-21 — C25 inventário (spec em revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@9491996`; alterações locais ainda não commitadas |
+| Tarefa | C25 — especificar lotes, saldos, reservas e invariantes; spec preparada, não concluída |
+| Mudanças | Criado `specs/SPEC-inventory.md`: saldo físico/reservado/livre, reserva de 15 minutos, pagamento tardio D13, elegibilidade `arrivalDate`/validade, fixture D67, alocação all-or-nothing, ledger/auditoria, handoff por pacote e critérios INV-001–008. FEFO, bloqueio com reserva ativa, calendário anual e validade em retirada tardia ficaram explicitamente abertos |
+| Verificação | Ainda executar após esta edição: `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json`. Nenhum código ou migration foi criado |
+| Remoto | Commit `a819ffd` publicado na PR #37: https://github.com/Gaalbu/de-la-do-para/pull/37, base `feat/c24-media`; PR aberta/MERGEABLE; CI inicial `35658857246` 7/7 verde. Nenhum merge automático |
+| Próximo passo | Acompanhar CI do commit de progresso; depois perguntar a regra de despacho parcial e obter revisão da spec antes de marcar C25 concluída |
+
+## Sessão 2026-09-21 — C29 preço e cupons (spec em revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@a6e5915`; PR #37 aberta, sem merge |
+| Tarefa | C29 — especificar cálculo monetário, descontos e elegibilidade de cupons; proposta documental, não concluída |
+| Mudanças | Ampliada `specs/SPEC-pricing.md` com centavos inteiros, ordem de subtotal/frete/desconto, arredondamento half-up proposto, limite de desconto, mínimo/validade/e-mail verificado, snapshots e casos de fronteira. Combinações e contador global permanecem decisões abertas |
+| Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop scan --changes --json` após a edição; sem código ou migration |
+| Remoto | PR #37 cobre a spec-base; nova alteração ainda local |
+| Próximo passo | Validar documentação; pedir revisão das regras propostas antes de C30/C31 |
+
+## Sessão 2026-09-21 — plano executável C30/C31
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `docs/c24a-logistics-decisions@7259c35`; PR #37 aberta, 7/7 verde |
+| Tarefa | Preparar ordem de implementação sem aprovar silenciosamente o contador global |
+| Mudanças | Criado `tasks/plan.md` com fatias C30 (totais canônicos + BT) e C31 (reserva atômica + BI), dependências, gates e bloqueios; rastreio atualizado |
+| Verificação | Executar `npm run docs:check --prefix frontend`, `git diff --check` e `aislop` após edição; sem código funcional |
+| Próximo passo | Revisão das specs C25/C29 e decisão do ciclo global de cupons; depois iniciar C30 |
