@@ -1,6 +1,7 @@
 package br.com.deladopara.checkout.adapter.web;
 
 import br.com.deladopara.checkout.application.CheckoutSnapshotService;
+import br.com.deladopara.checkout.application.PickupOptionsService;
 import br.com.deladopara.shipping.application.ShippingQuote;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
@@ -57,6 +58,12 @@ public class CheckoutController {
         var quote = snapshots.selectDeliveryOption(
                 request.getSession(true).getId(), snapshotId, snapshotVersion, body.quoteId(), body.inputFingerprint());
         return new SelectionResponse(quote.id(), quote.snapshotVersion(), quote.inputFingerprint());
+    }
+
+    @GetMapping("/{snapshotId}/pickup-options")
+    public PickupOptionsService.PickupOptions pickupOptions(
+            @PathVariable UUID snapshotId, @RequestParam long snapshotVersion, HttpServletRequest request) {
+        return snapshots.findPickupOptions(request.getSession(true).getId(), snapshotId, snapshotVersion);
     }
 
     public record SnapshotResponse(UUID snapshotId, long snapshotVersion) {}
