@@ -1561,7 +1561,8 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C43 — `feat(shipping): bind delivery quotes to purchase snapshots`
 
-- [ ] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M.
+- [x] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M. Implementação local pendente de PR/CI.
+- Persistidos snapshotId/version, destino normalizado, fingerprint, serviço, custo, prazos, pacotes e validade; a entidade exige identidade do snapshot e rejeita validade inválida.
 - **Aceite:** cotação vinculada a itens/endereço/composição dos pacotes; alteração invalida; custo total e prazos selecionados são verificados no servidor.
 - **Verificar:** BI(ShippingQuote), C e V12.
 

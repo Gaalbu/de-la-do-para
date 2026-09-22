@@ -530,3 +530,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Valida cobertura exata de todos os pacotes, custo, prazo, validade e campos obrigatórios; falhas são normalizadas sem expor credenciais.
 - Testes focados e checkstyle/Spotless passaram localmente.
 - Próximo passo: commitar, abrir PR e aguardar os gates remotos antes de considerar C42 concluído.
+
+## Sessão 2026-09-22 — C43 persistência de cotação
+
+- C42 foi mergeado no PR #55 (`66a433c`), com todos os gates verdes.
+- Criada migration V21 e entidade/repository de `shipping_quotes`, vinculando a cotação ao `snapshot_id`/versão e preservando fingerprint, destino, pacotes, custo, prazos e validade.
+- Criado agregado `ShippingQuote` com invariantes de identidade, valores e expiração; teste cobre validade inválida.
+- Próximo passo: commitar, abrir PR e validar a migration com o backend completo.
