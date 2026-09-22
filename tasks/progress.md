@@ -581,3 +581,11 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Verificação: `./mvnw -q -DargLine=-Xint verify` terminou sem falhas/erros nos relatórios Surefire/Failsafe; `npm run contracts:check` exit 0 (11 avisos Redocly preexistentes); `./mvnw -q spotless:apply` exit 0; `git diff --check` OK; `npx aislop scan --changes --json` 100/100, zero achados. Uma execução paralela anterior deixou `hs_err_pid27759.log` e SIGSEGV do GraalVM; o gate com `-Xint` foi usado e os relatórios finais ficaram verdes.
 - Remoto: ainda sem commit/PR desta extensão; alterações permanecem locais sobre `feat/checkout-address-contract`.
 - Próximo passo: revisar/stagear somente os cinco arquivos da fatia, commitar e abrir PR C44; depois validar o CI remoto antes de iniciar a UI de endereço/seleção.
+
+## Sessão 2026-09-22 — C44 opções de entrega publicadas
+
+- Commit local `bf58cb6` foi reconciliado com a reescrita remota da branch por merge explícito `cc926ec`, sem force-push, e publicado em `feat/checkout-address-contract`.
+- PR #60 aberta: https://github.com/Gaalbu/de-la-do-para/pull/60.
+- CI remoto `35766151122` verde em 6/6: backend, frontend, contracts, docs, security e commit-policy. Avisos de Node.js 20 nas actions foram reportados pelo runner, sem falha de gate.
+- PR permanece aberta/mergeable, sem merge automático.
+- Próximo passo: iniciar a UI C44 de endereço e seleção de modalidade em branch empilhada, preservando a decisão de merge humano do PR #60.
