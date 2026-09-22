@@ -406,3 +406,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | RED por compilação sem tipos; depois teste focado verde e `./mvnw -q -DargLine=-Xint verify` verde; `aislop scan --staged --json`: 100/100, zero achados |
 | Remoto | Commits `a7a0551`, `5813f3f`; PR #38: https://github.com/Gaalbu/de-la-do-para/pull/38; CI final 7/7 verde, aberta e mergeable; nenhum merge automático |
 | Próximo passo | Definir contador global de cupons e iniciar C31; expor cálculo por API só quando o contrato de checkout estiver definido |
+
+## Sessão 2026-09-21 — C26 invariantes de lote
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `feat/c30-pricing-totals@6409c4f`; implementação em `feat/c26-inventory-lot-invariants` |
+| Tarefa | C26 — núcleo independente de saldos e elegibilidade de lote |
+| Mudanças | Criados `InventoryLot`, `InventoryAvailability`, `InventoryMovement`, `InventoryLedger`, `InventoryReservation` e `ReservationIntent`: saldos, margem D67, bloqueio, ledger idempotente, expiração de 15 minutos e validação multi-SKU |
+| Verificação | Testes focados e `./mvnw -q -DargLine=-Xint verify` verdes; `aislop` 100/100, zero achados |
+| Remoto | Commits até `e81ea6e`; PR #39: https://github.com/Gaalbu/de-la-do-para/pull/39; rodada atual do CI em andamento, PR aberta e mergeable |
+| Limites | FEFO, lotes bloqueados com alocação ativa, persistência, reserva e API continuam fora desta fatia até revisão das regras abertas |

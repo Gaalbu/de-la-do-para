@@ -572,8 +572,62 @@ paths:
       responses:
         '200':
           description: Senha redefinida
+  /api/v1/admin/inventory/skus/{skuId}/lots:
+    get:
+      operationId: listInventoryLots
+      summary: Consultar lotes de um SKU
+      parameters:
+        - {$ref: '#/components/parameters/SkuId'}
+      responses:
+        '200':
+          description: Lotes do SKU
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/InventoryLot'}}
+    post:
+      operationId: receiveInventoryLot
+      summary: Registrar recebimento de lote
+      parameters:
+        - {$ref: '#/components/parameters/SkuId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/InventoryLotCreate'}
+      responses:
+        '200':
+          description: Lote registrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InventoryLot'}
+        '400': {$ref: '#/components/responses/Problem400'}
+  /api/v1/admin/inventory/lots/{lotId}:
+    patch:
+      operationId: adjustInventoryLot
+      summary: Ajustar saldo físico de lote
+      parameters:
+        - {$ref: '#/components/parameters/LotId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/InventoryAdjustment'}
+      responses:
+        '200':
+          description: Lote ajustado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InventoryLot'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
 components:
   responses:
+    Problem400:
+      description: Dados inválidos
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
+    Problem409:
+      description: Conflito de versão
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
     HealthUp:
       description: Processo disponível; não comprova integrações sandbox.
       headers:
@@ -608,6 +662,17 @@ components:
       schema:
         type: string
         format: uuid
+  parameters:
+    SkuId:
+      name: skuId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    LotId:
+      name: lotId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -1061,3 +1126,32 @@ components:
         size: {type: integer, minimum: 1, maximum: 50}
         totalElements: {type: integer, minimum: 0}
         totalPages: {type: integer, minimum: 0}
+    InventoryLotCreate:
+      type: object
+      required: [physicalUnits, receivedAt]
+      properties:
+        physicalUnits: {type: integer, minimum: 1}
+        expiresOn: {type: [string, 'null'], format: date}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 0}
+        receivedAt: {type: string, format: date-time}
+    InventoryAdjustment:
+      type: object
+      required: [actorId, physicalUnits, expectedVersion, reason]
+      properties:
+        actorId: {type: string, format: uuid}
+        physicalUnits: {type: integer, minimum: 0}
+        expectedVersion: {type: integer, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 500}
+    InventoryLot:
+      type: object
+      required: [id, skuCode, physicalUnits, reservedUnits, freeUnits, blocked, version]
+      properties:
+        id: {type: string, format: uuid}
+        skuCode: {type: string}
+        physicalUnits: {type: integer, minimum: 0}
+        reservedUnits: {type: integer, minimum: 0}
+        freeUnits: {type: integer, minimum: 0}
+        blocked: {type: boolean}
+        expiresOn: {type: [string, 'null'], format: date}
+        minimumShelfLifeDays: {type: [integer, 'null'], minimum: 0}
+        version: {type: integer, minimum: 0}

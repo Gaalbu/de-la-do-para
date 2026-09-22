@@ -5,9 +5,9 @@
 - Módulo: `inventory`
 - Status: rascunho de trabalho; não autoriza implementação até revisão da spec
 - Tarefas: C25 (especificação), C26 (lotes e ledger), C27 (API administrativa), C28 (UI), C57 (reserva atômica)
-- Decisões base: D11, D13, D17, D27, D54, D66, D67
+- Decisões base: D11, D13, D17, D27, D54, D66, D67, D68
 - Depende de `catalog`; checkout, carrinho, shipping e storefront consomem somente contratos públicos
-- Pendências relacionadas: validade em retirada tardia/calendário; regra de continuidade dos pacotes após despacho parcial segue em C24a/C41
+- Pendências relacionadas: validade em retirada tardia/calendário; a continuidade dos pacotes após despacho parcial foi aprovada em D68
 
 ## 1. Objetivo
 
@@ -78,9 +78,10 @@ uma compra com entrega futura será elegível.
    pela persistência, sem abrir transação durante chamadas HTTP ou espera de
    Kafka. Constraints do PostgreSQL protegem saldo mesmo com workers concorrentes.
 8. Solicitação de cancelamento não altera estoque. Só um fato de cancelamento
-   integral autorizado libera alocações ainda não despachadas. A decisão sobre
-   continuidade dos demais pacotes após despacho parcial permanece em
-   `shipping`/checkout; pedido pendente ou pedido de análise nunca libera saldo.
+   integral autorizado libera alocações ainda não despachadas. Após despacho
+   parcial, os demais pacotes continuam o fluxo normal por padrão; pausar exige
+   decisão administrativa, sem cancelamento ou reembolso automático ou parcial
+   (D68). Pedido pendente ou pedido de análise nunca libera saldo.
 9. Na entrega física do pacote à transportadora, baixar somente as unidades
    que pertencem àquele pacote; etiqueta emitida não baixa estoque (D29). Na
    retirada, baixar somente após confirmação exclusiva do atendente (D31).
@@ -167,13 +168,13 @@ sucesso genérico como prova de reserva atômica.
 | INV-005 | Pagamento anterior confirma alocação; posterior à expiração vai para análise/compensação | teste de aplicação ligado a D13, sem re-reserva |
 | INV-006 | Carrinho multi-SKU aloca tudo ou nada sob concorrência | BI com PostgreSQL real; duas transações disputam a última unidade |
 | INV-007 | Ajuste exige ator/motivo, preserva ledger e não reduz abaixo de reservas | BI de ledger; segundo ajuste preserva primeiro movimento |
-| INV-008 | Handoff baixa somente linhas do pacote e pedido de cancelamento não libera saldo | teste de contrato entre inventory e shipping/checkout; resolução parcial segue regra pendente |
+| INV-008 | Handoff baixa somente linhas do pacote e pedido de cancelamento não libera saldo | teste de contrato entre inventory e shipping/checkout; após despacho parcial, os demais pacotes continuam por padrão e pausa exige decisão administrativa, sem cancelamento ou reembolso automático ou parcial (D68) |
 
 ## 9. Limites e decisões abertas
 
-- C24a permanece em revisão. A pergunta sobre continuar ou pausar pacotes
-  ainda não despachados não altera saldo automaticamente: inventory aguarda
-  comandos/fatos autorizados de shipping/checkout e mantém alocação comprometida.
+- C24a ainda depende das decisões de calendário e validade tardia; a continuidade
+  dos pacotes após handoff parcial está definida em D68. Inventory mantém as
+  alocações comprometidas até fatos autorizados de shipping/checkout.
 - FEFO e tratamento de bloqueio com alocação existente são recomendações,
   não decisões aprovadas. Não iniciar C26 nesses pontos sem revisar a spec.
 - Calendário anual concreto e lote/datas de operação são distintos das

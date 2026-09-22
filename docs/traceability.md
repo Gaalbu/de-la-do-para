@@ -35,6 +35,7 @@ ou payloads pessoais.
 | C29 — especificação de preço e cupons | `specs/SPEC-pricing.md`, D17/D33/D34/D54 | `docs:check`, `git diff --check`, revisão humana; BT em C30 e BI em C31 | PR #37, commit `a819ffd` + atualização local | Centavos inteiros, ordem subtotal/frete/desconto, arredondamento proposto, mínimos/validade/e-mail verificado e reembolso documentados; reserva global e combinações ainda abertas; não concluído |
 | Plano C30/C31 | `tasks/plan.md`, `specs/SPEC-pricing.md` | revisão de dependências e checkpoints | `2151a0e` | Ordem C30 → C31, testes BT/BI, gates e bloqueios de contador global documentados |
 | C30 — totais canônicos | `backend/src/main/java/br/com/deladopara/pricing/domain`, `backend/src/test/java/br/com/deladopara/pricing/domain` | `PurchaseTotalCalculatorTest`, backend `verify`, CI 7/7 | `a7a0551`, `5813f3f` | Cálculo puro em centavos BRL, moeda estrangeira e mínimo rejeitados; PR #38 aberta e mergeable; contador global e API de checkout fora do escopo |
+| C26 — invariantes de lote | `backend/src/main/java/br/com/deladopara/inventory/domain`, `backend/src/test/java/br/com/deladopara/inventory/domain` | testes de lote, ledger, reserva e intenção; backend `verify`, CI | `0dba72c`–`e81ea6e` | Saldos, margem D67, bloqueio, ledger idempotente, reserva temporal e intenção multi-SKU; PR #39 aberta; FEFO, persistência e alocação permanecem abertos |
 
 Evidências por release vivem em `docs/evidence/<marco-ou-release>/`
 (criado quando houver a primeira entrega executável).

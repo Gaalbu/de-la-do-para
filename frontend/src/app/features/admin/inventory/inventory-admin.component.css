@@ -1,0 +1,37 @@
+.admin {
+  max-width: 70rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+.receive-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  align-items: end;
+}
+label {
+  display: grid;
+  gap: 0.35rem;
+}
+input,
+select,
+button {
+  padding: 0.55rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  border-bottom: 1px solid #ddd;
+  padding: 0.65rem;
+  text-align: left;
+}
+.error {
+  color: #9b1c1c;
+}
+.notice {
+  color: #176b3a;
+}

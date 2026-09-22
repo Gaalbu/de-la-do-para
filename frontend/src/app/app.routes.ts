@@ -24,4 +24,12 @@ export const routes: Routes = [
         (m) => m.ProductAdminComponent,
       ),
   },
+  {
+    path: 'admin/inventory',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/inventory/inventory-admin.component').then(
+        (m) => m.InventoryAdminComponent,
+      ),
+  },
 ];
