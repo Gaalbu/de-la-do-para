@@ -109,7 +109,9 @@ public final class PackageComposer {
         }
 
         private boolean canAdd(Line line) {
-            if (line.fragile() || fragile) return false;
+            if (line.fragile() || fragile) {
+                return false;
+            }
             var oldWeight = weightGrams;
             var oldLength = lengthMm;
             var oldWidth = widthMm;
