@@ -1518,7 +1518,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C38 — `docs(cart): specify guest carts and purchase snapshots`
 
-- [ ] **Depende:** C14, C17, C25, C29. **Alvos:** `specs/SPEC-cart.md`, contrato de versão; S.
+- [x] **Depende:** C14, C17, C25, C29. **Alvos:** `specs/SPEC-cart.md`, contrato de versão; S. Implementado em `8505626`, PR #49 merged.
 - **Aceite:** sessão convidada, atualização concorrente e persistência; regra de combinação no login; preservação de itens adicionados depois do checkout.
 - **Verificar:** DOC; casos exemplificados com dois navegadores/duas abas.
 
