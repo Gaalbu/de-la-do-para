@@ -552,3 +552,40 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
   `AVAILABLE`/`UNAVAILABLE`, invalidação e erros antes da UI.
 - Próximo passo: implementar a origem/API de delivery-options e então a tela C44.
 - Implementado `DeliveryOptionsService`: normaliza CEP, consulta apenas cotações persistidas do snapshot/versão ainda válidas e reconstrói a cobertura de pacotes; sem endpoint público até existir validação de ownership do snapshot.
+
+## Sessão 2026-09-22 — C44 snapshot de checkout
+
+- Implementado o primeiro slice executável do C44: `POST /api/v1/checkout/snapshots`
+  congela o carrinho convidado da sessão em migration V22 e retorna
+  `snapshotId`/`snapshotVersion`; a sessão é armazenada somente como hash.
+- Rota, schema OpenAPI e autorização pública foram atualizados; o snapshot
+  rejeita carrinho inexistente ou vazio e permanece imutável.
+- Verificação: testes focados `CheckoutSnapshotServiceTest,CheckoutControllerTest`,
+  `./mvnw -q -DargLine=-Xint verify` com PostgreSQL/Testcontainers e Flyway V22,
+  `npm run contracts:lint` (válido, 11 avisos Redocly preexistentes),
+  `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados).
+  A execução completa de `contracts:check` encontrou o SIGSEGV intermitente do
+  TypeScript durante `tsc`, após a geração de tipos; não é tratado como gate verde.
+- Commit local: `864db49` (`feat(checkout): create guest checkout snapshots`),
+  ainda não publicado.
+- Próximo passo: expor `GET /api/v1/checkout/{snapshotId}/delivery-options`,
+  validando ownership pela sessão, versão, CEP e validade das cotações antes de
+  iniciar a UI de endereço/seleção.
+
+## Sessão 2026-09-22 — C44 opções de entrega por snapshot (local, pronto para publicação)
+
+- Adicionado `GET /api/v1/checkout/{snapshotId}/delivery-options` com `snapshotVersion` e `postalCode`.
+- `CheckoutSnapshotService` valida ownership pelo hash da sessão e versão exata antes de delegar a `DeliveryOptionsService`, que mantém apenas cotações persistidas, do destino normalizado e não expiradas.
+- Erros contratuais: snapshot ausente/pertencente a outra sessão (404), versão obsoleta (409) e CEP inválido (400), com `ProblemDetail` e correlação.
+- OpenAPI atualizado com `DeliveryOptions`/`ShippingQuote`; testes unitários do serviço e controller adicionados.
+- Verificação: `./mvnw -q -DargLine=-Xint verify` terminou sem falhas/erros nos relatórios Surefire/Failsafe; `npm run contracts:check` exit 0 (11 avisos Redocly preexistentes); `./mvnw -q spotless:apply` exit 0; `git diff --check` OK; `npx aislop scan --changes --json` 100/100, zero achados. Uma execução paralela anterior deixou `hs_err_pid27759.log` e SIGSEGV do GraalVM; o gate com `-Xint` foi usado e os relatórios finais ficaram verdes.
+- Remoto: ainda sem commit/PR desta extensão; alterações permanecem locais sobre `feat/checkout-address-contract`.
+- Próximo passo: revisar/stagear somente os cinco arquivos da fatia, commitar e abrir PR C44; depois validar o CI remoto antes de iniciar a UI de endereço/seleção.
+
+## Sessão 2026-09-22 — C44 opções de entrega publicadas
+
+- Commit local `bf58cb6` foi reconciliado com a reescrita remota da branch por merge explícito `cc926ec`, sem force-push, e publicado em `feat/checkout-address-contract`.
+- PR #60 aberta: https://github.com/Gaalbu/de-la-do-para/pull/60.
+- CI remoto `35766151122` verde em 6/6: backend, frontend, contracts, docs, security e commit-policy. Avisos de Node.js 20 nas actions foram reportados pelo runner, sem falha de gate.
+- PR permanece aberta/mergeable, sem merge automático.
+- Próximo passo: iniciar a UI C44 de endereço e seleção de modalidade em branch empilhada, preservando a decisão de merge humano do PR #60.
