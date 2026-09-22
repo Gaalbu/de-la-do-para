@@ -1471,9 +1471,16 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C33 — `docs(storefront): specify public discovery and rendering`
 
-- [ ] **Depende:** C03, C17, C25, C29. **Alvos:** `specs/SPEC-storefront.md`, jornadas públicas; S.
+- [x] **Depende:** C03, C17, C25, C29. **Alvos:** `specs/SPEC-storefront.md`, jornadas públicas; S. Implementado em `ced510b`, PR #40 merged em `7ee7090`.
 - **Aceite:** filtros/ordenação/paginação e URLs compartilháveis; página de origem; SSR sem dados de sessão; critérios visuais aprovados de DEMO-VIDEO.md ligados aos estados reais da jornada, incluindo responsividade, movimento reduzido e legibilidade.
 - **Verificar:** DOC e protótipo revisado.
+- **Estado atual:** `SPEC-storefront.md` define rotas públicas, filtros em URL,
+  paginação estável, disponibilidade por saldo livre, isolamento de sessão no
+  SSR, estados recuperáveis e critérios visuais/a11y de C03. C34 continua
+  bloqueada por uma lacuna de contrato: C30 calcula totais, mas não existe
+  fonte persistida de preço por SKU; preço permanece responsabilidade de
+  `pricing` conforme SPEC-catalog, sem autorização para duplicá-lo no
+  catálogo/storefront.
 
 ### C34 — `feat(storefront): compose catalog price and availability queries`
 
