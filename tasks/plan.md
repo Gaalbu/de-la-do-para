@@ -57,3 +57,70 @@ npx aislop scan --changes --json
 
 Código funcional também executa os gates backend/frontend/contrato aplicáveis
 e não considera PR aberta ou mergeável como integração concluída.
+
+## C45–C49 — eventing e recuperação
+
+Este roteiro depende da revisão humana da `SPEC-eventing.md`. Os passos abaixo
+descrevem a ordem de implementação, mas não aprovam os valores marcados como
+proposta na spec.
+
+### C46 — outbox na transação local
+
+1. Criar a migration da outbox com `eventId` único, tipo/versão, agregado e
+   versão, instantes UTC, correlação/causação, payload JSONB, estado,
+   `availableAt`, tentativas, lease e último erro sanitizado.
+2. Criar o port do eventing e um writer usado pela transação do módulo dono;
+   não abrir transação nova nem publicar Kafka durante o request.
+3. Testar rollback do efeito e do evento juntos, payload imutável e seleção de
+   eventos pendentes sem reivindicar uma linha já alugada.
+4. Validar que segredos, tokens e PII desnecessária não entram no payload nem
+   no diagnóstico.
+
+**Checkpoint C46:** migration/entidade, teste PostgreSQL e contrato do envelope
+passam; ainda não existe publisher nem consumer real.
+
+### C47 — publisher com claim/lease e ACK
+
+1. Implementar worker separado com claim recuperável e limite de lote; lease
+   expirado volta a `PENDING` sem apagar a mensagem.
+2. Publicar usando `aggregateId` como chave e o envelope como valor; registrar
+   `PUBLISHED` somente após ACK do broker.
+3. Cobrir queda antes do publish, depois do ACK e antes do registro do ACK;
+   o último cenário deve provar redelivery possível, não ausência silenciosa.
+4. Medir backlog, idade do evento, tentativas e quarentena sem registrar
+   payload sensível nos logs.
+
+**Checkpoint C47:** Testcontainers Kafka real, restart do worker e nenhum
+   efeito comercial duplicado; não alegar exactly-once global.
+
+### C48 — consumo idempotente
+
+1. Criar registro único por `eventId + handlerName`, com versão/resultado e
+   correlação auditável.
+2. Validar envelope e versão antes do handler; aplicar o efeito e registrar o
+   consumo no mesmo commit PostgreSQL.
+3. Confirmar offset somente depois do commit; redelivery após queda deve ser
+   ignorado pelo registro único.
+4. Separar eventos fora de ordem: gap de `aggregateVersion` fica pendente e
+   não é aplicado como se estivesse atualizado.
+
+**Checkpoint C48:** duplicata, rebalance, queda antes/depois do commit e
+   incompatibilidade de schema cobertos com PostgreSQL/Kafka reais.
+
+### C49 — retry, quarentena e replay
+
+1. Classificar falha transitória, inválida e dependência em estado `UNKNOWN`;
+   apenas a primeira recebe retry automático.
+2. Aplicar backoff/jitter e limite configuráveis; preservar `eventId`, motivo,
+   tentativas e timestamps.
+3. Mover falha inválida ou excedente para quarentena sem loop infinito e
+   permitir replay autorizado com o mesmo `eventId`.
+4. Testar retenção sem remover pendências/investigações e sem recriar chamada
+   externa depois de resultado desconhecido.
+
+**Checkpoint C49:** cenário de recuperação completo, trilha auditável e
+   operador consegue distinguir retry, quarentena, replay e conciliação.
+
+**Bloqueios explícitos:** C46 só começa após C45 aprovada; valores de
+`lease/backoff/tentativas/retenção` permanecem revisão da spec; garantias dos
+provedores Asaas/Melhor Envio continuam dependentes do sandbox C04.
