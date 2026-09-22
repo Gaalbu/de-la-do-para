@@ -428,3 +428,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `npm run docs:check --prefix frontend` OK (25 Markdown), `git diff --check` OK, `npx aislop scan --changes --json` 100/100; PR #40 CI 7/7 verde, merged em `7ee7090`. |
 | Remoto | PR #40: https://github.com/Gaalbu/de-la-do-para/pull/40 — MERGED; PRs #30–#39 também merged em ordem. |
 | Próximo passo | C34 requer uma fonte de preço por SKU no módulo `pricing`; C30 é apenas cálculo puro e o catálogo explicitamente não deve copiar preço. Não implementar consulta incompleta nem inventar fixture sem decisão/contrato. |
+
+## Sessão 2026-09-22 — C34 primeira fatia de preços correntes
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@7ee7090`; branch `feat/c34-storefront-queries`; `.angular/` não rastreado preexistente preservado |
+| Tarefa | C34 — fonte pricing-owned de preço corrente por SKU — primeira fatia concluída e merged |
+| Mudanças | `SkuPrice` validado em BRL/centavos positivos; tabela `pricing_sku_prices` em V19 com FK para SKU e restrições; `SkuPriceEntity`/repository; `SkuPriceService` carrega preços em lote; testes unitários e `SkuPriceRepositoryIT`. |
+| Verificação | PR #42 CI 7/7 verde: backend real com PostgreSQL 18.6/Testcontainers e Flyway V19, frontend, contracts, docs, security, commit-policy e quality-gate; merge commit `b77bd3c`. |
+| Remoto | PR #42: https://github.com/Gaalbu/de-la-do-para/pull/42 — MERGED. |
+| Próximo passo | Implementar `StorefrontQueries`: filtro/ordenação/paginação e composição de produto, preço corrente e saldo livre; não marcar C34 concluída antes de teste de consulta vazia, limites, filtros inválidos e reserva ativa. |
