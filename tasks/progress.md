@@ -621,3 +621,10 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Verificação: `npm run test:ci` 9 arquivos/19 testes verdes; `npm run lint` e `npm run format:check` OK; `npx aislop scan --changes --json` 100/100, zero achados.
 - A UI continua em `feat/checkout-address-ui`, empilhada sobre PR #60; caminho de sucesso permanece coberto por mocks de contrato no teste, enquanto a jornada integrada real confirmou apenas o erro correto para carrinho vazio.
 - Próximo passo: commitar, publicar e abrir PR empilhada; não fazer merge automático.
+
+## Sessão 2026-09-22 — C44 UI publicada
+
+- Commit `385b503` publicado em `feat/checkout-address-ui`; PR #61 aberta contra `feat/checkout-address-contract`: https://github.com/Gaalbu/de-la-do-para/pull/61.
+- CI remoto `35767275847` verde em 7/7: backend, frontend, contracts, docs, security, commit-policy e quality-gate.
+- PR #60 segue aberta/mergeable como base do contrato; nenhum merge automático foi feito.
+- Próximo passo: revisão humana dos PRs #60/#61 e, após integração autorizada, avançar para seleção persistente de modalidade/continuação do checkout conforme C44.
