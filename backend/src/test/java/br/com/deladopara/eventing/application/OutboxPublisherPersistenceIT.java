@@ -29,6 +29,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -79,6 +80,11 @@ class OutboxPublisherPersistenceIT {
         try (var admin = AdminClient.create(properties)) {
             admin.createTopics(List.of(new NewTopic(topic, 1, (short) 1))).all().get();
         }
+    }
+
+    @BeforeEach
+    void clearOutbox() {
+        transactions.executeWithoutResult(status -> events.deleteAllInBatch());
     }
 
     @Test
