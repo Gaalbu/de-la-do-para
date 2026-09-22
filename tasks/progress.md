@@ -439,3 +439,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | PR #42 CI 7/7 verde: backend real com PostgreSQL 18.6/Testcontainers e Flyway V19, frontend, contracts, docs, security, commit-policy e quality-gate; merge commit `b77bd3c`. |
 | Remoto | PR #42: https://github.com/Gaalbu/de-la-do-para/pull/42 — MERGED. |
 | Próximo passo | Implementar `StorefrontQueries`: filtro/ordenação/paginação e composição de produto, preço corrente e saldo livre; não marcar C34 concluída antes de teste de consulta vazia, limites, filtros inválidos e reserva ativa. |
+
+## Sessão 2026-09-22 — C34 consulta composta e C35 catálogo público
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `main@923c882`; branch `feat/next-catalog-work`; `.angular/` não rastreado preexistente preservado |
+| Tarefa | C34 concluída no PR #45; iniciar C35 com catálogo público navegável |
+| Mudanças | C34 expõe `GET /api/v1/products` com filtros combináveis, ordenação/paginação, preço corrente e saldo livre por SKU; `StorefrontAvailability` e `StorefrontPricing` mantêm fronteiras acíclicas. C35 adiciona a página Angular da vitrine na rota `/`, filtros e ordenação persistidos em query params, estados de carregamento/vazio/erro, cards editoriais responsivos e paginação limitada. |
+| Verificação | Backend remoto do PR #45 verde em todos os checks; frontend local `format:check`, `lint`, build SSR e `storefront.component.spec.ts` (3 testes) verdes. |
+| Remoto | C34 merged em `923c882`; C35 ainda local, sem commit/PR. |
+| Próximo passo | Rodar gate final/aislop disponível, commitar e abrir PR do C35; depois seguir para C36 (detalhe público/procedência). |
