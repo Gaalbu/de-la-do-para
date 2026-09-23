@@ -789,3 +789,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `OutboxPublisherPersistenceIT`: 3 testes, 0 falhas, com Kafka `apache/kafka:4.3.1` e PostgreSQL `18.6` reais via Testcontainers. Spotless passou. A execução precisou de `-Xint -Xshare:off` e `-DforkCount=0` por SIGSEGV intermitente do GraalVM no verificador de classes. O gate completo do backend iniciou, executou 12 testes e abortou com o mesmo SIGSEGV durante outro contexto Surefire; não houve falha de asserção. |
 | Limite | A evidência cobre a fronteira de reinício no serviço publisher e confirma redelivery sem perda; ainda não é uma homologação de processo/worker orquestrado nem resolve os valores de lease/backoff/tentativas/retenção da C45. |
 | Próximo passo | Repetir o gate completo com um JDK/runtime estável e manter C47 pendente até a revisão humana dos parâmetros operacionais da C45. |
+
+## Sessão 2026-09-23 — integração da evidência de recuperação C47
+
+| Campo | Conteúdo |
+|---|---|
+| Resultado | PR #72 (`2d39515`) mergeada em `main`; integra somente a evidência EVT-003 de redelivery após ACK e falha antes de `PUBLISHED`. |
+| Verificação remota | CI da PR #72 `35810757054` passou 7/7; CI pós-merge de `main` `35810929135` também passou 7/7, incluindo backend com PostgreSQL/Kafka reais. |
+| Verificação local | `OutboxPublisherPersistenceIT`: 3/3; Spotless, `docs:check`, `git diff --check` e `aislop` 100/100. O gate local padrão segue sujeito ao SIGSEGV do GraalVM; a variante sem fork não é equivalente por compartilhar estado global entre contextos Spring. |
+| Limite | C47 continua pendente: falta homologação de processo/worker orquestrado e aprovação humana dos valores de lease, backoff, tentativas e retenção da C45. |
+| Próximo passo | Revisar a C45 antes de implementar consumo idempotente, retry, quarentena ou marcar C47 como concluído; PR #23 continua bloqueada pelo conflito TypeScript/Angular. |
