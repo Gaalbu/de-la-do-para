@@ -809,3 +809,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | O teste de integração passou 2/2 após recompilação dos testes, usando PostgreSQL 18.6 e Kafka 4.3.1 via Testcontainers; `spotless:check` e `git diff --check` passaram. |
 | Limite | A evidência valida o wiring e a publicação pelo ciclo agendado do worker, mas não é ainda uma prova de reinício de processo/orquestração. Não altera nem decide lease, backoff, tentativas ou retenção da C45. |
 | Próximo passo | Manter C47 pendente até a prova de processo/restart e a revisão humana da C45; não avançar para C48/C49 nem mergear o PR #23 enquanto o conflito TypeScript/Angular mantiver os checks vermelhos. |
+
+## Sessão 2026-09-23 — métricas operacionais da outbox C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Medir backlog, idade do evento mais antigo e tentativas sem expor payload, PII ou labels de evento. |
+| Mudanças | Adicionadas consultas agregadas no repository, gauges Micrometer sem labels e exposição do endpoint Actuator `metrics` (`dlp.eventing.outbox.*`) no perfil do worker; a métrica de quarentena permanece fora até C49 modelar esse estado. |
+| Verificação | `OutboxOperationalMetricsTest` passou 1/1; `EventingWorkerConfigIT` passou 2/2 com PostgreSQL 18.6/Kafka 4.3.1 reais; `spotless:check` passou. O contexto Spring iniciou os dois endpoints Actuator e o teste confirmou backlog zero após publicação. |
+| Limite | Esta fatia não define lease, backoff, tentativas máximas ou retenção da C45 e não conclui a prova de restart de processo do worker. |
+| Próximo passo | Publicar a instrumentação em PR própria; depois manter C47 pendente até a prova de processo/restart e a revisão humana da C45. |
