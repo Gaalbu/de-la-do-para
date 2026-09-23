@@ -799,3 +799,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação local | `OutboxPublisherPersistenceIT`: 3/3; Spotless, `docs:check`, `git diff --check` e `aislop` 100/100. O gate local padrão segue sujeito ao SIGSEGV do GraalVM; a variante sem fork não é equivalente por compartilhar estado global entre contextos Spring. |
 | Limite | C47 continua pendente: falta homologação de processo/worker orquestrado e aprovação humana dos valores de lease, backoff, tentativas e retenção da C45. |
 | Próximo passo | Revisar a C45 antes de implementar consumo idempotente, retry, quarentena ou marcar C47 como concluído; PR #23 continua bloqueada pelo conflito TypeScript/Angular. |
+
+## Sessão 2026-09-22 — ciclo configurado do worker C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Exercitar o bean do worker separado contra a outbox e o broker reais. |
+| Mudanças | `EventingWorkerConfigIT` agora grava um evento pendente em PostgreSQL, invoca o ciclo configurado do worker e verifica a transição para `PUBLISHED`; a configuração continua exigindo explicitamente o perfil `worker` e seus parâmetros. |
+| Verificação | O teste de integração passou 2/2 após recompilação dos testes, usando PostgreSQL 18.6 e Kafka 4.3.1 via Testcontainers; `spotless:check` e `git diff --check` passaram. |
+| Limite | A evidência valida o wiring e a publicação pelo ciclo agendado do worker, mas não é ainda uma prova de reinício de processo/orquestração. Não altera nem decide lease, backoff, tentativas ou retenção da C45. |
+| Próximo passo | Manter C47 pendente até a prova de processo/restart e a revisão humana da C45; não avançar para C48/C49 nem mergear o PR #23 enquanto o conflito TypeScript/Angular mantiver os checks vermelhos. |
