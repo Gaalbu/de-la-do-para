@@ -7,6 +7,8 @@ import br.com.deladopara.eventing.adapter.persistence.OutboxEventWriter;
 import br.com.deladopara.eventing.domain.OutboxEvent;
 import br.com.deladopara.eventing.domain.OutboxEventStatus;
 import br.com.deladopara.eventing.infrastructure.KafkaOutboxEventBroker;
+import br.com.deladopara.eventing.infrastructure.OutboxEventBroker;
+import br.com.deladopara.eventing.infrastructure.OutboxPublishException;
 import br.com.deladopara.eventing.infrastructure.OutboxPublisherProperties;
 import br.com.deladopara.support.PostgresTestContainer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -74,12 +76,19 @@ class OutboxPublisherPersistenceIT {
 
     @BeforeAll
     static void createTopic() throws Exception {
-        topic = "events-" + UUID.randomUUID().toString().substring(0, 8);
+        topic = createTopicForTest();
+    }
+
+    private static String createTopicForTest() throws Exception {
+        var topicName = "events-" + UUID.randomUUID().toString().substring(0, 8);
         var properties = new Properties();
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers());
         try (var admin = AdminClient.create(properties)) {
-            admin.createTopics(List.of(new NewTopic(topic, 1, (short) 1))).all().get();
+            admin.createTopics(List.of(new NewTopic(topicName, 1, (short) 1)))
+                    .all()
+                    .get();
         }
+        return topicName;
     }
 
     @BeforeEach
@@ -131,7 +140,47 @@ class OutboxPublisherPersistenceIT {
                 .isEqualTo(2);
     }
 
-    private PublishedRecord readOne() {
+    @Test
+    void redeliversAfterWorkerDiesAfterKafkaAckBeforeDatabaseMark() throws Exception {
+        var event = event();
+        var redeliveryTopic = createTopicForTest();
+        transactions.executeWithoutResult(status -> writer.append(event));
+
+        try (var producer = new KafkaProducer<String, String>(producerProperties());
+                var broker = new KafkaOutboxEventBroker(producer, objectMapper, redeliveryTopic)) {
+            var crashedPublisher = new OutboxPublisher(
+                    claimer,
+                    events,
+                    new AckThenCrashBroker(broker),
+                    new OutboxPublisherProperties(Duration.ofSeconds(30), 10),
+                    Clock.fixed(NOW, ZoneOffset.UTC));
+
+            assertThat(crashedPublisher.publishBatch()).isZero();
+            assertThat(events.findById(event.eventId()).orElseThrow().getStatus())
+                    .isEqualTo(OutboxEventStatus.PENDING);
+
+            var restartedPublisher = new OutboxPublisher(
+                    claimer,
+                    events,
+                    broker,
+                    new OutboxPublisherProperties(Duration.ofSeconds(30), 10),
+                    Clock.fixed(NOW.plusSeconds(31), ZoneOffset.UTC));
+
+            assertThat(restartedPublisher.publishBatch()).isEqualTo(1);
+        }
+
+        assertThat(events.findById(event.eventId()).orElseThrow().getStatus()).isEqualTo(OutboxEventStatus.PUBLISHED);
+        assertThat(readAll(redeliveryTopic))
+                .hasSize(2)
+                .allSatisfy(record -> assertThat(record.value().get("eventId").asText())
+                        .isEqualTo(event.eventId().toString()));
+    }
+
+    private List<PublishedRecord> readAll() {
+        return readAll(topic);
+    }
+
+    private List<PublishedRecord> readAll(String topicName) {
         var properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "test-" + UUID.randomUUID());
@@ -139,15 +188,38 @@ class OutboxPublisherPersistenceIT {
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         try (var consumer = new KafkaConsumer<String, String>(properties)) {
-            consumer.assign(List.of(new TopicPartition(topic, 0)));
+            consumer.assign(List.of(new TopicPartition(topicName, 0)));
             var records = consumer.poll(Duration.ofSeconds(10));
-            assertThat(records).hasSize(1);
-            try {
-                var record = records.iterator().next();
-                return new PublishedRecord(record.key(), objectMapper.readTree(record.value()));
-            } catch (Exception exception) {
-                throw new AssertionError(exception);
-            }
+            return records.records(new TopicPartition(topicName, 0)).stream()
+                    .map(record -> {
+                        try {
+                            return new PublishedRecord(record.key(), objectMapper.readTree(record.value()));
+                        } catch (Exception exception) {
+                            throw new AssertionError(exception);
+                        }
+                    })
+                    .toList();
+        }
+    }
+
+    private PublishedRecord readOne() {
+        var records = readAll();
+        assertThat(records).hasSize(1);
+        return records.getFirst();
+    }
+
+    private static final class AckThenCrashBroker implements OutboxEventBroker {
+
+        private final OutboxEventBroker delegate;
+
+        private AckThenCrashBroker(OutboxEventBroker delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void publish(OutboxEvent event) {
+            delegate.publish(event);
+            throw new OutboxPublishException("worker stopped after Kafka acknowledgement", new RuntimeException());
         }
     }
 
