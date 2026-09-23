@@ -779,3 +779,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | Local: backend com 90 testes unitários + 40 de integração, Spotless, Checkstyle e `aislop` 100/100. Remoto no PR #71: backend, frontend, contracts, docs, security, commit-policy e quality-gate passaram; `mergeStateStatus=CLEAN`. |
 | Impedimento | PR #23 permanece aberto e não mergeado: `npm ci` falha porque `@angular/build@22.1.8` exige `typescript >=6.0 <6.1`, enquanto o PR instala TypeScript 7.0.2. Comentário técnico publicado; não usar `--force`/`--legacy-peer-deps`. |
 | Próximo passo | Manter o #23 aguardando compatibilidade oficial; retomar C47 com testes de queda/reinício e revisão humana dos valores de C45 antes de novos merges. |
+
+## Sessão 2026-09-22 — evidência de recuperação do publisher C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Exercitar o ponto de falha depois do ACK Kafka e antes do registro local `PUBLISHED`. |
+| Mudanças | Adicionado teste de integração com tópico Kafka isolado: um publisher publica e falha após o ACK; uma nova instância reivindica após o lease e redelivera o mesmo evento, que então é marcado como `PUBLISHED`. |
+| Verificação | `OutboxPublisherPersistenceIT`: 3 testes, 0 falhas, com Kafka `apache/kafka:4.3.1` e PostgreSQL `18.6` reais via Testcontainers. Spotless passou. A execução precisou de `-Xint -Xshare:off` e `-DforkCount=0` por SIGSEGV intermitente do GraalVM no verificador de classes. O gate completo do backend iniciou, executou 12 testes e abortou com o mesmo SIGSEGV durante outro contexto Surefire; não houve falha de asserção. |
+| Limite | A evidência cobre a fronteira de reinício no serviço publisher e confirma redelivery sem perda; ainda não é uma homologação de processo/worker orquestrado nem resolve os valores de lease/backoff/tentativas/retenção da C45. |
+| Próximo passo | Repetir o gate completo com um JDK/runtime estável e manter C47 pendente até a revisão humana dos parâmetros operacionais da C45. |
