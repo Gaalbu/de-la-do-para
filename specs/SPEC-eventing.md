@@ -154,4 +154,3 @@ segredo, token ou payload pessoal desnecessário.
 - Revisão humana desta spec e do ADR-0002 antes de C46.
 - C46–C49 acrescentarão testes de integração PostgreSQL/Kafka para EVT-001 a
   EVT-009; esta spec não usa mocks como evidência de entrega real.
-

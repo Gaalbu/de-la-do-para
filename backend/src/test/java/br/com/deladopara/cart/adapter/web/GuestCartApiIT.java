@@ -14,6 +14,7 @@ import br.com.deladopara.catalog.domain.Producer;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
 import br.com.deladopara.support.PostgresTestContainer;
+import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,8 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -80,23 +81,29 @@ class GuestCartApiIT {
 
     @Test
     void preservesGuestSessionAndRejectsStaleMutation() throws Exception {
-        var session = new MockHttpSession();
-        mvc.perform(get("/api/v1/cart").session(session))
+        var initial = mvc.perform(get("/api/v1/cart"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.version").value(0))
-                .andExpect(jsonPath("$.items").isEmpty());
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andReturn();
+        Cookie sessionCookie = initial.getResponse().getCookie("DLSESSION");
 
-        mvc.perform(put("/api/v1/cart/items")
-                        .session(session)
+        MvcResult replaced = mvc.perform(put("/api/v1/cart/items")
+                        .cookie(sessionCookie)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"expectedVersion\":0,\"items\":[{\"skuId\":\"" + skuId + "\",\"quantity\":2}]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.version").value(1))
-                .andExpect(jsonPath("$.items[0].quantity").value(2));
+                .andExpect(jsonPath("$.items[0].quantity").value(2))
+                .andReturn();
+        var replacementCookie = replaced.getResponse().getCookie("DLSESSION");
+        if (replacementCookie != null) {
+            sessionCookie = replacementCookie;
+        }
 
         mvc.perform(put("/api/v1/cart/items")
-                        .session(session)
+                        .cookie(sessionCookie)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"expectedVersion\":0,\"items\":[]}"))
@@ -104,7 +111,7 @@ class GuestCartApiIT {
                 .andExpect(jsonPath("$.codigo").value("CART_002"));
 
         mvc.perform(delete("/api/v1/cart/items/" + skuId)
-                        .session(session)
+                        .cookie(sessionCookie)
                         .with(csrf())
                         .param("expectedVersion", "1"))
                 .andExpect(status().isOk())

@@ -2,7 +2,9 @@ package br.com.deladopara.identity.application;
 
 import br.com.deladopara.identity.adapter.persistence.AccountRepository;
 import br.com.deladopara.identity.domain.Account;
+import java.security.SecureRandom;
 import java.time.Clock;
+import java.util.HexFormat;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +21,10 @@ public class AdminSeeder {
     @Bean
     ApplicationRunner seedAdmin(AccountRepository accounts, PasswordEncoder encoder, Clock clock) {
         return args -> {
-            var existingAdmin = accounts.findByEmailIgnoreCase("admin@deladopara.local");
-            if (existingAdmin.isPresent()) {
+            if (accounts.existsByRole(Account.Role.ADMIN)) {
                 return;
             }
-            var hasAnyAdmin = accounts.findAll().stream().anyMatch(a -> a.getRole() == Account.Role.ADMIN);
-            if (hasAnyAdmin) {
-                return;
-            }
-            var password = UUID.randomUUID().toString().substring(0, 12) + "A1!";
+            var password = randomPassword();
             var admin = new Account(
                     UUID.randomUUID(),
                     "admin@deladopara.local",
@@ -37,5 +34,11 @@ public class AdminSeeder {
             accounts.save(admin);
             LOG.info("Admin inicial criado: admin@deladopara.local / senha: {}", password);
         };
+    }
+
+    private static String randomPassword() {
+        var bytes = new byte[18];
+        new SecureRandom().nextBytes(bytes);
+        return HexFormat.of().formatHex(bytes);
     }
 }

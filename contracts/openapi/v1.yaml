@@ -591,34 +591,6 @@ paths:
           description: Produtor não disponível
           content:
             application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
-  /api/v1/accounts/verify:
-    post:
-      operationId: verifyEmail
-      summary: Verificar e-mail (placeholder C15 — verifica via token)
-      security: []
-      responses:
-        '200':
-          description: Verificado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccountResponse'
-  /api/v1/accounts/recovery:
-    post:
-      operationId: requestRecovery
-      summary: Solicitar recuperação (sempre 202)
-      security: []
-      responses:
-        '202':
-          description: Solicitação aceita
-  /api/v1/accounts/reset:
-    post:
-      operationId: resetPassword
-      summary: Redefinir senha
-      security: []
-      responses:
-        '200':
-          description: Senha redefinida
   /api/v1/admin/inventory/skus/{skuId}/lots:
     get:
       operationId: listInventoryLots
@@ -894,8 +866,8 @@ components:
       in: cookie
       name: DLSESSION
       description: >
-        Sessão Spring Security persistida no PostgreSQL (D64). Nome do
-        cookie provisório; definitivo em SPEC-identity (C14).
+        Sessão Spring Security persistida no PostgreSQL (D64), cookie
+        HttpOnly, Secure e SameSite=Lax.
   schemas:
     Health:
       type: object

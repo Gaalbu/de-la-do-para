@@ -25,10 +25,8 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
   session:
-    store-type: jdbc
     jdbc:
       initialize-schema: never
-      table-name: SPRING_SESSION
     timeout: 30m
     cookie:
       name: DLSESSION
@@ -49,19 +47,6 @@ app:
     directory: ${APP_MEDIA_DIRECTORY:./data/media}
   identity:
     bcrypt-strength: 12
-    verification-token-ttl: 30m
-    recovery-token-ttl: 15m
-    session:
-      idle-timeout: 30m
-      absolute-timeout: 12h
-    mail-from: no-reply@deladopara.local
-    mail-base-url: ${APP_BASE_URL:http://localhost:8080}
-  base-url: ${APP_BASE_URL:http://localhost:8080}
-
-logging:
-  structured:
-    format:
-      console: logstash
 
 management:
   endpoints:

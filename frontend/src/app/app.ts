@@ -1,6 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { PLATFORM_ID } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { IdentityService } from './features/identity/services/identity.service';
 import { CartService } from './features/cart/cart.service';

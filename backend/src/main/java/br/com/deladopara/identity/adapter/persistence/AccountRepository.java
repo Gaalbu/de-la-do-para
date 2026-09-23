@@ -10,4 +10,6 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     Optional<Account> findByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    boolean existsByRole(Account.Role role);
 }

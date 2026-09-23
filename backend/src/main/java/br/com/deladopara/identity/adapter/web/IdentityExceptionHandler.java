@@ -1,9 +1,11 @@
 package br.com.deladopara.identity.adapter.web;
 
+import br.com.deladopara.identity.application.AccountService;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,23 +13,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class IdentityExceptionHandler {
 
-    @ExceptionHandler(AccountController.DuplicateEmailProblem.class)
-    ResponseEntity<Problem> duplicate(AccountController.DuplicateEmailProblem ex) {
+    @ExceptionHandler(AccountService.DuplicateEmailException.class)
+    ResponseEntity<Problem> duplicate() {
         return problem(HttpStatus.CONFLICT, "IDENTITY_002", "e-mail já cadastrado");
     }
 
-    @ExceptionHandler(AccountController.InvalidInputProblem.class)
-    ResponseEntity<Problem> invalid(AccountController.InvalidInputProblem ex) {
+    @ExceptionHandler(AccountService.InvalidInputException.class)
+    ResponseEntity<Problem> invalid(AccountService.InvalidInputException ex) {
         return problem(HttpStatus.BAD_REQUEST, ex.getCodigo(), ex.getMessage());
     }
 
-    @ExceptionHandler(SessionController.BadCredentialsProblem.class)
-    ResponseEntity<Problem> badCreds(SessionController.BadCredentialsProblem ex) {
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Problem> badCredentials() {
         return problem(HttpStatus.UNAUTHORIZED, "IDENTITY_005", "credenciais inválidas");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    ResponseEntity<Problem> validation(MethodArgumentNotValidException ex) {
+    ResponseEntity<Problem> validation() {
         return problem(HttpStatus.BAD_REQUEST, "IDENTITY_001", "dados inválidos");
     }
 
