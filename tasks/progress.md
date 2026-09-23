@@ -769,3 +769,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `OutboxPublisherTest`, `KafkaOutboxEventBrokerTest` e `OutboxPublisherPersistenceIT` passaram; o teste real publicou/consumiu Kafka 4.3.1 e confirmou `PUBLISHED`; backend completo passou com 90 testes unitários e 27 de integração, Spotless e Checkstyle. |
 | Remoto | PR #68 merged em `b07ffbc`; CI `35786482536` passou integralmente. A fatia não declara C47 concluída porque reinício/queda e parâmetros operacionais continuam pendentes. |
 | Próximo passo | Revisar queda/reinício do worker e os valores operacionais da C45 antes de ampliar para retry/quarentena ou marcar C47 como concluída. |
+
+## Sessão 2026-09-22 — auditoria de PRs abertos e integração da correção de identidade
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Avaliar todos os PRs abertos e integrar somente os que não apresentassem impedimentos verificáveis. |
+| Resultado | PR #71, substituto atualizado do #29, mergeado em `main` (`c6c9b2b`) após atualização contra `origin/main`; o #29 ficou registrado como merged no mesmo histórico (`cb608f4`). A correção inclui persistência JDBC de sessão, `DLSESSION` explícito, testes reais de cookie/CSRF/rotação/logout e concorrência de cadastro. |
+| Verificação | Local: backend com 90 testes unitários + 40 de integração, Spotless, Checkstyle e `aislop` 100/100. Remoto no PR #71: backend, frontend, contracts, docs, security, commit-policy e quality-gate passaram; `mergeStateStatus=CLEAN`. |
+| Impedimento | PR #23 permanece aberto e não mergeado: `npm ci` falha porque `@angular/build@22.1.8` exige `typescript >=6.0 <6.1`, enquanto o PR instala TypeScript 7.0.2. Comentário técnico publicado; não usar `--force`/`--legacy-peer-deps`. |
+| Próximo passo | Manter o #23 aguardando compatibilidade oficial; retomar C47 com testes de queda/reinício e revisão humana dos valores de C45 antes de novos merges. |
