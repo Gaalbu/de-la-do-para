@@ -839,7 +839,7 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Mudanças | Adicionado `EventingWorkerProcessRestartIT`: PostgreSQL e Kafka reais via Testcontainers, worker empacotado em processo JVM separado, falha de broker após claim, encerramento do primeiro processo, expiração da lease e publicação por um segundo processo. O teste usa valores curtos somente no cenário de teste; os parâmetros de produto da C45 não foram alterados. |
 | Verificação | O teste passou após ambos os processos usarem o mesmo PostgreSQL gerenciado por `@ServiceConnection`; confirmou migração v24 já existente, claim do primeiro processo e `PUBLISHED` pelo segundo. Também passaram `HealthEndpointTest` + `OutboxOperationalMetricsTest`, Spotless, Checkstyle, `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados). O CI remoto `36034954871` passou 7/7, incluindo backend real PostgreSQL/Kafka, frontend, contratos, docs, segurança, política de commits e quality-gate. |
 | Limite | A prova de processo agora existe, mas C47 continua pendente até a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
-| Remoto | PR #75 está aberta, `MERGEABLE`, `CLEAN` e sem revisão humana registrada; commit `f363922` publicado. Nenhum merge automático. |
+| Remoto | A implementação de recuperação foi integrada posteriormente nos PRs #75/#77 e a linha de base atual é `main`; esta evidência é histórica, não uma indicação de PR ainda aberto. |
 | Próximo passo | Obter a revisão humana da C45 e a decisão dos valores de lease, backoff, tentativas e retenção antes de marcar C47 concluída ou iniciar C48/C49. |
 
 ## Sessão 2026-09-24 — hardening dos logs de teste e reconciliação C47
@@ -849,7 +849,7 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | Remover credenciais de teste dos relatórios e reconciliar estado remoto dos PRs e evidência C47. |
 | Mudanças | O teste `EventingWorkerProcessRestartIT` desliga o log do `AdminSeeder` no contexto de teste e descarta stdout/stderr dos processos filhos; comportamento local de bootstrap permanece inalterado. O estado C47 no plano mestre agora inclui restart de processo, ciclo do worker, redelivery e métricas já integrados pelos PRs #68/#72/#74/#75; dependência restante é somente decisão humana dos parâmetros C45. |
 | Verificação | Teste direcionado passou 1/1; relatório Surefire sem mensagem do seeder/senha; `spotless:check` e `git diff --check` passaram. PR #76 CI `36041444700` passou backend, frontend, contracts, docs, security, commit-policy e quality-gate (7/7). |
-| Remoto | PR #23 foi fechada em 2026-09-24 com comentário sobre incompatibilidade Angular Build/TypeScript 7. PR #76 (`test/security`), commit `758c51b`, está aberta e CI verde; sem merge automático. |
+| Remoto | PR #23 foi fechada em 2026-09-24 com comentário sobre incompatibilidade Angular Build/TypeScript 7. A PR #76 foi supersedida pela correção na origem da senha, integrada no PR #78; não permanece aberta. |
 | Limite | Nenhum PR impedido aberto identificado. C48/C49 continuam aguardando revisão humana da C45. Artefatos locais não rastreados preexistentes foram preservados. |
 | Próximo passo | Revisão humana da C45; após isso, reavaliar conclusão de C47 e liberar C48/C49 conforme parâmetros aprovados. |
 
@@ -861,5 +861,16 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Mudanças | `AdminSeeder` agora registra somente que a conta inicial foi criada. `AdminSeederTest` captura o logger e verifica que a senha não aparece; o próprio diagnóstico do teste mascara valores se a regressão voltar. A supressão específica no teste de restart permanece como defesa adicional. |
 | Verificação | O teste novo reproduziu o vazamento antes da correção e passou depois; 92 testes unitários e 43 de integração passaram em execução local Temurin 25.0.4 com `-Xint`. Após formatar com Spotless, passaram o teste focado, Spotless, Checkstyle (0 violações), `git diff --check` e aislop 100/100. Os relatórios Surefire/Failsafe finais não contêm o padrão de senha. O primeiro `clean verify` local terminou somente por formatação; a JVM teve SIGSEGV intermitente sem `-Xint`. |
 | Remoto | PR #78 (`bfea389`) aberta e mergeável; CI `36044874971` passou 7/7: backend, frontend, contratos, docs, segurança, política de commits e quality-gate. Sem merge automático. |
-| Limite | C47/C48/C49 seguem aguardando a revisão humana e aprovação dos parâmetros operacionais da C45. Os arquivos locais `.angular/`, crash logs anteriores e novos relatórios de crash produzidos pela instabilidade da JVM foram preservados sem inclusão no commit. |
-| Próximo passo | Aguardar revisão/decisão humana da C45; revisar e integrar o PR #78 conforme política do repositório, sem merge automático. |
+| Limite | Os parâmetros C45 foram aprovados em 2026-09-24 e registrados na SPEC/ADR; C47/C48/C49 ainda precisam implementar/verificar os comportamentos correspondentes. Os arquivos locais `.angular/`, crash logs anteriores e novos relatórios de crash produzidos pela instabilidade da JVM foram preservados sem inclusão no commit. |
+| Próximo passo | Aguardar revisão/decisão humana dos parâmetros da C45; não iniciar C48/C49 até aprovação. |
+
+## Sessão 2026-09-24 — integração de segurança e reconciliação da C45
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Revisar os PRs abertos sem detratores, eliminar vazamento de credencial de teste e reconciliar a rastreabilidade de C45/C47. |
+| Mudanças | PR #78 removeu a senha de bootstrap dos logs na origem. PR #79 atualizou `docs/traceability.md` para refletir que a especificação C45 foi publicada no PR #65 e que ainda depende de aprovação humana dos parâmetros operacionais e da homologação real do provedor C04. |
+| Verificação | CI do PR #79 `36045833998` passou 7/7. CI pós-merge #78 `36045610490` passou 7/7. CI pós-merge de #79 `36046158220` concluiu com sucesso. |
+| Remoto | PRs #78 (`584b0e4`) e #79 (`763dbaa`) mescladas em `main`. PR #23 fechada com comentário explicativo. Consulta ao GitHub confirmou zero PRs abertas. |
+| Limite | O CI pós-merge da PR #79 e o CI da PR #80 foram verificados. Decisões C45 aprovadas e registradas: lease 60 s, backoff 1 s/×2/1 min/full jitter, 8 tentativas transitórias/1 inválida, 30 dias para outbox publicada e identidades financeiras até política formal de descarte. A implementação não é declarada concluída por esta aprovação. Arquivos locais não rastreados `.angular/` e crash logs foram preservados. |
+| Próximo passo | Aplicar os valores aprovados nas fatias C47/C49 com testes; avançar C48 segundo o plano, mantendo ausência de suporte do worker (renovação/retry/quarentena/limpeza) explicitamente pendente. |
