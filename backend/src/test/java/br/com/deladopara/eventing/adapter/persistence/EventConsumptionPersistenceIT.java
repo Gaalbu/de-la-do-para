@@ -1,9 +1,12 @@
 package br.com.deladopara.eventing.adapter.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import br.com.deladopara.eventing.application.EventEnvelope;
+import br.com.deladopara.eventing.domain.EventConsumptionResult;
 import br.com.deladopara.support.PostgresTestContainer;
-import java.sql.Timestamp;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -17,37 +20,41 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Import(PostgresTestContainer.class)
 class EventConsumptionPersistenceIT {
 
-    private final JdbcTemplate jdbc;
+    private static final Instant RECEIVED_AT = Instant.parse("2026-09-24T12:00:00Z");
+
+    private final EventConsumptionRepository consumptions;
     private final TransactionTemplate transactions;
+    private final ObjectMapper objectMapper;
+    private final JdbcTemplate jdbc;
 
     @Autowired
-    EventConsumptionPersistenceIT(JdbcTemplate jdbc, TransactionTemplate transactions) {
-        this.jdbc = jdbc;
+    EventConsumptionPersistenceIT(
+            EventConsumptionRepository consumptions,
+            TransactionTemplate transactions,
+            ObjectMapper objectMapper,
+            JdbcTemplate jdbc) {
+        this.consumptions = consumptions;
         this.transactions = transactions;
+        this.objectMapper = objectMapper;
+        this.jdbc = jdbc;
     }
 
     @Test
     void storesOneConsumptionReceiptPerEventAndHandler() {
         var eventId = UUID.randomUUID();
         var handlerName = "test-order-handler";
-        var inserted = transactions.execute(status -> insertReceipt(eventId, handlerName));
-        var duplicate = transactions.execute(status -> insertReceipt(eventId, handlerName));
+        var event = event(eventId);
+        var inserted = transactions.execute(status -> consumptions.insertPending(handlerName, event, RECEIVED_AT));
+        var duplicate = transactions.execute(status -> consumptions.insertPending(handlerName, event, RECEIVED_AT));
 
-        assertThat(inserted).isEqualTo(1);
-        assertThat(duplicate).isZero();
-        assertThat(receiptCount(eventId, handlerName)).isEqualTo(1);
-        assertThat(jdbc.queryForObject(
-                        "SELECT processing_result FROM event_consumption WHERE event_id = ? AND handler_name = ?",
-                        String.class,
-                        eventId,
-                        handlerName))
-                .isEqualTo("PENDING_ORDER");
-        assertThat(jdbc.queryForObject(
-                        "SELECT payload ->> 'orderId' FROM event_consumption WHERE event_id = ? AND handler_name = ?",
-                        String.class,
-                        eventId,
-                        handlerName))
-                .isEqualTo("order-1");
+        assertThat(inserted).isTrue();
+        assertThat(duplicate).isFalse();
+        assertThat(consumptions.find(handlerName, eventId)).get().satisfies(receipt -> {
+            assertThat(receipt.result()).isEqualTo(EventConsumptionResult.PENDING_ORDER);
+            assertThat(receipt.envelope().payload().get("orderId").asText()).isEqualTo("order-1");
+            assertThat(receipt.receivedAt()).isEqualTo(RECEIVED_AT);
+            assertThat(receipt.envelope().causationId()).isEqualTo(eventId);
+        });
     }
 
     @Test
@@ -55,13 +62,12 @@ class EventConsumptionPersistenceIT {
         var eventId = UUID.randomUUID();
 
         transactions.executeWithoutResult(status -> {
-            insertReceipt(eventId, "billing-handler");
-            insertReceipt(eventId, "analytics-handler");
+            consumptions.insertPending("billing-handler", event(eventId), RECEIVED_AT);
+            consumptions.insertPending("analytics-handler", event(eventId), RECEIVED_AT);
         });
 
-        assertThat(jdbc.queryForObject(
-                        "SELECT COUNT(*) FROM event_consumption WHERE event_id = ?", Integer.class, eventId))
-                .isEqualTo(2);
+        assertThat(consumptions.find("billing-handler", eventId)).isPresent();
+        assertThat(consumptions.find("analytics-handler", eventId)).isPresent();
     }
 
     @Test
@@ -69,18 +75,11 @@ class EventConsumptionPersistenceIT {
         var handlerName = "test-order-handler";
         var aggregateId = "order-1";
 
-        var inserted = transactions.execute(status -> insertCursor(handlerName, aggregateId));
-        var duplicate = transactions.execute(status -> insertCursor(handlerName, aggregateId));
+        var firstVersion = transactions.execute(status -> consumptions.lockCursor(handlerName, aggregateId));
+        var secondVersion = transactions.execute(status -> consumptions.lockCursor(handlerName, aggregateId));
 
-        assertThat(inserted).isEqualTo(1);
-        assertThat(duplicate).isZero();
-        assertThat(jdbc.queryForObject(
-                        "SELECT last_aggregate_version FROM event_consumer_cursor "
-                                + "WHERE handler_name = ? AND aggregate_id = ?",
-                        Long.class,
-                        handlerName,
-                        aggregateId))
-                .isEqualTo(-1L);
+        assertThat(firstVersion).isEqualTo(-1L);
+        assertThat(secondVersion).isEqualTo(-1L);
     }
 
     @Test
@@ -88,43 +87,69 @@ class EventConsumptionPersistenceIT {
         var eventId = UUID.randomUUID();
 
         transactions.executeWithoutResult(status -> {
-            insertReceipt(eventId, "test-order-handler");
+            consumptions.insertPending("test-order-handler", event(eventId), RECEIVED_AT);
             status.setRollbackOnly();
         });
 
-        assertThat(receiptCount(eventId, "test-order-handler")).isZero();
+        assertThat(consumptions.find("test-order-handler", eventId)).isEmpty();
     }
 
-    private int insertReceipt(UUID eventId, String handlerName) {
-        return jdbc.update(
-                """
-                INSERT INTO event_consumption
-                    (event_id, handler_name, event_type, schema_version, aggregate_id,
-                     aggregate_version, occurred_at, correlation_id, payload, processing_result, received_at)
-                VALUES (?, ?, 'order.created', 1, 'order-1', 0, ?, ?, '{\"orderId\":\"order-1\"}'::jsonb,
-                        'PENDING_ORDER', ?)
-                ON CONFLICT (event_id, handler_name) DO NOTHING
-                """,
-                eventId,
-                handlerName,
-                Timestamp.from(Instant.parse("2026-09-24T11:59:00Z")),
-                eventId,
-                Timestamp.from(Instant.parse("2026-09-24T12:00:00Z")));
+    @Test
+    void serializesDifferentEventsForOneAggregateCursor() {
+        var handlerName = "cursor-concurrency-" + UUID.randomUUID();
+        var aggregateId = "order-" + UUID.randomUUID();
+
+        var first = transactions.execute(status -> consumptions.lockCursor(handlerName, aggregateId));
+        transactions.executeWithoutResult(
+                status -> consumptions.advanceCursor(handlerName, aggregateId, first, 0, RECEIVED_AT));
+        var next = transactions.execute(status -> consumptions.lockCursor(handlerName, aggregateId));
+
+        assertThat(first).isEqualTo(-1L);
+        assertThat(next).isZero();
     }
 
-    private Integer receiptCount(UUID eventId, String handlerName) {
-        return jdbc.queryForObject(
-                "SELECT COUNT(*) FROM event_consumption WHERE event_id = ? AND handler_name = ?",
-                Integer.class,
-                eventId,
-                handlerName);
+    @Test
+    void rejectsTwoPendingReceiptsForTheSameAggregateVersion() {
+        var handlerName = "unique-version-" + UUID.randomUUID();
+        var aggregateId = "order-" + UUID.randomUUID();
+        var first = event(UUID.randomUUID(), aggregateId, 0);
+        var second = event(UUID.randomUUID(), aggregateId, 0);
+
+        transactions.executeWithoutResult(status -> consumptions.insertPending(handlerName, first, RECEIVED_AT));
+        assertThatThrownBy(() -> transactions.executeWithoutResult(
+                        status -> consumptions.insertPending(handlerName, second, RECEIVED_AT)))
+                .hasMessageContaining("event_consumption_pending_version_key");
     }
 
-    private int insertCursor(String handlerName, String aggregateId) {
-        return jdbc.update("""
-                INSERT INTO event_consumer_cursor (handler_name, aggregate_id)
-                VALUES (?, ?)
-                ON CONFLICT (handler_name, aggregate_id) DO NOTHING
-                """, handlerName, aggregateId);
+    @Test
+    void pendingVersionLookupReturnsTheReceiptToApplyNext() {
+        var handlerName = "pending-lookup-" + UUID.randomUUID();
+        var aggregateId = "order-" + UUID.randomUUID();
+        var event = event(UUID.randomUUID(), aggregateId, 0);
+        transactions.executeWithoutResult(status -> consumptions.insertPending(handlerName, event, RECEIVED_AT));
+
+        var pending = transactions.execute(status -> consumptions.findPendingVersion(handlerName, aggregateId, 0));
+
+        assertThat(pending)
+                .get()
+                .extracting(receipt -> receipt.envelope().eventId())
+                .isEqualTo(event.eventId());
+    }
+
+    private EventEnvelope event(UUID eventId) {
+        return event(eventId, "order-1", 0);
+    }
+
+    private EventEnvelope event(UUID eventId, String aggregateId, long aggregateVersion) {
+        return new EventEnvelope(
+                eventId,
+                "order.created",
+                1,
+                aggregateId,
+                aggregateVersion,
+                "2026-09-24T11:59:00Z",
+                eventId,
+                eventId,
+                objectMapper.createObjectNode().put("orderId", "order-1"));
     }
 }

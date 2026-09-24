@@ -862,7 +862,7 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | O teste novo reproduziu o vazamento antes da correção e passou depois; 92 testes unitários e 43 de integração passaram em execução local Temurin 25.0.4 com `-Xint`. Após formatar com Spotless, passaram o teste focado, Spotless, Checkstyle (0 violações), `git diff --check` e aislop 100/100. Os relatórios Surefire/Failsafe finais não contêm o padrão de senha. O primeiro `clean verify` local terminou somente por formatação; a JVM teve SIGSEGV intermitente sem `-Xint`. |
 | Remoto | PR #78 (`bfea389`) aberta e mergeável; CI `36044874971` passou 7/7: backend, frontend, contratos, docs, segurança, política de commits e quality-gate. Sem merge automático. |
 | Limite | Os parâmetros C45 foram aprovados em 2026-09-24 e registrados na SPEC/ADR; C47/C48/C49 ainda precisam implementar/verificar os comportamentos correspondentes. Os arquivos locais `.angular/`, crash logs anteriores e novos relatórios de crash produzidos pela instabilidade da JVM foram preservados sem inclusão no commit. |
-| Próximo passo | Aguardar revisão/decisão humana dos parâmetros da C45; não iniciar C48/C49 até aprovação. |
+| Próximo passo | Reavaliar C47 após os parâmetros C45 serem aprovados em 2026-09-24; manter C48/C49 bloqueadas até essa decisão. |
 
 ## Sessão 2026-09-24 — integração de segurança e reconciliação da C45
 
@@ -874,3 +874,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PRs #78 (`584b0e4`) e #79 (`763dbaa`) mescladas em `main`. PR #23 fechada com comentário explicativo. Consulta ao GitHub confirmou zero PRs abertas. |
 | Limite | O CI pós-merge da PR #79 e o CI da PR #80 foram verificados. Decisões C45 aprovadas e registradas: lease 60 s, backoff 1 s/×2/1 min/full jitter, 8 tentativas transitórias/1 inválida, 30 dias para outbox publicada e identidades financeiras até política formal de descarte. A implementação não é declarada concluída por esta aprovação. Arquivos locais não rastreados `.angular/` e crash logs foram preservados. |
 | Próximo passo | Aplicar os valores aprovados nas fatias C47/C49 com testes; avançar C48 segundo o plano, mantendo ausência de suporte do worker (renovação/retry/quarentena/limpeza) explicitamente pendente. |
+
+## Sessão 2026-09-24 — C48: ledger e consumo transacional (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Implementar o ledger idempotente C48, handler transacional, validação estrita do envelope e adapter Kafka com commit posterior ao commit PostgreSQL. |
+| Mudanças | Criados `EventConsumptionRepository`, registro/resultado, cursor por handler+agregado, serviço/contrato de handler, validação Draft 2020-12 do schema versionado e adapter Kafka manual com auto-commit desligado; migration V25 preserva `causation_id` e impede múltiplas versões pendentes concorrentes. Consumidor fica opt-in no perfil `worker`; desabilitado por padrão. |
+| Verificação | Suíte focada 23/23: persistência PostgreSQL 7, serviço PostgreSQL 6, validador de envelope 3, adapter Kafka 2 e worker 5. Kafka/PostgreSQL reais cobrem reinício/redelivery, rebalanceamento de grupo, efeito + recibo transacionais, offset só após o commit local, deduplicação no replay e schema incompatível sem commit. Tópicos inbound/outbound separados; consumer explícito e desligado por padrão. |
+| Limite | C48 está verificada localmente, ainda sem commit/push nesta sessão. Não há handler comercial habilitado. Falhas de processamento pausam a partição sem commit até C49 fornecer retry/quarentena; C47 continua incompleta por renovação de lease e recuperação operacional. C04 segue dependente de homologação real dos provedores. |
+| Próximo passo | Rodar `verify`, `git diff --check` e aislop; registrar a fatia em commit local. Depois avançar C49 usando os valores aprovados: lease 60 s; backoff 1 s/×2/1 min/full jitter; 8 tentativas transitórias/1 inválida; outbox publicada 30 dias; identidades financeiras sem expiração até política formal. |

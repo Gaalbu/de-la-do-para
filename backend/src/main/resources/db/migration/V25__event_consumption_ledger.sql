@@ -8,6 +8,7 @@ CREATE TABLE event_consumption
     aggregate_version  BIGINT       NOT NULL,
     occurred_at        TIMESTAMPTZ  NOT NULL,
     correlation_id     UUID         NOT NULL,
+    causation_id       UUID         NOT NULL,
     payload            JSONB        NOT NULL,
     processing_result  VARCHAR(24)  NOT NULL DEFAULT 'PENDING_ORDER',
     received_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,7 +26,7 @@ CREATE TABLE event_consumption
     CONSTRAINT event_consumption_aggregate_id_nonblank CHECK (btrim(aggregate_id) <> '')
 );
 
-CREATE INDEX event_consumption_pending_order_idx
+CREATE UNIQUE INDEX event_consumption_pending_version_key
     ON event_consumption (handler_name, aggregate_id, aggregate_version)
     WHERE processing_result = 'PENDING_ORDER';
 
