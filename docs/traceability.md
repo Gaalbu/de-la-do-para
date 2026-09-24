@@ -44,6 +44,7 @@ ou payloads pessoais.
 | C31 — reserva atômica de cupom | `SPEC-pricing` §§4–5, migration V27, `CouponReservationService` | `CouponReservationServiceIT` (PostgreSQL real, corrida de 12 threads, chave idempotente, transições) | verificado localmente; sem PR | limite global e por e-mail respeitados sob concorrência; regra de reembolso (global permanece gasto) é a recomendação ainda não aprovada da spec |
 | C32 — gestão administrativa de cupons | `contracts/openapi/v1.yaml` (`/admin/coupons`), `CouponAdminService` | `CouponAdminApiIT` (autorização, CSRF, validação, histórico, limite abaixo do uso), `RouteContractCoverageTest`, `contracts:check` | verificado localmente; sem PR | cupom nunca removido; consultas não alteram uso |
 | C50 — spec de pedidos | `specs/SPEC-orders.md` | `docs:check`; revisão humana; testes ORD-001…007 previstos para C51/C52 | proposta; sem PR de merge | snapshot por valor, histórico append-only, transições D11–D13/D29–D31/D66/D68, visibilidade e eventos definidos; ORD-Q01/Q02 abertas |
+| C51 — persistência de pedidos | `SPEC-orders` §§7.1–7.3, migration V28, `OrderService`, `OrderTransitions` | `OrderLifecycleTest` (6), `OrderLifecycleIT` (7, PostgreSQL real: idempotência, imutabilidade por trigger, totais, sequência contígua, evento por passo, transição inválida sem efeitos) | verificado localmente; sem PR de merge | snapshot por valor; sem consulta/API (C52) |
 
 Evidências por release vivem em `docs/evidence/<marco-ou-release>/`
 (criado quando houver a primeira entrega executável).

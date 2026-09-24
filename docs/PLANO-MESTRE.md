@@ -1643,6 +1643,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C30, C46, C50. **Alvos:** agregado/repository/migration/histórico/testes; M.
 - **Aceite:** itens/preços/endereço preservados; transições inválidas rejeitadas; mudança comercial grava evento na outbox.
 - **Verificar:** BI(OrderLifecycle), catálogo alterado após snapshot e rollback de transição.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c51-order-persistence`, empilhada na C50): migration V28 (`purchase_order`, itens, história) com triggers de imutabilidade, `OrderTransitions` (tabela da SPEC-orders §7.2 com ator/modalidade/motivo), `OrderService` (criação idempotente por chave de checkout; transição atômica com história e evento de outbox). Sem API de consulta (C52) e sem integração ao checkout (C58a). A SPEC-orders ainda aguarda revisão.
 
 ### C52 — `feat(orders): authorize customer and guest order queries`
 
