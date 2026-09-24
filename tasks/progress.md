@@ -852,3 +852,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PR #23 foi fechada em 2026-09-24 com comentário sobre incompatibilidade Angular Build/TypeScript 7. PR #76 (`test/security`), commit `758c51b`, está aberta e CI verde; sem merge automático. |
 | Limite | Nenhum PR impedido aberto identificado. C48/C49 continuam aguardando revisão humana da C45. Artefatos locais não rastreados preexistentes foram preservados. |
 | Próximo passo | Revisão humana da C45; após isso, reavaliar conclusão de C47 e liberar C48/C49 conforme parâmetros aprovados. |
+
+## Sessão 2026-09-24 — remover senha do log de bootstrap
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Corrigir na origem a exposição da senha aleatória de administrador em logs e relatórios de teste. |
+| Mudanças | `AdminSeeder` agora registra somente que a conta inicial foi criada. `AdminSeederTest` captura o logger e verifica que a senha não aparece; o próprio diagnóstico do teste mascara valores se a regressão voltar. A supressão específica no teste de restart permanece como defesa adicional. |
+| Verificação | O teste novo reproduziu o vazamento antes da correção e passou depois; 92 testes unitários e 43 de integração passaram em execução local Temurin 25.0.4 com `-Xint`. Após formatar com Spotless, passaram o teste focado, Spotless, Checkstyle (0 violações), `git diff --check` e aislop 100/100. Os relatórios Surefire/Failsafe finais não contêm o padrão de senha. O primeiro `clean verify` local terminou somente por formatação; a JVM teve SIGSEGV intermitente sem `-Xint`. |
+| Remoto | PR #78 (`bfea389`) aberta e mergeável; CI `36044874971` passou 7/7: backend, frontend, contratos, docs, segurança, política de commits e quality-gate. Sem merge automático. |
+| Limite | C47/C48/C49 seguem aguardando a revisão humana e aprovação dos parâmetros operacionais da C45. Os arquivos locais `.angular/`, crash logs anteriores e novos relatórios de crash produzidos pela instabilidade da JVM foram preservados sem inclusão no commit. |
+| Próximo passo | Aguardar revisão/decisão humana da C45; revisar e integrar o PR #78 conforme política do repositório, sem merge automático. |
