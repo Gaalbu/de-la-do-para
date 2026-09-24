@@ -20,8 +20,9 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEventEntity, 
             "SELECT MIN(e.createdAt) FROM OutboxEventEntity e WHERE e.status = br.com.deladopara.eventing.domain.OutboxEventStatus.PENDING")
     Instant oldestPendingCreatedAt();
 
-    @Query(
-            "SELECT COALESCE(SUM(e.attemptCount), 0) FROM OutboxEventEntity e WHERE e.status = br.com.deladopara.eventing.domain.OutboxEventStatus.PENDING")
+    @Query("SELECT COALESCE(SUM(e.attemptCount), 0) "
+            + "FROM OutboxEventEntity e "
+            + "WHERE e.status = br.com.deladopara.eventing.domain.OutboxEventStatus.PENDING")
     long sumPendingAttempts();
 
     @Query(value = """
