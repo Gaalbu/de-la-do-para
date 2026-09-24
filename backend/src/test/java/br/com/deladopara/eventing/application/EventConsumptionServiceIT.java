@@ -28,14 +28,19 @@ class EventConsumptionServiceIT {
     private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
 
-    @Autowired
-    private EventConsumptionService service;
+    private final EventConsumptionService service;
+
+    private final JdbcEventHandler handler;
 
     @Autowired
-    private JdbcEventHandler handler;
-
-    @Autowired
-    EventConsumptionServiceIT(EventConsumptionRepository consumptions, JdbcTemplate jdbc, ObjectMapper objectMapper) {
+    EventConsumptionServiceIT(
+            EventConsumptionRepository consumptions,
+            JdbcTemplate jdbc,
+            ObjectMapper objectMapper,
+            EventConsumptionService service,
+            JdbcEventHandler handler) {
+        this.service = service;
+        this.handler = handler;
         this.consumptions = consumptions;
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;

@@ -18,11 +18,15 @@ class EventFailureServiceIT {
 
     private static final String TOPIC = "events.failure-it";
 
-    @Autowired
-    private EventFailureService service;
+    private final EventFailureService service;
+
+    private final JdbcTemplate jdbc;
 
     @Autowired
-    private JdbcTemplate jdbc;
+    EventFailureServiceIT(EventFailureService service, JdbcTemplate jdbc) {
+        this.service = service;
+        this.jdbc = jdbc;
+    }
 
     @BeforeEach
     void clean() {
