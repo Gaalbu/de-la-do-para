@@ -52,7 +52,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,metrics
+        include: health
       discovery:
         enabled: false
   endpoint:
@@ -82,6 +82,12 @@ app:
       lease: ${APP_EVENTING_LEASE}
       batch-size: ${APP_EVENTING_BATCH_SIZE}
       poll-delay: ${APP_EVENTING_POLL_DELAY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
 
 ---
 
