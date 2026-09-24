@@ -29,7 +29,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SpringBootTest
+@SpringBootTest(properties = "logging.level.br.com.deladopara.identity.application.AdminSeeder=OFF")
 @Testcontainers
 @Import(PostgresTestContainer.class)
 class EventingWorkerProcessRestartIT {
@@ -102,7 +102,8 @@ class EventingWorkerProcessRestartIT {
                         "--spring.datasource.url=" + postgres.getJdbcUrl(),
                         "--spring.datasource.username=" + postgres.getUsername(),
                         "--spring.datasource.password=" + postgres.getPassword())
-                .redirectErrorStream(true);
+                .redirectErrorStream(true)
+                .redirectOutput(ProcessBuilder.Redirect.DISCARD);
         builder.environment().put("APP_EVENTING_BOOTSTRAP_SERVERS", bootstrapServers);
         builder.environment().put("APP_EVENTING_TOPIC", topic);
         builder.environment().put("APP_EVENTING_LEASE", LEASE.toString());
@@ -110,8 +111,6 @@ class EventingWorkerProcessRestartIT {
         builder.environment().put("APP_EVENTING_POLL_DELAY", POLL_DELAY.toString());
         var process = builder.start();
         process.getOutputStream().close();
-        Thread.startVirtualThread(
-                () -> process.inputReader().lines().forEach(line -> System.out.println("worker-process: " + line)));
         return process;
     }
 
