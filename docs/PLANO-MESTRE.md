@@ -1636,6 +1636,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C14, C29, C41, C45. **Alvos:** `specs/SPEC-orders.md`, contrato de pedido; S.
 - **Aceite:** snapshot e transições; visibilidade convidado/cliente/admin; eventos emitidos pelo pedido definidos.
 - **Verificar:** DOC/C; desenho não importa entidade de outro módulo.
+- **Estado atual:** `specs/SPEC-orders.md` escrita como proposta para revisão (branch `docs/c50-orders-spec`); pendências ORD-Q01 (retenção de dados) e ORD-Q02 (validade do token de convidado) registradas, sem aprovação implícita.
 
 ### C51 — `feat(orders): persist immutable order snapshots and transitions`
 

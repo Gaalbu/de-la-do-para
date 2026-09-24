@@ -914,3 +914,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `CouponAdminApiIT` 5/5, `ArchitectureRulesTest` 3/3, `RouteContractCoverageTest` 1/1 (PostgreSQL real); `contracts:check` (lint, eventos, geração, tsc) verde. |
 | Limite | Sem UI administrativa de cupons; integração ao cálculo/checkout fica para C58a. |
 | Próximo passo | C33+ (storefront) ou tarefas backend restantes da fase 5–6. |
+
+## Sessão 2026-09-24 — C50: spec de pedidos (proposta para revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Especificar pedido imutável, história de estados, visibilidade e eventos. |
+| Mudanças | `specs/SPEC-orders.md`; rastreio e plano atualizados. |
+| Verificação | `docs:check` e `aislop`; revisão contra decisões D11–D13, D29–D31, D66, D68 e SPEC-identity IDN-011. |
+| Limite | Proposta não aprovada; ORD-Q01/Q02 abertas. C51 pode começar pela parte do snapshot/transições (independente dessas perguntas). |
+| Próximo passo | C51 (persistência do pedido). |
