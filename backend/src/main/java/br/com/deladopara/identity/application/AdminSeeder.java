@@ -32,7 +32,7 @@ public class AdminSeeder {
                     Account.Role.ADMIN,
                     clock.instant());
             accounts.save(admin);
-            LOG.info("Admin inicial criado: admin@deladopara.local / senha: {}", password);
+            LOG.info("Admin inicial criado: admin@deladopara.local");
         };
     }
 
