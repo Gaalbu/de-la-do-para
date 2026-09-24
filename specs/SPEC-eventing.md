@@ -102,16 +102,15 @@ leases e quarentena pertencem à persistência do eventing.
 
 ## 5. Retry, lease, quarentena e retenção
 
-Os valores seguintes são proposta operacional para revisão, não decisão do
-usuário:
+Valores aprovados pelo usuário em 2026-09-24:
 
 | Item | Proposta | Limite que deve ser testado |
 |---|---|---|
-| Lease | duração configurável e renovável somente durante o processamento | queda do worker libera a mensagem sem duplicar efeito |
-| Backoff | exponencial com jitter e teto configurável | reinício não cria tempestade de retries |
-| Tentativas | limite por tipo de falha, separado entre transitória e inválida | falha inválida vai à quarentena no limite |
-| Outbox operacional | retenção inicial proposta de 30 dias após publicação | limpeza não remove evento ainda pendente ou em investigação |
-| Identidades financeiras | retenção duradoura conforme auditoria/reconciliação | não apagar referência necessária para UNKNOWN |
+| Lease | 60 segundos, renovável durante o processamento | aprovado em 2026-09-24; queda do worker libera a mensagem sem duplicar efeito |
+| Backoff | exponencial: atraso inicial 1 segundo, multiplicador ×2, teto 1 minuto, full jitter | aprovado em 2026-09-24; reinício não cria tempestade de retries |
+| Tentativas | 8 para falhas transitórias e 1 para falhas inválidas; a falha inválida segue para quarentena ao atingir o limite | aprovado em 2026-09-24; falha inválida vai à quarentena no limite |
+| Outbox operacional | retenção de 30 dias após publicação | aprovado em 2026-09-24; limpeza não remove evento ainda pendente ou em investigação |
+| Identidades financeiras | retenção indefinida até existir política formal de descarte | aprovado em 2026-09-24; não apagar referência necessária para UNKNOWN |
 
 Nenhum retry deve manter uma transação HTTP aberta ou chamar provedor externo
 sem uma chave/registro de operação próprio. A implementação deve registrar
@@ -151,6 +150,7 @@ segredo, token ou payload pessoal desnecessário.
 - `npm --prefix frontend run docs:check`
 - `npm --prefix frontend run contracts:check`
 - Validação do schema válido e rejeição do exemplo inválido.
-- Revisão humana desta spec e do ADR-0002 antes de C46.
+- Atualizar a implementação e os testes para refletir os valores aprovados antes
+  de declarar C47/C49 concluídas; C48–C49 continuam em suas fatias planejadas.
 - C46–C49 acrescentarão testes de integração PostgreSQL/Kafka para EVT-001 a
   EVT-009; esta spec não usa mocks como evidência de entrega real.

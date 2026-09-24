@@ -43,9 +43,12 @@ garantia global entre Kafka, PostgreSQL e provedores HTTP.
 - [KafkaConsumer 4.2 — commitSync](https://kafka.apache.org/42/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html)
 - [Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox)
 
-Os valores de lease, backoff, tentativas e retenção continuam propostas em
-revisão na [SPEC-eventing](../../specs/SPEC-eventing.md); não são garantias já
-implementadas.
+Em 2026-09-24, o usuário aprovou na [SPEC-eventing](../../specs/SPEC-eventing.md)
+lease de 60 segundos, backoff exponencial (1 segundo inicial, ×2, teto de 1
+minuto, full jitter), 8 tentativas transitórias/1 inválida, retenção de 30 dias
+da outbox publicada e retenção indefinida das identidades financeiras até uma
+política formal de descarte. A aprovação define os requisitos, mas não declara
+que retry, quarentena ou limpeza já estejam implementados.
 
 ## Evidência
 
