@@ -22,11 +22,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Import(PostgresTestContainer.class)
 class CouponReservationServiceIT {
 
-    @Autowired
-    private CouponReservationService service;
+    private final CouponReservationService service;
+
+    private final JdbcTemplate jdbc;
 
     @Autowired
-    private JdbcTemplate jdbc;
+    CouponReservationServiceIT(CouponReservationService service, JdbcTemplate jdbc) {
+        this.service = service;
+        this.jdbc = jdbc;
+    }
 
     @BeforeEach
     void clean() {
