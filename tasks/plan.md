@@ -60,9 +60,10 @@ e não considera PR aberta ou mergeável como integração concluída.
 
 ## C45–C49 — eventing e recuperação
 
-Este roteiro depende da revisão humana da `SPEC-eventing.md`. Os passos abaixo
-descrevem a ordem de implementação, mas não aprovam os valores marcados como
-proposta na spec.
+O contrato e os parâmetros operacionais da `SPEC-eventing.md` foram revisados e
+aprovados pelo usuário em 2026-09-24. Os passos abaixo descrevem a ordem de
+implementação; aprovação não substitui implementação, evidência dos checkpoints
+ou homologação real dos provedores em C04.
 
 ### C46 — outbox na transação local
 
@@ -121,6 +122,9 @@ passam; ainda não existe publisher nem consumer real.
 **Checkpoint C49:** cenário de recuperação completo, trilha auditável e
    operador consegue distinguir retry, quarentena, replay e conciliação.
 
-**Bloqueios explícitos:** C46 só começa após C45 aprovada; valores de
-`lease/backoff/tentativas/retenção` permanecem revisão da spec; garantias dos
-provedores Asaas/Melhor Envio continuam dependentes do sandbox C04.
+**Situação:** C46 e fatias de C47 já estão integradas, mas C47 permanece
+incompleta até os comportamentos aprovados (incluindo renovação de lease e
+recuperação operacional) serem implementados/verificados. C48 está liberada
+para implementação conforme esta ordem; C49 implementará retry/quarentena,
+backoff, limites e retenção aprovados. Garantias dos provedores Asaas/Melhor
+Envio continuam dependentes da homologação real do sandbox C04.

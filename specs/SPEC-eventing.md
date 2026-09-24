@@ -3,7 +3,8 @@
 ## 0. Metadados
 
 - Módulo: `eventing`
-- Status: em revisão; não autoriza implementação de C46–C49
+- Status: contrato revisado e parâmetros operacionais aprovados em 2026-09-24;
+  implementação continua sujeita aos checkpoints C46–C49 e à homologação C04
 - Decisões base: D06, D40, D61, D63 e ADR-0002
 - Dependências: C04 permanece sem homologação real dos provedores; suas
   limitações são tratadas como incertezas, não como garantias.
@@ -15,7 +16,7 @@ internos entre a transação PostgreSQL, a outbox e os consumidores Kafka. A
 especificação protege a consistência local, permite redelivery seguro e deixa
 replay/quarentena auditáveis sem prometer entrega global `exactly-once`.
 
-Ficam fora desta etapa a criação da tabela outbox (C46), o publicador (C47),
+Esta especificação não implementa a tabela outbox (C46), o publicador (C47),
 os consumidores (C48), retry/quarentena executáveis (C49), eventos comerciais
 definitivos de `orders`/`payments` e qualquer chamada real aos sandboxes.
 
