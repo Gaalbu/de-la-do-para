@@ -1604,13 +1604,17 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C08, C46. **Alvos:** publicador, claim/lease, config Kafka e testes; M.
 - **Aceite:** marca só após ACK; abandona claim recuperável em queda; múltiplos workers não perdem mensagens.
 - **Verificar:** BI(OutboxPublisher), broker interrompido e V05/V19.
-- **Estado atual:** primeira fatia implementada e integrada em `main` pelo PR #68
-  (`b07ffbc`):
+- **Estado atual:** publicação, recuperação após ACK, ciclo configurado do worker,
+  métricas operacionais e reinício de processo foram integrados em `main` pelos
+  PRs #68, #72, #74 e #75 (último merge `a92648a`):
   claim PostgreSQL com `SKIP LOCKED`, lease recuperável, publicação com chave
-  `aggregateId`, ACK síncrono e marcação posterior de `PUBLISHED`, com teste
-  PostgreSQL/Kafka reais. Worker exige parâmetros explícitos no perfil `worker`;
-  C47 permanece em implementação até cobrir reinício/queda e revisar os valores
-  operacionais da C45.
+  `aggregateId`, ACK síncrono e marcação posterior de `PUBLISHED`; a queda após
+  ACK permite redelivery, e o teste de processo comprova recuperação após
+  encerramento forçado do worker e expiração da lease. Há métricas agregadas sem
+  labels de evento ou payload. Os testes usam PostgreSQL/Kafka reais. O worker
+  exige parâmetros explícitos no perfil `worker`. C47 continua pendente somente
+  da revisão humana e aprovação dos valores operacionais da C45; não iniciar
+  C48/C49 antes dessa decisão.
 
 ### C48 — `feat(eventing): record consumer effects idempotently`
 

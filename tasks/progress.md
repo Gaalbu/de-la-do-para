@@ -841,3 +841,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | A prova de processo agora existe, mas C47 continua pendente até a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
 | Remoto | PR #75 está aberta, `MERGEABLE`, `CLEAN` e sem revisão humana registrada; commit `f363922` publicado. Nenhum merge automático. |
 | Próximo passo | Obter a revisão humana da C45 e a decisão dos valores de lease, backoff, tentativas e retenção antes de marcar C47 concluída ou iniciar C48/C49. |
+
+## Sessão 2026-09-24 — hardening dos logs de teste e reconciliação C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Remover credenciais de teste dos relatórios e reconciliar estado remoto dos PRs e evidência C47. |
+| Mudanças | O teste `EventingWorkerProcessRestartIT` desliga o log do `AdminSeeder` no contexto de teste e descarta stdout/stderr dos processos filhos; comportamento local de bootstrap permanece inalterado. O estado C47 no plano mestre agora inclui restart de processo, ciclo do worker, redelivery e métricas já integrados pelos PRs #68/#72/#74/#75; dependência restante é somente decisão humana dos parâmetros C45. |
+| Verificação | Teste direcionado passou 1/1; relatório Surefire sem mensagem do seeder/senha; `spotless:check` e `git diff --check` passaram. PR #76 CI `36041444700` passou backend, frontend, contracts, docs, security, commit-policy e quality-gate (7/7). |
+| Remoto | PR #23 foi fechada em 2026-09-24 com comentário sobre incompatibilidade Angular Build/TypeScript 7. PR #76 (`test/security`), commit `758c51b`, está aberta e CI verde; sem merge automático. |
+| Limite | Nenhum PR impedido aberto identificado. C48/C49 continuam aguardando revisão humana da C45. Artefatos locais não rastreados preexistentes foram preservados. |
+| Próximo passo | Revisão humana da C45; após isso, reavaliar conclusão de C47 e liberar C48/C49 conforme parâmetros aprovados. |
