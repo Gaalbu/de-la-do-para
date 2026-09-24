@@ -9,11 +9,13 @@ import br.com.deladopara.eventing.application.EventConsumptionOutcome;
 import br.com.deladopara.eventing.application.EventConsumptionService;
 import br.com.deladopara.eventing.application.EventEnvelope;
 import br.com.deladopara.eventing.application.EventEnvelopeValidator;
+import br.com.deladopara.eventing.application.EventFailureService;
 import br.com.deladopara.eventing.application.EventHandler;
 import br.com.deladopara.eventing.domain.OutboxEvent;
 import br.com.deladopara.support.PostgresTestContainer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -64,6 +66,7 @@ class EventingWorkerConfigIT {
     private final EventConsumptionRepository consumptions;
     private final EventConsumptionService consumptionService;
     private final EventEnvelopeValidator envelopeValidator;
+    private final EventFailureService failures;
     private final TestOrderHandler handler;
 
     @Autowired
@@ -78,6 +81,7 @@ class EventingWorkerConfigIT {
             EventConsumptionRepository consumptions,
             EventConsumptionService consumptionService,
             EventEnvelopeValidator envelopeValidator,
+            EventFailureService failures,
             TestOrderHandler handler) {
         this.context = context;
         this.writer = writer;
@@ -89,6 +93,7 @@ class EventingWorkerConfigIT {
         this.consumptions = consumptions;
         this.consumptionService = consumptionService;
         this.envelopeValidator = envelopeValidator;
+        this.failures = failures;
         this.handler = handler;
     }
 
@@ -175,7 +180,8 @@ class EventingWorkerConfigIT {
 
         try (var restartedConsumer = createConsumer(group)) {
             restartedConsumer.subscribe(List.of(topic));
-            var adapter = new KafkaEventConsumer(restartedConsumer, envelopeValidator, consumptionService);
+            var adapter = new KafkaEventConsumer(
+                    restartedConsumer, envelopeValidator, consumptionService, failures, Clock.systemUTC());
             assertThat(awaitConsumerCommit(adapter)).isEqualTo(1);
             var partition = new org.apache.kafka.common.TopicPartition(topic, 0);
             var committed =
@@ -245,7 +251,8 @@ class EventingWorkerConfigIT {
                 secondConsumer.poll(Duration.ofMillis(100));
                 firstConsumer.poll(Duration.ofMillis(100));
                 firstConsumer.close();
-                var secondAdapter = new KafkaEventConsumer(secondConsumer, envelopeValidator, consumptionService);
+                var secondAdapter = new KafkaEventConsumer(
+                        secondConsumer, envelopeValidator, consumptionService, failures, Clock.systemUTC());
                 var deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
                 var committedAfterRebalance = false;
                 while (System.nanoTime() < deadline && !committedAfterRebalance) {
@@ -269,42 +276,70 @@ class EventingWorkerConfigIT {
     }
 
     @Test
-    void incompatibleHandlerSchemaLeavesKafkaOffsetUncommittedAndPausesPartition() throws Exception {
-        var topic = "events.incompatible-it-" + UUID.randomUUID();
-        var group = "incompatible-it-" + UUID.randomUUID();
+    void incompatibleSchemaIsQuarantinedDurablyAndDoesNotBlockLaterEvents() throws Exception {
+        var topic = "events.quarantine-it-" + UUID.randomUUID();
+        var group = "quarantine-it-" + UUID.randomUUID();
         createTopic(topic);
         jdbc.execute("CREATE TABLE IF NOT EXISTS event_handler_effect (event_id UUID PRIMARY KEY)");
         jdbc.execute("TRUNCATE event_handler_effect, event_consumption, event_consumer_cursor");
-        var eventId = UUID.randomUUID();
-        var unsupported = new EventEnvelope(
-                eventId,
+        var poisonId = UUID.randomUUID();
+        var poison = new EventEnvelope(
+                poisonId,
                 "order.created",
                 2,
-                "incompatible-order-" + eventId,
+                "poison-order-" + poisonId,
                 0,
                 Instant.now().toString(),
-                eventId,
-                eventId,
-                objectMapper.createObjectNode().put("orderId", "incompatible-order-" + eventId));
+                poisonId,
+                poisonId,
+                objectMapper.createObjectNode().put("orderId", "secret-" + poisonId));
+        var validId = UUID.randomUUID();
+        var valid = new EventEnvelope(
+                validId,
+                "order.created",
+                1,
+                "valid-order-" + validId,
+                0,
+                Instant.now().toString(),
+                validId,
+                validId,
+                objectMapper.createObjectNode().put("orderId", "order-" + validId));
         try (var producer = createProducer();
                 var consumer = createConsumer(group)) {
-            producer.send(new ProducerRecord<>(
-                            topic, unsupported.aggregateId(), objectMapper.writeValueAsString(unsupported)))
+            producer.send(new ProducerRecord<>(topic, poison.aggregateId(), objectMapper.writeValueAsString(poison)))
+                    .get(10, TimeUnit.SECONDS);
+            producer.send(new ProducerRecord<>(topic, poison.aggregateId(), objectMapper.writeValueAsString(valid)))
                     .get(10, TimeUnit.SECONDS);
             consumer.subscribe(List.of(topic));
-            var adapter = new KafkaEventConsumer(consumer, envelopeValidator, consumptionService);
+            var adapter = new KafkaEventConsumer(
+                    consumer, envelopeValidator, consumptionService, failures, Clock.systemUTC());
             var partition = new org.apache.kafka.common.TopicPartition(topic, 0);
-            var deadline = System.nanoTime() + Duration.ofSeconds(15).toNanos();
-            while (System.nanoTime() < deadline && !consumer.paused().contains(partition)) {
+            var deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+            while (System.nanoTime() < deadline
+                    && consumptions.find(handler.handlerName(), validId).isEmpty()) {
                 adapter.pollAndProcess();
             }
 
-            assertThat(consumer.paused()).contains(partition);
-            assertThat(consumer.committed(java.util.Set.of(partition)).get(partition))
-                    .isNull();
-            assertThat(consumptions.find(handler.handlerName(), eventId)).isEmpty();
+            assertThat(consumer.paused()).doesNotContain(partition);
+            assertThat(consumer.committed(java.util.Set.of(partition))
+                            .get(partition)
+                            .offset())
+                    .isEqualTo(2L);
+            assertThat(consumptions.find(handler.handlerName(), poisonId)).isEmpty();
+            assertThat(consumptions.find(handler.handlerName(), validId)).isPresent();
+            var row = jdbc.queryForMap(
+                    "SELECT state, failure_kind, attempt_count, last_error, event_id, correlation_id"
+                            + " FROM event_consumer_failure WHERE topic = ? AND record_offset = 0",
+                    topic);
+            assertThat(row.get("state")).isEqualTo("QUARANTINED");
+            assertThat(row.get("failure_kind")).isEqualTo("INVALID");
+            assertThat(row.get("attempt_count")).isEqualTo(1);
+            assertThat(row.get("last_error")).isEqualTo("INVALID:UnsupportedEventException");
+            assertThat(row.get("last_error").toString()).doesNotContain("secret");
+            assertThat(row.get("event_id").toString()).isEqualTo(poisonId.toString());
+            assertThat(row.get("correlation_id").toString()).isEqualTo(poisonId.toString());
             assertThat(jdbc.queryForObject("SELECT count(*) FROM event_handler_effect", Long.class))
-                    .isZero();
+                    .isEqualTo(1L);
         }
     }
 

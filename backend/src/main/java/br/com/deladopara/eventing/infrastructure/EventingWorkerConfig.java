@@ -56,9 +56,10 @@ public class EventingWorkerConfig {
             Consumer<String, String> consumer,
             br.com.deladopara.eventing.application.EventEnvelopeValidator validator,
             br.com.deladopara.eventing.application.EventConsumptionService consumption,
+            br.com.deladopara.eventing.application.EventFailureService failures,
             EventingWorkerProperties properties) {
         consumer.subscribe(java.util.List.of(properties.consumerTopic()));
-        return new KafkaEventConsumer(consumer, validator, consumption);
+        return new KafkaEventConsumer(consumer, validator, consumption, failures, Clock.systemUTC());
     }
 
     @Bean(destroyMethod = "")
