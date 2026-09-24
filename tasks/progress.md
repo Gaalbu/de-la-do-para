@@ -830,3 +830,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | PR #75 aberta e mergeable: https://github.com/Gaalbu/de-la-do-para/pull/75; commits `b409d86` e `e7f62a7` publicados. Nenhum merge automático. |
 | Limite | C47 ainda não está concluída: falta a prova de restart de processo/orquestração e a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
 | Próximo passo | Obter a revisão humana da C45 e, enquanto isso, preparar a evidência de restart de processo sem alterar os parâmetros propostos. |
+
+## Sessão 2026-09-24 — prova de restart do processo worker C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Exercitar a recuperação de uma reivindicação após encerramento forçado do processo JVM do worker. |
+| Mudanças | Adicionado `EventingWorkerProcessRestartIT`: PostgreSQL e Kafka reais via Testcontainers, worker empacotado em processo JVM separado, falha de broker após claim, encerramento do primeiro processo, expiração da lease e publicação por um segundo processo. O teste usa valores curtos somente no cenário de teste; os parâmetros de produto da C45 não foram alterados. |
+| Verificação | O teste passou após ambos os processos usarem o mesmo PostgreSQL gerenciado por `@ServiceConnection`; confirmou migração v24 já existente, claim do primeiro processo e `PUBLISHED` pelo segundo. Também passaram `HealthEndpointTest` + `OutboxOperationalMetricsTest`, Spotless, Checkstyle, `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados). |
+| Limite | A prova de processo agora existe, mas C47 continua pendente até a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
+| Próximo passo | Publicar esta evidência na PR #75, aguardar CI e manter a decisão operacional da C45 explícita antes de avançar. |
