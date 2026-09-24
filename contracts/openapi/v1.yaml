@@ -317,6 +317,153 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/coupons:
+    get:
+      operationId: listAdminCoupons
+      summary: Listar cupons, incluindo inativos e uso global registrado
+      description: Consulta somente leitura; não altera reservas nem uso.
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 0, default: 0}
+        - in: query
+          name: size
+          schema: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        '200':
+          description: Página de cupons
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CouponPage'}
+        '400':
+          description: Paginação inválida
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    post:
+      operationId: createAdminCoupon
+      summary: Criar cupom
+      description: Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CouponWrite'}
+      responses:
+        '201':
+          description: Cupom criado
+          headers:
+            Location: {schema: {type: string, format: uri-reference}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Coupon'}
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Código já cadastrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/coupons/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getAdminCoupon
+      summary: Consultar cupom
+      responses:
+        '200':
+          description: Cupom encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Coupon'}
+        '400':
+          description: UUID inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Cupom não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+    patch:
+      operationId: updateAdminCoupon
+      summary: Editar ou desativar cupom
+      description: Corpo completo dos campos editáveis; o código é imutável e cupons nunca são removidos. Exige sessão DLSESSION e CSRF no cookie XSRF-TOKEN com o valor repetido no cabeçalho X-XSRF-TOKEN.
+      x-csrf-required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CouponUpdate'}
+      responses:
+        '200':
+          description: Cupom atualizado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Coupon'}
+        '400':
+          description: Dados inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Cupom não encontrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Limite global abaixo do uso registrado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/admin/products:
     get:
       operationId: listAdminProducts
@@ -1469,6 +1616,93 @@ components:
         active: {type: boolean}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
+    CouponWrite:
+      type: object
+      additionalProperties: false
+      required: [code, discountType, discountValue, minimumCents, validFrom, validUntil, perEmailLimit]
+      example:
+        code: BEMVINDO
+        discountType: PERCENTAGE
+        discountValue: 10
+        minimumCents: 2000
+        validFrom: '2026-10-01T00:00:00Z'
+        validUntil: '2026-12-31T23:59:59Z'
+        globalLimit: 100
+        perEmailLimit: 1
+      properties:
+        code: {type: string, pattern: '^[A-Za-z0-9_-]{3,32}$', description: 'Normalizado para maiúsculas na comparação.'}
+        discountType: {type: string, enum: [PERCENTAGE, FIXED]}
+        discountValue: {type: integer, format: int64, minimum: 1, description: 'Percentual inteiro (1–100) ou centavos BRL.'}
+        minimumCents: {type: integer, format: int64, minimum: 0}
+        validFrom: {type: string, format: date-time}
+        validUntil: {type: string, format: date-time}
+        globalLimit: {type: [integer, 'null'], minimum: 1, description: 'Ausente ou nulo significa sem limite global.'}
+        perEmailLimit: {type: integer, minimum: 1, maximum: 1000}
+    CouponUpdate:
+      type: object
+      additionalProperties: false
+      required: [discountType, discountValue, minimumCents, validFrom, validUntil, perEmailLimit, active]
+      example:
+        discountType: PERCENTAGE
+        discountValue: 15
+        minimumCents: 2000
+        validFrom: '2026-10-01T00:00:00Z'
+        validUntil: '2026-12-31T23:59:59Z'
+        globalLimit: 200
+        perEmailLimit: 1
+        active: false
+      properties:
+        discountType: {type: string, enum: [PERCENTAGE, FIXED]}
+        discountValue: {type: integer, format: int64, minimum: 1}
+        minimumCents: {type: integer, format: int64, minimum: 0}
+        validFrom: {type: string, format: date-time}
+        validUntil: {type: string, format: date-time}
+        globalLimit: {type: [integer, 'null'], minimum: 1}
+        perEmailLimit: {type: integer, minimum: 1, maximum: 1000}
+        active: {type: boolean}
+    Coupon:
+      type: object
+      additionalProperties: false
+      required: [id, code, discountType, discountValue, minimumCents, validFrom, validUntil, active, perEmailLimit, globalUsage, createdAt, updatedAt]
+      example:
+        id: 4f2c3e0a-3b0d-4b5e-9a3f-2f0e5d4c9a11
+        code: BEMVINDO
+        discountType: PERCENTAGE
+        discountValue: 10
+        minimumCents: 2000
+        validFrom: '2026-10-01T00:00:00Z'
+        validUntil: '2026-12-31T23:59:59Z'
+        active: true
+        globalLimit: 100
+        perEmailLimit: 1
+        globalUsage: 0
+        createdAt: '2026-09-24T12:00:00Z'
+        updatedAt: '2026-09-24T12:00:00Z'
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string}
+        discountType: {type: string, enum: [PERCENTAGE, FIXED]}
+        discountValue: {type: integer, format: int64}
+        minimumCents: {type: integer, format: int64}
+        validFrom: {type: string, format: date-time}
+        validUntil: {type: string, format: date-time}
+        active: {type: boolean}
+        globalLimit: {type: [integer, 'null']}
+        perEmailLimit: {type: integer}
+        globalUsage: {type: integer, description: 'Reservas e usos que ainda contam contra o limite global histórico.'}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    CouponPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/Coupon'}
+        page: {type: integer}
+        size: {type: integer}
+        totalElements: {type: integer, format: int64}
+        totalPages: {type: integer}
     ProducerPage:
       type: object
       required: [content, page, size, totalElements, totalPages]
