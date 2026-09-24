@@ -819,3 +819,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `OutboxOperationalMetricsTest` passou 1/1; `EventingWorkerConfigIT` passou 2/2 com PostgreSQL 18.6/Kafka 4.3.1 reais; `spotless:check` passou. O contexto Spring iniciou os dois endpoints Actuator e o teste confirmou backlog zero após publicação. |
 | Limite | Esta fatia não define lease, backoff, tentativas máximas ou retenção da C45 e não conclui a prova de restart de processo do worker. |
 | Próximo passo | Publicar a instrumentação em PR própria; depois manter C47 pendente até a prova de processo/restart e a revisão humana da C45. |
+
+## Sessão 2026-09-24 — correção e CI da instrumentação C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Corrigir a exposição do Actuator e o gate de estilo da fatia de métricas operacionais. |
+| Mudanças | `metrics` ficou exposto somente no perfil `worker`; o perfil padrão continua expondo apenas `health`. A query agregada de tentativas foi formatada para respeitar o limite do Checkstyle. |
+| Verificação | `HealthEndpointTest` e `EventingWorkerConfigIT` passaram localmente; Spotless/Checkstyle, `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados) passaram. CI remoto `36032742850` da PR #75 passou 6/6 checks de execução e `quality-gate`; backend usou PostgreSQL/Kafka reais. |
+| Remoto | PR #75 aberta e mergeable: https://github.com/Gaalbu/de-la-do-para/pull/75; commits `b409d86` e `e7f62a7` publicados. Nenhum merge automático. |
+| Limite | C47 ainda não está concluída: falta a prova de restart de processo/orquestração e a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
+| Próximo passo | Obter a revisão humana da C45 e, enquanto isso, preparar a evidência de restart de processo sem alterar os parâmetros propostos. |
