@@ -39,6 +39,12 @@ parâmetros `APP_EVENTING_BOOTSTRAP_SERVERS`, `APP_EVENTING_TOPIC`,
 Eles não têm valores padrão enquanto a C45 não aprovar lease e polling; o
 worker falha cedo se a configuração estiver incompleta.
 
+O perfil `worker` expõe no Actuator, sem labels de evento ou payload, as
+métricas `dlp.eventing.outbox.pending.count`,
+`dlp.eventing.outbox.pending.oldest_age_seconds` e
+`dlp.eventing.outbox.pending.attempts`. O estado de quarentena será medido
+quando o modelo de C49 existir; esta fatia não cria uma quarentena implícita.
+
 ## Superfícies expostas
 
 Só as portas acima, só em `localhost`. Banco, broker e simuladores ficam na

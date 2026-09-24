@@ -809,3 +809,35 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | O teste de integração passou 2/2 após recompilação dos testes, usando PostgreSQL 18.6 e Kafka 4.3.1 via Testcontainers; `spotless:check` e `git diff --check` passaram. |
 | Limite | A evidência valida o wiring e a publicação pelo ciclo agendado do worker, mas não é ainda uma prova de reinício de processo/orquestração. Não altera nem decide lease, backoff, tentativas ou retenção da C45. |
 | Próximo passo | Manter C47 pendente até a prova de processo/restart e a revisão humana da C45; não avançar para C48/C49 nem mergear o PR #23 enquanto o conflito TypeScript/Angular mantiver os checks vermelhos. |
+
+## Sessão 2026-09-23 — métricas operacionais da outbox C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Medir backlog, idade do evento mais antigo e tentativas sem expor payload, PII ou labels de evento. |
+| Mudanças | Adicionadas consultas agregadas no repository, gauges Micrometer sem labels e exposição do endpoint Actuator `metrics` (`dlp.eventing.outbox.*`) no perfil do worker; a métrica de quarentena permanece fora até C49 modelar esse estado. |
+| Verificação | `OutboxOperationalMetricsTest` passou 1/1; `EventingWorkerConfigIT` passou 2/2 com PostgreSQL 18.6/Kafka 4.3.1 reais; `spotless:check` passou. O contexto Spring iniciou os dois endpoints Actuator e o teste confirmou backlog zero após publicação. |
+| Limite | Esta fatia não define lease, backoff, tentativas máximas ou retenção da C45 e não conclui a prova de restart de processo do worker. |
+| Próximo passo | Publicar a instrumentação em PR própria; depois manter C47 pendente até a prova de processo/restart e a revisão humana da C45. |
+
+## Sessão 2026-09-24 — correção e CI da instrumentação C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Corrigir a exposição do Actuator e o gate de estilo da fatia de métricas operacionais. |
+| Mudanças | `metrics` ficou exposto somente no perfil `worker`; o perfil padrão continua expondo apenas `health`. A query agregada de tentativas foi formatada para respeitar o limite do Checkstyle. |
+| Verificação | `HealthEndpointTest` e `EventingWorkerConfigIT` passaram localmente; Spotless/Checkstyle, `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados) passaram. CI remoto `36032742850` da PR #75 passou 6/6 checks de execução e `quality-gate`; backend usou PostgreSQL/Kafka reais. |
+| Remoto | PR #75 aberta e mergeable: https://github.com/Gaalbu/de-la-do-para/pull/75; commits `b409d86` e `e7f62a7` publicados. Nenhum merge automático. |
+| Limite | C47 ainda não está concluída: falta a prova de restart de processo/orquestração e a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
+| Próximo passo | Obter a revisão humana da C45 e, enquanto isso, preparar a evidência de restart de processo sem alterar os parâmetros propostos. |
+
+## Sessão 2026-09-24 — prova de restart do processo worker C47
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Exercitar a recuperação de uma reivindicação após encerramento forçado do processo JVM do worker. |
+| Mudanças | Adicionado `EventingWorkerProcessRestartIT`: PostgreSQL e Kafka reais via Testcontainers, worker empacotado em processo JVM separado, falha de broker após claim, encerramento do primeiro processo, expiração da lease e publicação por um segundo processo. O teste usa valores curtos somente no cenário de teste; os parâmetros de produto da C45 não foram alterados. |
+| Verificação | O teste passou após ambos os processos usarem o mesmo PostgreSQL gerenciado por `@ServiceConnection`; confirmou migração v24 já existente, claim do primeiro processo e `PUBLISHED` pelo segundo. Também passaram `HealthEndpointTest` + `OutboxOperationalMetricsTest`, Spotless, Checkstyle, `git diff --check` e `npx aislop scan --changes --json` (100/100, zero achados). O CI remoto `36034954871` passou 7/7, incluindo backend real PostgreSQL/Kafka, frontend, contratos, docs, segurança, política de commits e quality-gate. |
+| Limite | A prova de processo agora existe, mas C47 continua pendente até a revisão humana dos valores de lease, backoff, tentativas e retenção da C45. C48/C49 não foram iniciadas. |
+| Remoto | PR #75 está aberta, `MERGEABLE`, `CLEAN` e sem revisão humana registrada; commit `f363922` publicado. Nenhum merge automático. |
+| Próximo passo | Obter a revisão humana da C45 e a decisão dos valores de lease, backoff, tentativas e retenção antes de marcar C47 concluída ou iniciar C48/C49. |

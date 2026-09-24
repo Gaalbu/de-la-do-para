@@ -83,6 +83,12 @@ app:
       batch-size: ${APP_EVENTING_BATCH_SIZE}
       poll-delay: ${APP_EVENTING_POLL_DELAY}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
 ---
 
 spring:

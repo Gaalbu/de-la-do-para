@@ -7,6 +7,7 @@ import br.com.deladopara.eventing.adapter.persistence.OutboxEventWriter;
 import br.com.deladopara.eventing.domain.OutboxEvent;
 import br.com.deladopara.support.PostgresTestContainer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ class EventingWorkerConfigIT {
     private final OutboxEventRepository events;
     private final TransactionTemplate transactions;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry metrics;
 
     @Autowired
     EventingWorkerConfigIT(
@@ -44,12 +46,14 @@ class EventingWorkerConfigIT {
             OutboxEventWriter writer,
             OutboxEventRepository events,
             TransactionTemplate transactions,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            MeterRegistry metrics) {
         this.context = context;
         this.writer = writer;
         this.events = events;
         this.transactions = transactions;
         this.objectMapper = objectMapper;
+        this.metrics = metrics;
     }
 
     @DynamicPropertySource
@@ -87,5 +91,7 @@ class EventingWorkerConfigIT {
         var persisted = events.findById(eventId).orElseThrow();
         assertThat(persisted.getStatus()).isEqualTo(br.com.deladopara.eventing.domain.OutboxEventStatus.PUBLISHED);
         assertThat(persisted.getAttemptCount()).isEqualTo(1);
+        assertThat(metrics.get("dlp.eventing.outbox.pending.count").gauge().value())
+                .isZero();
     }
 }
