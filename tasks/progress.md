@@ -894,3 +894,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `KafkaEventConsumerIT` 6/6 e `EventRetryPolicyTest` 5/5; ITs com PostgreSQL/Kafka reais: `EventFailureServiceIT` 3/3, `EventingWorkerConfigIT` 5/5 (inclui poison com schema incompatível quarentenado e evento válido seguinte aplicado), demais 14 ITs de backend verdes e `EventConsumptionPersistenceIT` 7/7; Spotless, Checkstyle, `git diff --check` e aislop 0 achados. JVM rodou com `-Xint` por causa do SIGSEGV intermitente já registrado. |
 | Limite | Sem push/PR. Falta limpeza por retenção da quarentena, ferramenta operacional de replay e handlers reais; C47 ainda precisa de renovação de lease. Evento em quarentena deixa lacuna de `aggregateVersion` (posteriores ficam pendentes até reconciliação). Arquivos não rastreados `.angular/` e `hs_err_pid*.log` preservados fora do commit. |
 | Próximo passo | Abrir PR empilhado (C48+C49) após autorização, ou seguir com renovação de lease (C47) e limpeza de retenção. |
+
+## Sessão 2026-09-24 — C31: reserva atômica de cupons (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Reservar, consumir e liberar uso de cupom com atomicidade e idempotência. |
+| Mudanças | Migration V27 (`coupon`, `coupon_usage`); `CouponUsageRepository` (lock `FOR UPDATE` da linha do cupom), `CouponReservationService` (reserve/consume/release/markFullyRefunded), rejeições estáveis (`CouponRejection`). Código e e-mail normalizados; e-mail verificado é responsabilidade do chamador. |
+| Verificação | `CouponReservationServiceIT` 6/6 com PostgreSQL real, incluindo 12 reservas concorrentes com limite global 3 (exatamente 3) e 8 concorrentes no mesmo e-mail (exatamente 1); arquitetura, Spotless e Checkstyle verdes. |
+| Limite | Regra de reembolso (global permanece gasto) é a recomendação não aprovada da SPEC-pricing §5; aplicada por decisão de execução e sinalizada para revisão. Sem API administrativa (C32) nem integração ao checkout (C58a). Sem push desta branch ainda. |
+| Próximo passo | C32 (API admin de cupons). |
+
