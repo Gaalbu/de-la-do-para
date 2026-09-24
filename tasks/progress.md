@@ -904,4 +904,3 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `CouponReservationServiceIT` 6/6 com PostgreSQL real, incluindo 12 reservas concorrentes com limite global 3 (exatamente 3) e 8 concorrentes no mesmo e-mail (exatamente 1); arquitetura, Spotless e Checkstyle verdes. |
 | Limite | Regra de reembolso (global permanece gasto) é a recomendação não aprovada da SPEC-pricing §5; aplicada por decisão de execução e sinalizada para revisão. Sem API administrativa (C32) nem integração ao checkout (C58a). Sem push desta branch ainda. |
 | Próximo passo | C32 (API admin de cupons). |
-
