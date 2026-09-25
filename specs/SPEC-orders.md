@@ -59,7 +59,7 @@ Relógio controlado; sem `sleep`; cada transição testa o lado permitido e o la
 
 - Esta spec não define como o pagamento é obtido (SPEC-payments, C53) nem os passos de compensação (SPEC-checkout, C56): apenas quais fatos de pedido existem.
 - **ORD-Q01 (aberta):** política de retenção de dados pessoais do pedido (endereço/e-mail) depois de concluído. Sem resposta, mantém-se indefinidamente e nada é apagado. Momento: antes de qualquer job de limpeza.
-- **ORD-Q02 (aberta):** validade do token de acesso do convidado (proposta: sem expiração enquanto o pedido estiver aberto e 90 dias após conclusão). Momento: C52.
+- **ORD-Q02 (aberta):** validade do token de acesso do convidado (proposta: sem expiração enquanto o pedido estiver aberto e 90 dias após conclusão). Momento: C52. Implementação da C52: o token não expira até esta pergunta ser respondida.
 - Silêncio não é aprovação: as propostas acima só valem após revisão.
 
 ## 7. Regras e invariantes
@@ -119,7 +119,8 @@ O token é aleatório de alta entropia, guardado como hash, mostrado uma vez na 
 
 - Operações: ver §3; todas somente leitura (criação e transições ocorrem por comandos internos do checkout/pagamento/expedição, não por API pública genérica).
 - Cabeçalhos: `Cache-Control: private, no-store` em respostas de pedido.
-- Erros: `ORDER_001` pedido não encontrado/sem acesso (404), `ORDER_002` transição inválida (409), `ORDER_003` token inválido (401).
+- Erros: `ORDER_001` pedido não encontrado/sem acesso (404), `ORDER_002` transição inválida (409), `ORDER_003` token inválido (401), `ORDER_004` paginação/UUID inválidos (400).
+- Prova do convidado: cabeçalho `X-Order-Token`, válido somente para o pedido a que pertence. Listas usam `content/page/size/totalElements/totalPages`.
 
 ### Eventos emitidos
 

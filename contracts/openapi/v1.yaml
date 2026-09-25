@@ -464,6 +464,146 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/orders:
+    get:
+      operationId: listMyOrders
+      summary: Listar os pedidos da conta autenticada
+      description: >
+        Somente pedidos vinculados ao `accountId` da sessão, do mais recente ao mais antigo.
+        Pedidos de convidado nunca aparecem, mesmo com o mesmo e-mail. Resposta `Cache-Control: private, no-store`.
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 0, default: 0}
+        - in: query
+          name: size
+          schema: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        '200':
+          description: Página de pedidos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OrderPage'}
+        '400':
+          description: Paginação inválida (ORDER_004)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/orders/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getOrder
+      summary: Consultar um pedido
+      description: >
+        Duas provas de acesso: o cabeçalho `X-Order-Token` (convidado; o token vale só para o pedido a que
+        pertence) ou a sessão da conta dona do pedido. Pedido de outra conta é `404`, sem revelar existência.
+        Resposta `Cache-Control: private, no-store`.
+      security:
+        - sessionCookie: []
+        - orderToken: []
+      parameters:
+        - in: header
+          name: X-Order-Token
+          required: false
+          schema: {type: string}
+      responses:
+        '200':
+          description: Pedido com itens e histórico de estados
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Order'}
+        '400':
+          description: UUID inválido (ORDER_004)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sem token válido para este pedido e sem sessão (ORDER_003)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Pedido inexistente ou de outra conta (ORDER_001)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/orders:
+    get:
+      operationId: listAdminOrders
+      summary: Listar todos os pedidos
+      description: Consulta somente leitura, paginada, do mais recente ao mais antigo.
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 0, default: 0}
+        - in: query
+          name: size
+          schema: {type: integer, minimum: 1, maximum: 50, default: 20}
+      responses:
+        '200':
+          description: Página de pedidos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OrderPage'}
+        '400':
+          description: Paginação inválida (ORDER_004)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/orders/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getAdminOrder
+      summary: Consultar qualquer pedido
+      responses:
+        '200':
+          description: Pedido com itens e histórico de estados
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Order'}
+        '400':
+          description: UUID inválido (ORDER_004)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Pedido não encontrado (ORDER_001)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/admin/products:
     get:
       operationId: listAdminProducts
@@ -1008,6 +1148,13 @@ components:
       required: true
       schema: {type: string, format: uuid}
   securitySchemes:
+    orderToken:
+      type: apiKey
+      in: header
+      name: X-Order-Token
+      description: >
+        Prova de acesso do convidado a um único pedido: token aleatório mostrado uma vez na confirmação,
+        guardado só como hash.
     sessionCookie:
       type: apiKey
       in: cookie
@@ -1703,6 +1850,99 @@ components:
         size: {type: integer}
         totalElements: {type: integer, format: int64}
         totalPages: {type: integer}
+    OrderStatus:
+      type: string
+      enum: [PENDING_PAYMENT, PAID, PREPARING, READY_FOR_PICKUP, IN_TRANSIT, DELIVERED, PICKED_UP, CANCELLED, EXPIRED, UNDER_REVIEW]
+    OrderSummary:
+      type: object
+      additionalProperties: false
+      required: [id, status, mode, totalCents, itemCount, createdAt]
+      properties:
+        id: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/OrderStatus'}
+        mode: {type: string, enum: [DELIVERY, PICKUP]}
+        totalCents: {type: integer, format: int64}
+        itemCount: {type: integer}
+        createdAt: {type: string, format: date-time}
+    OrderPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/OrderSummary'}
+        page: {type: integer}
+        size: {type: integer}
+        totalElements: {type: integer, format: int64}
+        totalPages: {type: integer}
+    Order:
+      type: object
+      additionalProperties: false
+      required: [id, status, mode, contactEmail, currency, subtotalCents, shippingCents, discountCents, totalCents, preparationDays, destination, createdAt, updatedAt, items, history]
+      example:
+        id: 7d0c1c5e-6f4a-4d43-8a51-3f3a1f8b2e10
+        status: PAID
+        mode: DELIVERY
+        contactEmail: ana@example.com
+        currency: BRL
+        subtotalCents: 4500
+        shippingCents: 750
+        discountCents: 0
+        totalCents: 5250
+        preparationDays: 1
+        deliveryDays: 5
+        destination: {label: Ponto de demonstração — Belém}
+        createdAt: '2026-09-24T12:00:00Z'
+        updatedAt: '2026-09-24T12:05:00Z'
+        items:
+          - {productName: Farinha, skuLabel: 500 g, quantity: 2, unitPriceCents: 2250, lineTotalCents: 4500}
+        history:
+          - {sequence: 0, to: PENDING_PAYMENT, actor: SYSTEM, occurredAt: '2026-09-24T12:00:00Z'}
+          - {sequence: 1, from: PENDING_PAYMENT, to: PAID, actor: SYSTEM, occurredAt: '2026-09-24T12:05:00Z'}
+      properties:
+        id: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/OrderStatus'}
+        mode: {type: string, enum: [DELIVERY, PICKUP]}
+        contactEmail: {type: string}
+        currency: {type: string, enum: [BRL]}
+        subtotalCents: {type: integer, format: int64}
+        shippingCents: {type: integer, format: int64}
+        discountCents: {type: integer, format: int64}
+        couponCode: {type: [string, 'null']}
+        totalCents: {type: integer, format: int64}
+        preparationDays: {type: integer}
+        deliveryDays: {type: [integer, 'null']}
+        destination:
+          type: object
+          description: Endereço normalizado ou ponto de retirada, gravado por valor na compra.
+          additionalProperties: true
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [productName, skuLabel, quantity, unitPriceCents, lineTotalCents]
+            properties:
+              productName: {type: string}
+              skuLabel: {type: string}
+              quantity: {type: integer}
+              unitPriceCents: {type: integer, format: int64}
+              lineTotalCents: {type: integer, format: int64}
+        history:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [sequence, to, actor, occurredAt]
+            properties:
+              sequence: {type: integer}
+              from: {oneOf: [{$ref: '#/components/schemas/OrderStatus'}, {type: 'null'}]}
+              to: {$ref: '#/components/schemas/OrderStatus'}
+              actor: {type: string, enum: [SYSTEM, CUSTOMER, ADMIN]}
+              reason: {type: [string, 'null']}
+              occurredAt: {type: string, format: date-time}
     ProducerPage:
       type: object
       required: [content, page, size, totalElements, totalPages]

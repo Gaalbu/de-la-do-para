@@ -1650,6 +1650,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C15, C51. **Alvos:** consulta/API de pedidos, controle de acesso e testes; M.
 - **Aceite:** dono acessa seus pedidos; convidado usa sessão/prova controlada; admin tem histórico autorizado.
 - **Verificar:** BI(OrderAccess), C e V17. Link por e-mail será conectado em C75/C78.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c52-order-queries`, empilhada na C51): V29 `purchase_order_access_token` (só hash SHA-256, imutável), `OrderAccessTokens` (emite token de 256 bits, valida por pedido), `OrderQueryService` e `OrderController` (`GET /orders/{id}` por `X-Order-Token` ou sessão dona; `GET /orders`; `GET /admin/orders[/{id}]`), erros ORDER_001/003/004, `Cache-Control: private, no-store`. Token sem expiração enquanto ORD-Q02 estiver aberta. O token ainda não é emitido no checkout (C58a) nem enviado por e-mail (C75/C78).
 
 ## Fase 6 — núcleo de checkout e pagamento controlado
 
