@@ -23,7 +23,10 @@ for (const file of readdirSync(examples).sort()) {
   if (accepted === expectValid) {
     console.log(`OK: ${file} ${expectValid ? 'aceito' : 'rejeitado como esperado'}`);
   } else {
-    console.error(`ERRO: ${file} ${expectValid ? 'rejeitado' : 'aceito indevidamente'}`, validate.errors ?? '');
+    console.error(
+      `ERRO: ${file} ${expectValid ? 'rejeitado' : 'aceito indevidamente'}`,
+      validate.errors ?? '',
+    );
     failed = true;
   }
 }
