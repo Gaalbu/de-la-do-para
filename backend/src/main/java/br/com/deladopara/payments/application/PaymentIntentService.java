@@ -56,7 +56,10 @@ public class PaymentIntentService {
         return id;
     }
 
-    /** Applies one §7.2 transition with a {@code payment.status_changed} event; same-state replays are no-ops. */
+    /**
+     * Applies one §7.2 transition and emits the event the table assigns to the target; same-state replays are no-ops.
+     * The aggregate version only advances with an event, so consumers see a contiguous sequence.
+     */
     @Transactional
     public PaymentStatus transition(UUID intentId, PaymentStatus to, String reason, UUID correlationId) {
         var intent = payments.lock(intentId).orElseThrow(PaymentIntentNotFoundException::new);
@@ -64,13 +67,33 @@ public class PaymentIntentService {
             return to;
         }
         PaymentTransitions.validate(intent.status(), to);
+        var now = clock.instant();
+        if (to == PaymentStatus.CREATING_CHECKOUT) {
+            payments.updateStatus(intentId, to, intent.version(), reason, now);
+            return to;
+        }
         var version = intent.version() + 1;
-        payments.updateStatus(intentId, to, version, reason, clock.instant());
+        payments.updateStatus(intentId, to, version, reason, now);
         var payload = payload(intentId, intent.orderId());
-        payload.put("from", intent.status().name());
-        payload.put("to", to.name());
-        payload.put("reason", reason);
-        emit("payment.status_changed", intentId, version, correlationId, payload);
+        var type =
+                switch (to) {
+                    case AWAITING_PAYMENT -> {
+                        var expiresAt = payments.checkoutExpiresAt(intentId);
+                        payload.put("expiresAt", expiresAt == null ? null : expiresAt.toString());
+                        yield "payment.checkout_available";
+                    }
+                    case REFUND_REQUESTED, REFUNDED -> {
+                        payload.put("amountCents", intent.amountCents());
+                        yield to == PaymentStatus.REFUNDED ? "payment.refunded" : "payment.refund_requested";
+                    }
+                    default -> {
+                        payload.put("from", intent.status().name());
+                        payload.put("to", to.name());
+                        payload.put("reason", reason);
+                        yield "payment.status_changed";
+                    }
+                };
+        emit(type, intentId, version, correlationId, payload);
         return to;
     }
 
