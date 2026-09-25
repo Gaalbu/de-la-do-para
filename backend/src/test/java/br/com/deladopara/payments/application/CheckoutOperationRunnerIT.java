@@ -2,14 +2,18 @@ package br.com.deladopara.payments.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import br.com.deladopara.payments.application.PaymentProvider.CheckoutRequest;
+import br.com.deladopara.payments.application.PaymentProvider.CheckoutState;
 import br.com.deladopara.payments.application.PaymentProvider.CreatedCheckout;
 import br.com.deladopara.payments.application.PaymentProvider.ProviderRejectedException;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.io.UncheckedIOException;
 import java.net.SocketTimeoutException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +46,20 @@ class CheckoutOperationRunnerIT {
         jdbc.execute("ALTER TABLE payment_intent ENABLE TRIGGER payment_intent_reference_guard");
     }
 
+    private static PaymentProvider creating(Function<CheckoutRequest, CreatedCheckout> create) {
+        return new PaymentProvider() {
+            @Override
+            public CreatedCheckout createCheckout(CheckoutRequest request) {
+                return create.apply(request);
+            }
+
+            @Override
+            public Optional<CheckoutState> findCheckout(UUID paymentIntentId) {
+                return Optional.empty();
+            }
+        };
+    }
+
     private String intentStatus(UUID id) {
         return jdbc.queryForObject("SELECT status FROM payment_intent WHERE id = ?", String.class, id);
     }
@@ -63,7 +81,7 @@ class CheckoutOperationRunnerIT {
     void operationIsDurableAndInFlightBeforeProviderCallWhichRunsWithoutTransaction() {
         var id = intents.request(UUID.randomUUID(), 5_250, UUID.randomUUID());
         var seen = new StringBuilder();
-        PaymentProvider provider = request -> {
+        PaymentProvider provider = creating(request -> {
             seen.append(TransactionSynchronizationManager.isActualTransactionActive())
                     .append(':')
                     .append(operationStatus(request.paymentIntentId()))
@@ -72,7 +90,7 @@ class CheckoutOperationRunnerIT {
                     .append(':')
                     .append(request.amountCents());
             return new CreatedCheckout("chk_1", "https://sandbox.example/c/chk_1", EXPIRES);
-        };
+        });
 
         assertThat(new CheckoutOperationRunner(operations, provider).runNext()).isTrue();
 
@@ -88,10 +106,10 @@ class CheckoutOperationRunnerIT {
     void timeoutAfterSendingKeepsUnknownAndIsNeverRetried() {
         var id = intents.request(UUID.randomUUID(), 5_250, UUID.randomUUID());
         var calls = new AtomicInteger();
-        PaymentProvider provider = request -> {
+        PaymentProvider provider = creating(request -> {
             calls.incrementAndGet();
             throw new UncheckedIOException(new SocketTimeoutException("read timed out"));
-        };
+        });
         var runner = new CheckoutOperationRunner(operations, provider);
 
         assertThat(runner.runNext()).isTrue();
@@ -108,9 +126,9 @@ class CheckoutOperationRunnerIT {
     @Test
     void rejectionBeforeEffectDeclinesTheIntent() {
         var id = intents.request(UUID.randomUUID(), 5_250, UUID.randomUUID());
-        PaymentProvider provider = request -> {
+        PaymentProvider provider = creating(request -> {
             throw new ProviderRejectedException("HTTP_400");
-        };
+        });
 
         new CheckoutOperationRunner(operations, provider).runNext();
 
@@ -139,9 +157,9 @@ class CheckoutOperationRunnerIT {
 
     @Test
     void nothingToRunReturnsFalse() {
-        PaymentProvider provider = request -> {
+        PaymentProvider provider = creating(request -> {
             throw new AssertionError("must not be called");
-        };
+        });
 
         assertThat(new CheckoutOperationRunner(operations, provider).runNext()).isFalse();
     }

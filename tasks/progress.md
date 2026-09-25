@@ -964,3 +964,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `PaymentTransitionsTest` 3/3, `PaymentIntentIT` 7/7, `CheckoutOperationRunnerIT` 5/5, `ArchitectureRulesTest` 3/3 (PostgreSQL real, `-Xint`); Spotless e Checkstyle. |
 | Limite | Runner sem worker agendado nem adapter real (C59); simulador WireMock em C55. PRs #83–#88 aguardam merge manual. |
 | Próximo passo | C55 (simulador do provedor e suíte de contrato do adapter). |
+
+## Sessão 2026-09-24 — C55: simulador e contrato do provedor (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Cenários aprovado/recusado/pendente, timeout depois de efeito e evento repetido; modo simulado explícito. |
+| Mudanças | Port `PaymentProvider` ganha `findCheckout` (único meio seguro de resolver criação desconhecida); `ProviderEvent`; `SimulatedPaymentProvider` condicionado a `payments.provider=simulated`; suíte abstrata `PaymentProviderContract`. |
+| Verificação | `SimulatedPaymentProviderContractTest` 6/6, `SimulatedCheckoutIT` 2/2, `CheckoutOperationRunnerIT` 5/5, `ArchitectureRulesTest` 3/3; Spotless, Checkstyle. |
+| Limite | Sem WireMock: não há adapter HTTP para exercitar; entra na C59 com a mesma suíte. Resultado do simulador não é homologação Asaas. PRs #83–#89 aguardam merge manual. |
+| Próximo passo | C56 (spec de checkout e compensação). |

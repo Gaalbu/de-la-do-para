@@ -1673,6 +1673,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C53, C54. **Alvos:** fixtures/simulador WireMock e suíte de contrato do adapter; M.
 - **Aceite:** cenários aprovado/recusado/pendente, timeout depois de efeito e evento repetido; modo simulado explícito.
 - **Verificar:** suíte de contrato controlada; não usar resultado como homologação Asaas.
+- **Estado atual:** implementado e verificado localmente (branch `test/c55-provider-simulator`): suíte abstrata `PaymentProviderContract` (aprovado/pendente, recusa, timeout antes/depois do efeito, evento repetido) aplicada ao `SimulatedPaymentProvider`, ativado só com `payments.provider=simulated`. Desvio registrado: sem WireMock nesta fatia porque ainda não há adapter HTTP; C59 adiciona o adapter Asaas com fixtures WireMock e roda a mesma suíte.
 
 ### C56 — `docs(checkout): specify purchase and compensation state machines`
 
