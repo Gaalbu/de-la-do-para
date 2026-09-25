@@ -995,3 +995,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `StockReservationIT` 7/7, `ArchitectureRulesTest` 3/3 (PostgreSQL real, `-Xint`). |
 | Limite | Sem job de expiração nem coordenação com pedido/cupom (C58a/C61). Merges de #83–#88 e #92+ dependem do usuário. |
 | Próximo passo | C58 (idempotência durável do aceite). |
+
+## Sessão 2026-09-24 — C58: idempotência durável do aceite (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Claim por sujeito/operação/chave; payload alterado é conflito; replay definido. |
+| Mudanças | V32; `CheckoutIdempotency` (claim/complete/purchaseHash). |
+| Verificação | `CheckoutIdempotencyIT` 6/6, `ArchitectureRulesTest` 3/3 (PostgreSQL real, `-Xint`). |
+| Limite | Sem endpoint (C58a); retenção CHK-Q01 aberta. |
+| Próximo passo | C58a (aceite em uma transação). |
