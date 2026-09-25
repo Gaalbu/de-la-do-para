@@ -1717,6 +1717,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C04, C48, C53, C54. **Alvos:** endpoint/parser, inbox/migration, autenticação e testes; M.
 - **Aceite:** token próprio validado; evento persistido antes de 2xx; duplicatas identificadas, payload inválido rejeitado.
 - **Verificar:** BI(AsaasWebhookIngress), V08/V09; falha de banco não produz ACK de recebimento durável.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c60-asaas-webhooks`): V33 `payment_provider_event` (inbox por provedor+`id`, só identificadores/estados, sem dados do cliente), `POST /api/v1/webhooks/asaas` sem sessão/CSRF, token `asaas-access-token` comparado em tempo constante (32–255 caracteres; sem token configurado tudo é 401), limite de 64 KiB, `200` só depois do commit, reentrega reconhecida sem duplicar, tipos não tratados `IGNORED`. Payload revalidado na documentação oficial (evento de checkout traz `id`, `event`, `dateCreated`, `checkout.id/status`, sem valor na raiz): o valor é confirmado por consulta ao provedor na C61. Sem homologação real (C04).
 
 ### C61 — `feat(checkout): apply confirmed payment outcomes transactionally`
 
