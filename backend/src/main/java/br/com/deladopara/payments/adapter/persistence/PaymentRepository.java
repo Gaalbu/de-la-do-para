@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -82,6 +83,58 @@ public class PaymentRepository {
                 .query("SELECT * FROM payment_external_operation WHERE id = ?", PaymentRepository::operation, id)
                 .stream()
                 .findFirst();
+    }
+
+    /** Claims the oldest pending CREATE_CHECKOUT operation without waiting on rows another worker holds. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<Operation> claimPendingCheckout(Instant now, Instant leaseUntil) {
+        return jdbc.query("""
+                        UPDATE payment_external_operation SET status = 'IN_FLIGHT', lease_until = ?, started_at = ?
+                        WHERE id = (SELECT id FROM payment_external_operation
+                                    WHERE status = 'PENDING' AND kind = 'CREATE_CHECKOUT'
+                                    ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
+                        RETURNING *
+                        """, PaymentRepository::operation, Timestamp.from(leaseUntil), Timestamp.from(now)).stream()
+                .findFirst();
+    }
+
+    /** Only an IN_FLIGHT operation can finish; returns false for a late or repeated result. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public boolean finishOperation(UUID id, OperationStatus status, String diagnostic, Instant now) {
+        return jdbc.update(
+                        "UPDATE payment_external_operation SET status = ?, lease_until = NULL, finished_at = ?,"
+                                + " last_error = ? WHERE id = ? AND status = 'IN_FLIGHT'",
+                        status.name(),
+                        Timestamp.from(now),
+                        diagnostic,
+                        id)
+                > 0;
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<Operation> lockAbandonedInFlight(Instant now) {
+        return jdbc.query(
+                "SELECT * FROM payment_external_operation WHERE status = 'IN_FLIGHT' AND lease_until < ?"
+                        + " ORDER BY lease_until FOR UPDATE SKIP LOCKED",
+                PaymentRepository::operation,
+                Timestamp.from(now));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void storeCheckout(UUID intentId, String checkoutId, String url, Instant expiresAt) {
+        jdbc.update(
+                "UPDATE payment_intent SET provider_checkout_id = ?, checkout_url = ?, checkout_expires_at = ?"
+                        + " WHERE id = ?",
+                checkoutId,
+                url,
+                expiresAt == null ? null : Timestamp.from(expiresAt),
+                intentId);
+    }
+
+    public Instant checkoutExpiresAt(UUID intentId) {
+        var value = jdbc.queryForObject(
+                "SELECT checkout_expires_at FROM payment_intent WHERE id = ?", Timestamp.class, intentId);
+        return value == null ? null : value.toInstant();
     }
 
     private static Intent intent(ResultSet rs, int row) throws SQLException {

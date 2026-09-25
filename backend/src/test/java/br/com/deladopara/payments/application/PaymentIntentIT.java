@@ -139,18 +139,28 @@ class PaymentIntentIT {
     }
 
     @Test
-    void transitionAdvancesVersionAndEmitsEventWhileInvalidOneChangesNothing() {
+    void versionAdvancesOnlyWithAnEventAndInvalidTransitionChangesNothing() {
         var id = service.request(UUID.randomUUID(), 5_250, UUID.randomUUID());
 
         service.transition(id, PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
+        assertThat(version(id)).isZero();
+        service.transition(id, PaymentStatus.UNKNOWN, "OUTCOME_UNKNOWN", UUID.randomUUID());
         assertThatThrownBy(() -> service.transition(id, PaymentStatus.REFUNDED, null, UUID.randomUUID()))
                 .isInstanceOf(InvalidPaymentTransitionException.class);
 
-        assertThat(jdbc.queryForMap("SELECT status, status_version FROM payment_intent WHERE id = ?", id))
-                .containsEntry("status", "CREATING_CHECKOUT")
-                .containsEntry("status_version", 1);
-        assertThat(count("SELECT count(*) FROM event_outbox WHERE event_type = 'payment.status_changed'"))
-                .isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT status FROM payment_intent WHERE id = ?", String.class, id))
+                .isEqualTo("UNKNOWN");
+        assertThat(version(id)).isEqualTo(1);
+        assertThat(jdbc.queryForList(
+                        "SELECT event_type || ':' || aggregate_version FROM event_outbox WHERE aggregate_id = ?"
+                                + " ORDER BY aggregate_version",
+                        String.class,
+                        id.toString()))
+                .containsExactly("payment.checkout_requested:0", "payment.status_changed:1");
+    }
+
+    private int version(UUID id) {
+        return count("SELECT status_version FROM payment_intent WHERE id = ?", id);
     }
 
     @Test
