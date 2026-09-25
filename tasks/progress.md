@@ -1015,3 +1015,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `PurchaseAcceptanceIT` 7/7, `RouteContractCoverageTest`, `ArchitectureRulesTest`; `contracts:check`. Suíte backend completa rodada como checkpoint (ver PR). |
 | Limite | Cupom de convidado bloqueado até verificação de e-mail de convidado; CHK-Q01/Q02 abertas; sem UI. |
 | Próximo passo | C59 (worker de pagamentos). |
+
+## Sessão 2026-09-25 — C59: worker de pagamentos (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Chamada externa fora de transação; queda com efeito incerto mantém UNKNOWN; lease expirado não autoriza reenvio. |
+| Mudanças | `PaymentWorker` (perfil `worker`, opt-in), configuração `payments.*` e `.env.example`. |
+| Verificação | `PaymentWorkerIT` 4/4, `ArchitectureRulesTest` 3/3. Checkpoint anterior: suíte completa 115 unitários + 127 integração verdes na C58a. |
+| Limite | Provedor real só na C63; o worker exige `PAYMENTS_PROVIDER` quando habilitado. |
+| Próximo passo | C60 (webhook Asaas durável). |

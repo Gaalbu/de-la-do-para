@@ -88,6 +88,13 @@ app:
       enabled: ${APP_EVENTING_CONSUMER_ENABLED:false}
       poll-delay: ${APP_EVENTING_CONSUMER_POLL_DELAY:PT0.5S}
 
+payments:
+  provider: ${PAYMENTS_PROVIDER:}
+  worker:
+    enabled: ${PAYMENTS_WORKER_ENABLED:false}
+    batch-size: ${PAYMENTS_WORKER_BATCH_SIZE:10}
+    poll-delay: ${PAYMENTS_WORKER_POLL_DELAY:PT1S}
+
 management:
   endpoints:
     web:

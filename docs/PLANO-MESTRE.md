@@ -1710,6 +1710,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C48, C49, C54, C55, C58a. **Alvos:** worker/claim/aplicação de pagamento e testes; M.
 - **Aceite:** chamada externa fora de transação; confirmação persiste antes do offset; queda com efeito incerto mantém UNKNOWN.
 - **Verificar:** BI(PaymentWorker), V06/V07/V19; lease expirado não autoriza reenviar operação ambígua.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c59-payment-worker`): `PaymentWorker` agendado no perfil `worker`, ligado só com `PAYMENTS_WORKER_ENABLED=true` e provedor explícito (`PAYMENTS_PROVIDER`). A cada ciclo marca leases vencidos como `UNKNOWN` e roda um lote de operações pelo claim durável. Decisão de desenho: quem chama o provedor é o claim no banco, não o offset Kafka de `payment.checkout_requested`; assim uma reentrega não gera segunda cobrança. A confirmação antes do offset fica na C61 (handler transacional).
 
 ### C60 — `feat(payments): durably ingest authenticated Asaas webhooks`
 
