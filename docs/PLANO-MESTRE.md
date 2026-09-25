@@ -1612,21 +1612,22 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
   ACK permite redelivery, e o teste de processo comprova recuperação após
   encerramento forçado do worker e expiração da lease. Há métricas agregadas sem
   labels de evento ou payload. Os testes usam PostgreSQL/Kafka reais. O worker
-  exige parâmetros explícitos no perfil `worker`. C47 continua pendente somente
-  da revisão humana e aprovação dos valores operacionais da C45; não iniciar
-  C48/C49 antes dessa decisão.
+  exige parâmetros explícitos no perfil `worker`. Os valores operacionais da C45
+  foram aprovados em 2026-09-24; C48/C49 foram liberadas.
 
 ### C48 — `feat(eventing): record consumer effects idempotently`
 
 - [ ] **Depende:** C47. **Alvos:** registry de consumo, migration, contrato de handler e teste; M.
 - **Aceite:** eventId+handler único; efeito e registro no mesmo commit; offset só avança após resultado durável.
 - **Verificar:** BI(IdempotentConsumer), duplicata e V06; handler de teste não vira fluxo fictício da aplicação.
+- **Estado atual:** implementado e verificado localmente na branch `feat/eventing-idempotent-consumer` (ledger V25, serviço transacional, validação do envelope, adapter Kafka com commit manual após o commit PostgreSQL, lote processado em ordem sem commit além de falha); ainda sem PR/merge.
 
 ### C49 — `feat(eventing): schedule retries and quarantine invalid events`
 
 - [ ] **Depende:** C48. **Alvos:** política retry, quarentena/DLT e testes; M.
 - **Aceite:** transitório recebe tentativas limitadas; inválido tem diagnóstico seguro; reordenação possível é tratada por versão/estado.
 - **Verificar:** BI(EventRecovery), V14 e limites de retenção; mensagem problemática não impede progresso indefinidamente.
+- **Estado atual:** implementado e verificado localmente sobre a C48 (migration V26 `event_consumer_failure`, `EventRetryPolicy` com backoff 1 s/×2/teto 1 min/full jitter, 8 tentativas transitórias e 1 inválida, `EventFailureService` durável; o consumidor pausa a partição até o retry vencer e segue adiante após quarentena; `last_error` guarda só `KIND:ExceptionClass`, sem mensagem/payload). Pendente: limpeza por retenção de quarentena, API operacional de replay (C79 em diante) e PR/merge. Um evento em quarentena deixa lacuna de `aggregateVersion`: eventos posteriores do mesmo agregado ficam `PENDING_ORDER` até reconciliação (EVT-007).
 
 ### C50 — `docs(orders): specify immutable purchase records and status history`
 

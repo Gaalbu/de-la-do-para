@@ -108,6 +108,15 @@ passam; ainda não existe publisher nem consumer real.
 **Checkpoint C48:** duplicata, rebalance, queda antes/depois do commit e
    incompatibilidade de schema cobertos com PostgreSQL/Kafka reais.
 
+**Estado atual:** checkpoint C48 verificado localmente em 2026-09-24. Ledger,
+handler transacional, validação estrita de envelope, controle de gaps e adapter
+Kafka manual estão implementados. Testes com PostgreSQL/Kafka reais cobrem
+redelivery após reinício, rebalanceamento, commits posteriores ao efeito local,
+deduplicação e incompatibilidade de schema sem avançar o offset. Os tópicos de
+entrada e saída são separados. O consumer segue opt-in e desabilitado por
+padrão; não há handler comercial habilitado. C49 ainda precisa implementar
+retry e quarentena para não deixar falhas permanentes bloquearem a partição.
+
 ### C49 — retry, quarentena e replay
 
 1. Classificar falha transitória, inválida e dependência em estado `UNKNOWN`;

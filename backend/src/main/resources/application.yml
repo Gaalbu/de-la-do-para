@@ -82,6 +82,11 @@ app:
       lease: ${APP_EVENTING_LEASE}
       batch-size: ${APP_EVENTING_BATCH_SIZE}
       poll-delay: ${APP_EVENTING_POLL_DELAY}
+      consumer-topic: ${APP_EVENTING_CONSUMER_TOPIC:events.inbound}
+      consumer-group: ${APP_EVENTING_CONSUMER_GROUP:de-la-do-para}
+    consumer:
+      enabled: ${APP_EVENTING_CONSUMER_ENABLED:false}
+      poll-delay: ${APP_EVENTING_CONSUMER_POLL_DELAY:PT0.5S}
 
 management:
   endpoints:

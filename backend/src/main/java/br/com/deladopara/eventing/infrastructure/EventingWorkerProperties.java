@@ -5,7 +5,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.eventing.publisher")
 public record EventingWorkerProperties(
-        String bootstrapServers, String topic, Duration lease, int batchSize, Duration pollDelay) {
+        String bootstrapServers,
+        String topic,
+        Duration lease,
+        int batchSize,
+        Duration pollDelay,
+        String consumerTopic,
+        String consumerGroup) {
 
     public EventingWorkerProperties {
         if (bootstrapServers == null || bootstrapServers.isBlank()) {
@@ -22,6 +28,12 @@ public record EventingWorkerProperties(
         }
         if (pollDelay == null || pollDelay.isZero() || pollDelay.isNegative()) {
             throw new IllegalArgumentException("Outbox poll delay must be positive");
+        }
+        if (consumerTopic == null || consumerTopic.isBlank()) {
+            throw new IllegalArgumentException("Kafka consumer topic is required");
+        }
+        if (consumerGroup == null || consumerGroup.isBlank()) {
+            throw new IllegalArgumentException("Kafka consumer group is required");
         }
     }
 }
