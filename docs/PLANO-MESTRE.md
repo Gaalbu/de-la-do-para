@@ -1703,6 +1703,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C31, C39a, C43, C51, C54, C57, C58. **Alvos:** coordenador, API/DTOs e testes transacionais; M.
 - **Aceite:** uma transação cria pedido/reserva/cupom/intenção; versão/preço/dados externos revalidados; itens novos do carrinho não são apagados.
 - **Verificar:** BI(CheckoutAcceptance), C e V01–V04/V11/V12; rollback de qualquer etapa preserva todos os invariantes.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c58a-purchase-acceptance`): `PurchaseSummaryService` + `GET /checkout/{id}/summary` (`summaryVersion` SHA-256), `PurchaseAcceptanceService` + `POST /checkout/{id}/purchase` (claim, resumo revalidado, pedido, reserva FEFO, cupom só com conta de e-mail verificado, token de convidado, intenção de pagamento, consumo só das quantidades compradas, fechamento da chave, tudo em uma transação). Corrigido o mapeamento JSONB de `checkout_snapshots.items`, que fazia `POST /checkout/snapshots` falhar contra PostgreSQL real. Convidado não usa cupom até existir verificação de e-mail de convidado (D33).
 
 ### C59 — `feat(payments): process checkout requests with durable claims`
 

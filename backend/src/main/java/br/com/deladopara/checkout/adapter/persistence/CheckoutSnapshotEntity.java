@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "checkout_snapshots")
@@ -23,6 +25,7 @@ public class CheckoutSnapshotEntity {
     @Column(name = "guest_session_key", nullable = false, length = 160, updatable = false)
     private String guestSessionKey;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb", updatable = false)
     private String items;
 

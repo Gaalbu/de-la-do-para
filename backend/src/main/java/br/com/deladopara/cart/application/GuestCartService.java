@@ -12,8 +12,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +75,25 @@ public class GuestCartService {
         cart.requireWritable(expectedVersion);
         cart.replaceItems(List.of(), Instant.now(clock));
         return CartResponse.from(carts.saveAndFlush(cart));
+    }
+
+    /**
+     * Removes the purchased quantities after checkout; lines added after the snapshot, and any quantity above the
+     * purchased one, stay in the cart.
+     */
+    @Transactional
+    public void consumePurchased(String sessionId, Map<UUID, Integer> purchased) {
+        var cart = find(sessionId);
+        var now = Instant.now(clock);
+        var remaining = new ArrayList<CartItemEntity>();
+        for (var item : cart.getItems()) {
+            var left = item.getQuantity() - purchased.getOrDefault(item.getSkuId(), 0);
+            if (left > 0) {
+                remaining.add(new CartItemEntity(cart, item.getSkuId(), left, now));
+            }
+        }
+        cart.replaceItems(remaining, now);
+        carts.saveAndFlush(cart);
     }
 
     private CartEntity findOrCreate(String sessionId) {
