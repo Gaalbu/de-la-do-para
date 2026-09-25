@@ -32,7 +32,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 
 - Este arquivo é suficiente para retomar o projeto: não depender do histórico do chat, de memória do modelo ou da existência da pasta de documentos original.
 - Requisitos adicionais desta consolidação: clone do **novo** repositório em `/home/gaalbu/codigos`, pipeline CI/CD obrigatória, documentação verificada, commits limpos e código enxuto. Eles atualizam trechos anteriores que chamavam CI de opcional.
-- As decisões D01–D65 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
+- As decisões D01–D70 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
 - A01/A03/A05/A06/A07/A10 são propostas técnicas detalhadas. Validar compatibilidade e registrar em ADR nas etapas indicadas; não apresentá-las como respostas explícitas do usuário. Decisões comerciais ou arquitetônicas ainda ambíguas devem ser perguntadas, uma de cada vez, com opções e recomendação. Não transformar silêncio em aprovação.
 - Dados de preços, produtores, lotes, embalagens e origem da demonstração são fictícios ou referências de teste identificadas. Não alegar proteção física de embalagem, segurança alimentar, operação em produção ou disponibilidade de marca.
 - Não copiar código, identidade, namespace, dados pessoais, credenciais ou histórico Git do LAPES Commerce. Usar apenas os aprendizados funcionais descritos neste documento.
@@ -286,6 +286,8 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D66 | Pedido pronto para retirada fica guardado por 3 dias úteis. Depois, abrir análise administrativa sem cancelar, descartar ou reembolsar automaticamente; manter estoque comprometido até resolução explícita |
 | D67 | Fixture C25 usa lotes explicitamente sintéticos e relógio fixo: por alimento, um lote atende exatamente à margem D54 na chegada prevista e outro fica um dia abaixo. A fixture não representa estoque real |
 | D68 | Após qualquer pacote ser entregue à transportadora, os demais continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
+| D69 | Alocação de estoque entre lotes elegíveis por FEFO (primeiro a vencer, primeiro alocado), desempate por recebimento e UUID; só entre lotes que já passaram validade, bloqueio e saldo (aprovado em 2026-09-24, C57) |
+| D70 | Bloquear lote com reserva ativa mantém as reservas existentes e só impede novas; ajuste que deixaria o físico abaixo do reservado é recusado e segue para reconciliação administrativa, sem liberar ou trocar lote automaticamente (aprovado em 2026-09-24, C57) |
 
 D11–D13 são as regras adotadas no planejamento por resposta expressa do usuário. O marco de expedição foi definido em D29. O despacho parcial segue D30. O limite de cancelamento de retirada e a proteção contra conclusão simultânea seguem D31.
 
@@ -1687,6 +1689,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C26, C43, C56. **Alvos:** serviço de reserva, linhas/versionamento/migration e testes; M.
 - **Aceite:** lote elegível para chegada; reserva atômica em ordem estável; confirmar/liberar repetidamente não repete movimento.
 - **Verificar:** BI(StockReservation), V01/V13 com PostgreSQL real e relógio controlado.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c57-stock-reservation`): V31 (`inventory_reservation` com 15 min por constraint, linhas por lote), `StockReservationService` com locks em ordem (SKU, lote), FEFO (D69), reserva tudo-ou-nada, confirmação e liberação idempotentes com movimento único por passo; bloqueio preserva reservas (D70).
 
 ### C58 — `feat(checkout): claim purchase intentions with durable idempotency`
 

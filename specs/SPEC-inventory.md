@@ -111,7 +111,7 @@ uma compra com entrega futura será elegível.
 - Lote vencido não recebe novas alocações. A baixa física do vencido é ajuste
   administrativo auditado. Se o lote vencer enquanto estiver comprometido,
   exigir análise explícita; não trocar lote ou cancelar pedido silenciosamente.
-- **Estratégia de alocação a revisar:** recomendação é FEFO (primeiro a vencer,
+- **Estratégia de alocação aprovada (D69):** FEFO (primeiro a vencer,
   primeiro alocado), com desempate por recebimento e UUID estável. Só ordenar
   entre lotes que já passaram validade, bloqueio e saldo; FEFO não substitui
   os limites de validade do SKU.
@@ -122,7 +122,7 @@ uma compra com entrega futura será elegível.
   quantidade física nem histórico. Desbloquear é operação explícita,
   autenticada no servidor, com ator, motivo e versão concorrente (API/UI em
   C27/C28).
-- **Regra proposta para lotes com alocação ativa:** manter as linhas reservadas,
+- **Regra aprovada para lotes com alocação ativa (D70):** manter as linhas reservadas,
   impedir sua expedição e abrir pendência administrativa; não liberar nem
   realocar unidades até resolução explícita. A revisão deve decidir se o
   operador pode substituir o lote por outro elegível ou precisa cancelar a
@@ -175,8 +175,8 @@ sucesso genérico como prova de reserva atômica.
 - C24a ainda depende das decisões de calendário e validade tardia; a continuidade
   dos pacotes após handoff parcial está definida em D68. Inventory mantém as
   alocações comprometidas até fatos autorizados de shipping/checkout.
-- FEFO e tratamento de bloqueio com alocação existente são recomendações,
-  não decisões aprovadas. Não iniciar C26 nesses pontos sem revisar a spec.
+- FEFO (D69) e tratamento de bloqueio com alocação existente (D70) foram
+  aprovados em 2026-09-24 e estão implementados na C57.
 - Calendário anual concreto e lote/datas de operação são distintos das
   fixtures de teste. Configuração deve ser versionada/local, sem API paga,
   usar feriados confirmados em fonte oficial e manter ponto facultativo
