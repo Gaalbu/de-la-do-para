@@ -1800,6 +1800,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
 - **Aceite:** ponto/prazo informados; código e papel autorizados; entrega/retirada confirmada uma vez.
 - **Verificar:** BI(PickupLifecycle), código inválido/repetido e pedido não pago.
+- **Estado atual (2026-09-26):** `OrderTransitions` já restringe `PAID → PREPARING → READY_FOR_PICKUP → PICKED_UP` a `FulfillmentMode.PICKUP`, com transição final somente pelo ator `ADMIN`; `OrderService.transition` bloqueia o pedido e grava estado, histórico append-only e outbox em uma transação, e repetição do estado atual é no-op. `PickupLifecycleTest` exercita Postgres real: caminho até retirada confirmada uma vez, eventos/histórico contíguos, modalidade errada e pedido não pago rejeitados. Continua sem endpoint administrativo de ação; o código de retirada tem regra de emissão/validação pendente e não será inventado aqui. Sem PR/merge.
 
 ### C73 — `feat(shipping-ui): operate dispatch and pickup from the admin area`
 
