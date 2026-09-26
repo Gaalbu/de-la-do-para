@@ -924,3 +924,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `docs:check` e `aislop`; revisão contra decisões D11–D13, D29–D31, D66, D68 e SPEC-identity IDN-011. |
 | Limite | Proposta não aprovada; ORD-Q01/Q02 abertas. C51 pode começar pela parte do snapshot/transições (independente dessas perguntas). |
 | Próximo passo | C51 (persistência do pedido). |
+
+## Sessão 2026-09-24 — C51: persistência de pedidos (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Persistir snapshot imutável e transições de pedido com evento de outbox. |
+| Mudanças | V28 (`purchase_order`, `purchase_order_item`, `purchase_order_status_history`; triggers bloqueiam UPDATE/DELETE de itens/história e alteração das colunas do snapshot; totais conferidos por CHECK); módulo `orders` (`OrderTransitions`, `OrderService`, `OrderRepository`, `CreateOrderCommand`). Eventos `order.created` (v0) e `order.status_changed` (v = sequência) sem dados pessoais. |
+| Verificação | `OrderLifecycleTest` 6/6, `OrderLifecycleIT` 7/7, `ArchitectureRulesTest` 3/3; Spotless. |
+| Limite | Sem API de consulta (C52), sem integração ao checkout/pagamento. Rollback no meio da transação não é exercitado por falha injetada (a validação precede as escritas). SPEC-orders em revisão; ORD-Q01/Q02 abertas. |
+| Próximo passo | C52 (consulta autorizada de pedidos). |
