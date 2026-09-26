@@ -1469,6 +1469,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C15, C31. **Alvos:** API/aplicação/DTOs de cupons e testes; M.
 - **Aceite:** admin cria/edita/desativa com validação; consulta comercial não altera uso; histórico preservado.
 - **Verificar:** BI(CouponAdminApi), C e autorização.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c32-coupon-admin-api`, empilhada na C31): `/api/v1/admin/coupons` (listar, criar, consultar, editar/desativar) com contrato OpenAPI, papel ADMIN + CSRF, código imutável e sem remoção, limite global não pode ficar abaixo do uso registrado; leituras não alteram uso.
 
 ### C33 — `docs(storefront): specify public discovery and rendering`
 
