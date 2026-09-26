@@ -3,12 +3,16 @@ package br.com.deladopara.orders.adapter.web;
 import br.com.deladopara.orders.application.OrderQueryService.InvalidOrderTokenException;
 import br.com.deladopara.orders.application.OrderQueryService.InvalidPageException;
 import br.com.deladopara.orders.application.OrderQueryService.OrderNotVisibleException;
+import br.com.deladopara.orders.application.OrderService.OrderNotFoundException;
+import br.com.deladopara.orders.application.OrderService.PickupOnlyOrderException;
+import br.com.deladopara.orders.domain.OrderTransitions.InvalidOrderTransitionException;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -17,7 +21,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class OrderExceptionHandler {
 
-    @ExceptionHandler(OrderNotVisibleException.class)
+    @ExceptionHandler({OrderNotVisibleException.class, OrderNotFoundException.class})
     ResponseEntity<Problem> notVisible() {
         return problem(HttpStatus.NOT_FOUND, "ORDER_001", "pedido não encontrado");
     }
@@ -27,9 +31,18 @@ public class OrderExceptionHandler {
         return problem(HttpStatus.UNAUTHORIZED, "ORDER_003", "prova de acesso ao pedido ausente ou inválida");
     }
 
-    @ExceptionHandler({InvalidPageException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+        InvalidPageException.class,
+        MethodArgumentTypeMismatchException.class,
+        HttpMessageNotReadableException.class
+    })
     ResponseEntity<Problem> malformed() {
         return problem(HttpStatus.BAD_REQUEST, "ORDER_004", "parâmetros inválidos");
+    }
+
+    @ExceptionHandler({InvalidOrderTransitionException.class, PickupOnlyOrderException.class})
+    ResponseEntity<Problem> invalidTransition() {
+        return problem(HttpStatus.CONFLICT, "ORDER_002", "ação incompatível com modalidade ou estado do pedido");
     }
 
     private ResponseEntity<Problem> problem(HttpStatus status, String code, String detail) {

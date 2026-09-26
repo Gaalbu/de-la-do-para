@@ -3,6 +3,7 @@ package br.com.deladopara.orders.application;
 import br.com.deladopara.eventing.adapter.persistence.OutboxEventWriter;
 import br.com.deladopara.eventing.domain.OutboxEvent;
 import br.com.deladopara.orders.adapter.persistence.OrderRepository;
+import br.com.deladopara.orders.domain.FulfillmentMode;
 import br.com.deladopara.orders.domain.OrderActor;
 import br.com.deladopara.orders.domain.OrderStatus;
 import br.com.deladopara.orders.domain.OrderTransitions;
@@ -78,6 +79,22 @@ public class OrderService {
     @Transactional
     public OrderStatus transition(UUID orderId, OrderStatus to, OrderActor actor, String reason, UUID correlationId) {
         var order = orders.lock(orderId).orElseThrow(OrderNotFoundException::new);
+        return transitionLocked(order, to, actor, reason, correlationId);
+    }
+
+    /** Applies an administrator-operated pickup action only to a locked PICKUP order. */
+    @Transactional
+    public OrderStatus transitionPickup(UUID orderId, OrderStatus to, UUID correlationId) {
+        var order = orders.lock(orderId).orElseThrow(OrderNotFoundException::new);
+        if (order.mode() != FulfillmentMode.PICKUP) {
+            throw new PickupOnlyOrderException();
+        }
+        return transitionLocked(order, to, OrderActor.ADMIN, null, correlationId);
+    }
+
+    private OrderStatus transitionLocked(
+            OrderRepository.OrderHead order, OrderStatus to, OrderActor actor, String reason, UUID correlationId) {
+        var orderId = order.id();
         if (order.status() == to) {
             return to;
         }
@@ -110,4 +127,6 @@ public class OrderService {
     public record CreatedOrder(UUID id, boolean created) {}
 
     public static class OrderNotFoundException extends RuntimeException {}
+
+    public static class PickupOnlyOrderException extends RuntimeException {}
 }

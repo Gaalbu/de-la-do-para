@@ -604,6 +604,57 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/orders/{id}/pickup:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: applyPickupAction
+      summary: Avançar operação administrativa de retirada
+      description: >
+        Somente ADMIN. A transição é aplicada sob lock do pedido e aceita apenas pedidos PICKUP.
+        START_PREPARATION move PAID para PREPARING, MARK_READY move PREPARING para READY_FOR_PICKUP,
+        e CONFIRM_PICKUP move READY_FOR_PICKUP para PICKED_UP. Repetir a ação que corresponde ao
+        estado atual é idempotente. Esta operação registra a confirmação do atendente; não implementa
+        código de retirada, cuja política ainda não foi definida.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PickupActionRequest'}
+      responses:
+        '200':
+          description: Pedido e histórico atualizados
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Order'}
+        '400':
+          description: Ação inválida ou UUID inválido (ORDER_004)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Sessão ausente ou expirada
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Pedido não encontrado (ORDER_001)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Modalidade não é retirada ou estado não permite a ação (ORDER_002)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/admin/products:
     get:
       operationId: listAdminProducts
@@ -1980,6 +2031,14 @@ components:
     OrderStatus:
       type: string
       enum: [PENDING_PAYMENT, PAID, PREPARING, READY_FOR_PICKUP, IN_TRANSIT, DELIVERED, PICKED_UP, CANCELLED, EXPIRED, UNDER_REVIEW]
+    PickupActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [START_PREPARATION, MARK_READY, CONFIRM_PICKUP]
     OrderSummary:
       type: object
       additionalProperties: false

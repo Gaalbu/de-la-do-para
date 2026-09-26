@@ -1800,13 +1800,14 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
 - **Aceite:** ponto/prazo informados; código e papel autorizados; entrega/retirada confirmada uma vez.
 - **Verificar:** BI(PickupLifecycle), código inválido/repetido e pedido não pago.
-- **Estado atual (2026-09-26):** `OrderTransitions` já restringe `PAID → PREPARING → READY_FOR_PICKUP → PICKED_UP` a `FulfillmentMode.PICKUP`, com transição final somente pelo ator `ADMIN`; `OrderService.transition` bloqueia o pedido e grava estado, histórico append-only e outbox em uma transação, e repetição do estado atual é no-op. `PickupLifecycleTest` exercita Postgres real: caminho até retirada confirmada uma vez, eventos/histórico contíguos, modalidade errada e pedido não pago rejeitados. Continua sem endpoint administrativo de ação; o código de retirada tem regra de emissão/validação pendente e não será inventado aqui. Sem PR/merge.
+- **Estado atual (2026-09-26):** `OrderTransitions` restringe `PAID → PREPARING → READY_FOR_PICKUP → PICKED_UP` a `FulfillmentMode.PICKUP`, com transição final somente pelo ator `ADMIN`; `OrderService` bloqueia o pedido e grava estado, histórico append-only e outbox numa transação, e repetição do estado atual é no-op. `PickupLifecycleTest` exercita Postgres real. Adicionado `POST /api/v1/admin/orders/{id}/pickup`, protegido por ADMIN/CSRF, com as três ações operacionais, validação de modalidade/estado e consulta atualizada sem cache. `OrderAccessIT` cobre caminho, repetição sem evento duplicado, modalidade errada, pedido não pago e autorização. O endpoint não emite código de retirada: a política de emissão/validação segue pendente. C72 permanece parcial até cobrir ponto/prazo e código autorizado; sem PR/merge.
 
 ### C73 — `feat(shipping-ui): operate dispatch and pickup from the admin area`
 
 - [ ] **Depende:** C16, C69, C70, C71, C72. **Alvos:** admin expedição, ações e testes; M.
 - **Aceite:** operador prepara/envia/entrega ou confirma retirada; ações respeitam estado; impressão deixa claro que etiqueta é de teste.
 - **Verificar:** F/E; operar uma entrega e uma retirada; cancelamento concorre com transição logística conforme V16.
+- **Estado atual (2026-09-26):** o backend agora oferece as ações administrativas da retirada pelo endpoint de C72. A tela administrativa, operação de expedição e testes de concorrência com cancelamento continuam pendentes; dependências C69–C71 também não estão completas. Sem PR/merge.
 
 ### C73a — `feat(orders-ui): display delivery and pickup progress`
 
