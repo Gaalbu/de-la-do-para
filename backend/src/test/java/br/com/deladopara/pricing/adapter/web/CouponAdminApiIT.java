@@ -1,5 +1,6 @@
 package br.com.deladopara.pricing.adapter.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -9,9 +10,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.deladopara.pricing.adapter.web.dto.CouponWriteRequest;
+import br.com.deladopara.pricing.application.CouponAdminService;
+import br.com.deladopara.pricing.application.CouponAdminService.CouponCodeConflictException;
 import br.com.deladopara.pricing.application.CouponReservationService;
+import br.com.deladopara.pricing.domain.CouponDiscount;
 import br.com.deladopara.support.PostgresTestContainer;
 import com.jayway.jsonpath.JsonPath;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +48,14 @@ class CouponAdminApiIT {
     private final MockMvc mvc;
     private final JdbcTemplate jdbc;
     private final CouponReservationService reservations;
+    private final CouponAdminService admin;
 
     @Autowired
-    CouponAdminApiIT(MockMvc mvc, JdbcTemplate jdbc, CouponReservationService reservations) {
+    CouponAdminApiIT(MockMvc mvc, JdbcTemplate jdbc, CouponReservationService reservations, CouponAdminService admin) {
         this.mvc = mvc;
         this.jdbc = jdbc;
         this.reservations = reservations;
+        this.admin = admin;
     }
 
     @BeforeEach
@@ -182,5 +195,50 @@ class CouponAdminApiIT {
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("PRICING_004"));
+    }
+
+    @Test
+    void concurrentCreationOfTheSameCodeYieldsOneCouponAndConflicts() throws Exception {
+        var request = new CouponWriteRequest(
+                "CORRIDA",
+                CouponDiscount.Type.PERCENTAGE,
+                10,
+                0,
+                Instant.parse("2026-01-01T00:00:00Z"),
+                Instant.parse("2099-12-31T23:59:59Z"),
+                null,
+                1);
+        var start = new CountDownLatch(1);
+        var executor = Executors.newFixedThreadPool(6);
+        try {
+            var tasks = new ArrayList<Callable<Boolean>>();
+            for (var i = 0; i < 6; i++) {
+                tasks.add(() -> {
+                    start.await();
+                    try {
+                        admin.create(request);
+                        return true;
+                    } catch (CouponCodeConflictException conflict) {
+                        return false;
+                    }
+                });
+            }
+            var futures = tasks.stream().map(executor::submit).toList();
+            start.countDown();
+            var created = 0;
+            for (var future : futures) {
+                try {
+                    created += future.get() ? 1 : 0;
+                } catch (ExecutionException unexpected) {
+                    throw new AssertionError("only a code conflict is acceptable", unexpected.getCause());
+                }
+            }
+
+            assertThat(created).isEqualTo(1);
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM coupon", Integer.class))
+                    .isEqualTo(1);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }
