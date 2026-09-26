@@ -974,3 +974,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `SimulatedPaymentProviderContractTest` 6/6, `SimulatedCheckoutIT` 2/2, `CheckoutOperationRunnerIT` 5/5, `ArchitectureRulesTest` 3/3; Spotless, Checkstyle. |
 | Limite | Sem WireMock: não há adapter HTTP para exercitar; entra na C59 com a mesma suíte. Resultado do simulador não é homologação Asaas. PRs #83–#89 aguardam merge manual. |
 | Próximo passo | C56 (spec de checkout e compensação). |
+
+## Sessão 2026-09-24 — C56: spec de aceite e compensação (proposta para revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Especificar idempotência, resumo versionado, reserva de 15 min e as máquinas de compra e compensação. |
+| Mudanças | `specs/SPEC-checkout.md` §§A1–A9. |
+| Verificação | `docs:check`; revisão contra D11–D13, D29–D34, SPEC-orders/payments/pricing. |
+| Limite | Proposta; CHK-Q01…Q04 abertas. PRs #83–#90 aguardam merge manual. |
+| Próximo passo | C57 (reserva atômica de estoque). |

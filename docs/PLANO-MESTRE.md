@@ -1680,6 +1680,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C25, C29, C38, C41, C45, C50, C53. **Alvos:** `specs/SPEC-checkout.md`, transições e critérios CHK; M.
 - **Aceite:** chave+hash+sujeito e resumo versionado; reserva de 15 minutos; cancelamento/reembolso/pagamento tardio ligados às regras aprovadas.
 - **Verificar:** DOC/C; enumerar corridas V01–V12/V16 antes do código coordenador.
+- **Estado atual:** proposta escrita (branch `docs/c56-checkout-state-machines`) em `specs/SPEC-checkout.md` §§A1–A9. Perguntas abertas: CHK-Q01 (retenção da chave), CHK-Q02 (replay sem token de convidado), CHK-Q03 (devolução de estoque no cancelamento pago), CHK-Q04 (saída de `UNDER_REVIEW` após reembolso).
 
 ### C57 — `feat(inventory): reserve eligible stock atomically`
 
