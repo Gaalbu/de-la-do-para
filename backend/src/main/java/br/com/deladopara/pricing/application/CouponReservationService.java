@@ -1,11 +1,13 @@
 package br.com.deladopara.pricing.application;
 
 import br.com.deladopara.pricing.adapter.persistence.CouponUsageRepository;
+import br.com.deladopara.pricing.domain.CouponDiscount;
 import br.com.deladopara.pricing.domain.CouponRejection;
 import br.com.deladopara.pricing.domain.CouponReservationResult;
 import br.com.deladopara.pricing.domain.CouponUsageState;
 import java.time.Clock;
 import java.util.Locale;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,17 @@ public class CouponReservationService {
 
     public static String normalizeEmail(String email) {
         return email == null ? "" : email.strip().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Discount a code would give right now, for the purchase summary. Per-e-mail and global limits are checked only
+     * when the purchase reserves the coupon.
+     */
+    public Optional<CouponDiscount> previewDiscount(String code) {
+        var now = clock.instant();
+        return coupons.findByCode(normalizeCode(code))
+                .filter(c -> c.active() && !now.isBefore(c.validFrom()) && now.isBefore(c.validUntil()))
+                .map(CouponUsageRepository.CouponRow::discount);
     }
 
     /** Idempotent by {@code reservationKey}: a repeated call returns the original reservation. */

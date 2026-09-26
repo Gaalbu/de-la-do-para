@@ -148,6 +148,7 @@ não afeta a resposta: os eventos esperam na outbox (V04).
 Resposta `201`: `orderId`, estado, total, `expiresAt` da reserva e, para
 convidado, o token de acesso mostrado uma única vez.
 
+- **Implementação C58a:** cupom exige conta com e-mail verificado; convidado recebe `CHECKOUT_014` com motivo `EMAIL_NOT_VERIFIED` até existir verificação de e-mail de convidado (D33). Total zero é recusado com `422 CHECKOUT_016`.
 - **CHK-Q02 (aberta):** replay de aceite de convidado não pode repetir o token
   bruto (só o hash é guardado). Proposta: o replay devolve o pedido sem token,
   com `accessTokenIssued: true`, e o link por e-mail (C75) é o caminho de
@@ -219,6 +220,7 @@ reembolso.
 | `CHECKOUT_013` | 409 | estoque insuficiente para algum item |
 | `CHECKOUT_014` | 409 | cupom indisponível (limite, validade, mínimo) |
 | `CHECKOUT_015` | 400 | `Idempotency-Key` ausente ou malformada |
+| `CHECKOUT_016` | 422 | total zero (cupom cobre tudo em retirada) não é suportado |
 
 ## A9. Critérios de aceitação documental
 

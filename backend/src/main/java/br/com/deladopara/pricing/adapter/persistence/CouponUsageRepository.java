@@ -24,9 +24,17 @@ public class CouponUsageRepository {
     /** Locks the coupon row, serialising concurrent reservations of the same coupon. */
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<CouponRow> lockByCode(String codeNormalized) {
+        return coupon("SELECT * FROM coupon WHERE code_normalized = ? FOR UPDATE", codeNormalized);
+    }
+
+    public Optional<CouponRow> findByCode(String codeNormalized) {
+        return coupon("SELECT * FROM coupon WHERE code_normalized = ?", codeNormalized);
+    }
+
+    private Optional<CouponRow> coupon(String sql, String codeNormalized) {
         return jdbc
                 .query(
-                        "SELECT * FROM coupon WHERE code_normalized = ? FOR UPDATE",
+                        sql,
                         (rs, row) -> new CouponRow(
                                 rs.getObject("id", UUID.class),
                                 new CouponDiscount(

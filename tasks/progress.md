@@ -1005,3 +1005,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `CheckoutIdempotencyIT` 6/6, `ArchitectureRulesTest` 3/3 (PostgreSQL real, `-Xint`). |
 | Limite | Sem endpoint (C58a); retenção CHK-Q01 aberta. |
 | Próximo passo | C58a (aceite em uma transação). |
+
+## Sessão 2026-09-24 — C58a: aceite da compra em uma transação (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Uma transação cria pedido/reserva/cupom/intenção; versão, preço e dados externos revalidados; itens novos do carrinho não são apagados. |
+| Mudanças | `PurchaseSummaryService`, `PurchaseAcceptanceService`, `PurchaseController`; `CouponUsageRepository.findByCode` + `CouponReservationService.previewDiscount`; `AccountService.buyer`; `GuestCartService.consumePurchased`; contrato OpenAPI das duas rotas. Bug corrigido: `CheckoutSnapshotEntity.items` sem `@JdbcTypeCode(JSON)` quebrava `POST /checkout/snapshots` no PostgreSQL. |
+| Verificação | `PurchaseAcceptanceIT` 7/7, `RouteContractCoverageTest`, `ArchitectureRulesTest`; `contracts:check`. Suíte backend completa rodada como checkpoint (ver PR). |
+| Limite | Cupom de convidado bloqueado até verificação de e-mail de convidado; CHK-Q01/Q02 abertas; sem UI. |
+| Próximo passo | C59 (worker de pagamentos). |

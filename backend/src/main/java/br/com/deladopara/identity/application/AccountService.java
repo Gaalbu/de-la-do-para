@@ -41,6 +41,13 @@ public class AccountService {
         }
     }
 
+    public Optional<Buyer> buyer(String email) {
+        return accounts.findByEmailIgnoreCase(normalize(email))
+                .map(account -> new Buyer(account.getId(), account.getEmail(), account.isEmailVerified()));
+    }
+
+    public record Buyer(UUID accountId, String email, boolean emailVerified) {}
+
     public Optional<UUID> accountIdByEmail(String email) {
         return accounts.findByEmailIgnoreCase(normalize(email)).map(Account::getId);
     }
