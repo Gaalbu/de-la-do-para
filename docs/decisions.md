@@ -78,6 +78,8 @@ respondidas em D01–D65.
 | D66 | Pedido pronto para retirada fica guardado por 3 dias úteis. Após o prazo, abrir análise administrativa; sem cancelamento, descarte ou reembolso automáticos e mantendo o estoque comprometido até resolução explícita |
 | D67 | Fixture de teste C25 usa lotes explicitamente sintéticos e relógio fixo: para cada alimento, um lote atende exatamente à margem D54 na chegada prevista e outro fica um dia abaixo. Não representa estoque real |
 | D68 | Após qualquer pacote ser entregue à transportadora, os demais pacotes continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
+| D69 | Alocação de estoque entre lotes elegíveis por FEFO (primeiro a vencer, primeiro alocado), desempate por recebimento e UUID; só entre lotes que já passaram validade, bloqueio e saldo (aprovado em 2026-09-24, C57) |
+| D70 | Bloquear lote com reserva ativa mantém as reservas existentes e só impede novas; ajuste que deixaria o físico abaixo do reservado é recusado e segue para reconciliação administrativa, sem liberar ou trocar lote automaticamente (aprovado em 2026-09-24, C57) |
 
 ## Propostas técnicas (revisão do plano, não respostas do usuário)
 

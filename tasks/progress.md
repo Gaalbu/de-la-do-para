@@ -984,3 +984,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `docs:check`; revisão contra D11–D13, D29–D34, SPEC-orders/payments/pricing. |
 | Limite | Proposta; CHK-Q01…Q04 abertas. PRs #83–#90 aguardam merge manual. |
 | Próximo passo | C57 (reserva atômica de estoque). |
+
+## Sessão 2026-09-24 — PRs substituídos e C57: reserva atômica de estoque (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Remoto | #89–#91 fechados e substituídos por #92–#94 (branches `-v2`, mesma árvore): o commit de sync `merge(c53): …` reprovava o `commit-policy`, e o plano proíbe force-push. A C53 (#88) recebeu `fix(contracts): format event example checker` (Prettier). |
+| Decisões | D69 (FEFO) e D70 (bloqueio mantém reservas; ajuste abaixo do reservado vai para reconciliação) aprovadas pelo usuário. |
+| Mudanças | V31; `StockReservationService` (reserve/commit/release/find). |
+| Verificação | `StockReservationIT` 7/7, `ArchitectureRulesTest` 3/3 (PostgreSQL real, `-Xint`). |
+| Limite | Sem job de expiração nem coordenação com pedido/cupom (C58a/C61). Merges de #83–#88 e #92+ dependem do usuário. |
+| Próximo passo | C58 (idempotência durável do aceite). |
