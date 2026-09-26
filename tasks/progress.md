@@ -944,3 +944,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `OrderAccessIT` 7/7, `OrderLifecycleIT` 7/7, `OrderLifecycleTest` 6/6, `ArchitectureRulesTest` 3/3, `RouteContractCoverageTest` 1/1 (PostgreSQL real, JVM com `-Xint`); `contracts:check` verde. |
 | Limite | Sem emissão do token no checkout (C58a) nem e-mail (C75/C78). Token sem expiração (ORD-Q02 aberta). Sem UI. Sem push/PR. |
 | Próximo passo | C53 (spec de intents de pagamento e resultados incertos). |
+
+## Sessão 2026-09-24 — C53: spec de pagamentos (proposta para revisão)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Especificar intents de pagamento, operações externas e resultados incertos. |
+| Mudanças | `specs/SPEC-payments.md`; exemplos `payment-*.json` em `contracts/events/examples`; `check-events.mjs` passa a validar todos os exemplos da pasta. |
+| Verificação | `contracts:check-events` 5/5 exemplos; `docs:check`; aislop. |
+| Limite | Proposta não aprovada; PAY-Q01/Q02/Q03 abertas; Asaas não homologado (C04). PRs #83–#87 aguardam merge manual: o merge automatizado da pilha foi negado pela permissão da sessão. |
+| Próximo passo | C54 (persistir intent e operação externa antes de efeitos). |

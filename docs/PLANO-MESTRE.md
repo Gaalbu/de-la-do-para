@@ -1659,6 +1659,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C04, C45, C50. **Alvos:** `specs/SPEC-payments.md`, contratos/eventos de pagamento; M.
 - **Aceite:** Pix/cartão hospedado; correlação checkout/pagamento e valor; resultado desconhecido, consulta e reembolso definidos.
 - **Verificar:** DOC/C; contrato não depende de classes de pedido; limitações observadas no Asaas incorporadas.
+- **Estado atual:** proposta escrita (branch `docs/c53-payments-spec`): `specs/SPEC-payments.md` com intent/operação externa, tabela de transições, pagamento tardio (D13), eventos e exemplos validados pelo envelope. PAY-Q01 (validade do link), PAY-Q02 (espera de `UNKNOWN`) e PAY-Q03 (`EXPIRED`) aguardam revisão; unicidade de `externalReference` segue não provada (C04).
 
 ### C54 — `feat(payments): persist payment intents before external effects`
 

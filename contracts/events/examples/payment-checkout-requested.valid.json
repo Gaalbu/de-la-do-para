@@ -1,0 +1,16 @@
+{
+  "eventId": "1f2e3d4c-5b6a-4978-8a9b-0c1d2e3f4a5b",
+  "eventType": "payment.checkout_requested",
+  "schemaVersion": 1,
+  "aggregateId": "5d6e7f80-1a2b-4c3d-8e9f-0a1b2c3d4e5f",
+  "aggregateVersion": 0,
+  "occurredAt": "2026-09-24T12:00:00Z",
+  "correlationId": "7d0c1c5e-6f4a-4d43-8a51-3f3a1f8b2e10",
+  "causationId": "7d0c1c5e-6f4a-4d43-8a51-3f3a1f8b2e10",
+  "payload": {
+    "paymentIntentId": "5d6e7f80-1a2b-4c3d-8e9f-0a1b2c3d4e5f",
+    "orderId": "7d0c1c5e-6f4a-4d43-8a51-3f3a1f8b2e10",
+    "amountCents": 5250,
+    "currency": "BRL"
+  }
+}
