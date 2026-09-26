@@ -934,3 +934,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `OrderLifecycleTest` 6/6, `OrderLifecycleIT` 7/7, `ArchitectureRulesTest` 3/3; Spotless. |
 | Limite | Sem API de consulta (C52), sem integração ao checkout/pagamento. Rollback no meio da transação não é exercitado por falha injetada (a validação precede as escritas). SPEC-orders em revisão; ORD-Q01/Q02 abertas. |
 | Próximo passo | C52 (consulta autorizada de pedidos). |
+
+## Sessão 2026-09-24 — C52: consulta autorizada de pedidos (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Dono acessa seus pedidos; convidado usa prova controlada; admin vê o histórico. |
+| Mudanças | V29 `purchase_order_access_token` (hash SHA-256, imutável); `OrderAccessTokens`, `OrderQueryService`, `OrderView`, `OrderController`, `OrderExceptionHandler`; `AccountService.accountIdByEmail` (orders não toca o repository de identity); regra `GET /api/v1/orders/*` pública no `SecurityConfig` (o serviço decide 401/404); contrato OpenAPI com `Order`, `OrderPage`, esquema `orderToken`. Pedido alheio ou inexistente = 404; convidado sem token válido = 401. |
+| Verificação | `OrderAccessIT` 7/7, `OrderLifecycleIT` 7/7, `OrderLifecycleTest` 6/6, `ArchitectureRulesTest` 3/3, `RouteContractCoverageTest` 1/1 (PostgreSQL real, JVM com `-Xint`); `contracts:check` verde. |
+| Limite | Sem emissão do token no checkout (C58a) nem e-mail (C75/C78). Token sem expiração (ORD-Q02 aberta). Sem UI. Sem push/PR. |
+| Próximo passo | C53 (spec de intents de pagamento e resultados incertos). |

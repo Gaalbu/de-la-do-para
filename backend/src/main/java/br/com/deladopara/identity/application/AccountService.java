@@ -4,6 +4,7 @@ import br.com.deladopara.identity.adapter.persistence.AccountRepository;
 import br.com.deladopara.identity.domain.Account;
 import java.time.Clock;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,6 +39,10 @@ public class AccountService {
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateEmailException();
         }
+    }
+
+    public Optional<UUID> accountIdByEmail(String email) {
+        return accounts.findByEmailIgnoreCase(normalize(email)).map(Account::getId);
     }
 
     public static String normalize(String email) {
