@@ -191,4 +191,33 @@ class CouponReservationServiceIT {
             executor.shutdownNow();
         }
     }
+
+    @Test
+    void concurrentCallsWithTheSameKeyReplayTheSingleReservation() throws Exception {
+        openCoupon("REPETIDO", null, 5);
+        var executor = Executors.newFixedThreadPool(6);
+        try {
+            var tasks = new ArrayList<Callable<UUID>>();
+            for (var i = 0; i < 6; i++) {
+                tasks.add(() ->
+                        service.reserve("repetido", "a@x.com", 100, "same-key").usageId());
+            }
+            var usageIds = executor.invokeAll(tasks).stream()
+                    .map(future -> {
+                        try {
+                            return future.get();
+                        } catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                    })
+                    .distinct()
+                    .toList();
+
+            assertThat(usageIds).hasSize(1).doesNotContainNull();
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM coupon_usage", Integer.class))
+                    .isEqualTo(1);
+        } finally {
+            executor.shutdownNow();
+        }
+    }
 }
