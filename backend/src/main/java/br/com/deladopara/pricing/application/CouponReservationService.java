@@ -52,14 +52,16 @@ public class CouponReservationService {
             String code, String verifiedEmail, long eligibleSubtotalCents, String reservationKey) {
         var existing = coupons.lockUsage(reservationKey);
         if (existing.isPresent()) {
-            var usage = existing.get();
-            return usage.state() == CouponUsageState.RELEASED
-                    ? CouponReservationResult.rejected(CouponRejection.INACTIVE)
-                    : CouponReservationResult.reserved(usage.id(), usage.discount(), true);
+            return replay(existing.get());
         }
         var coupon = coupons.lockByCode(normalizeCode(code)).orElse(null);
         if (coupon == null) {
             return CouponReservationResult.rejected(CouponRejection.NOT_FOUND);
+        }
+        // A concurrent call with the same key held the coupon lock until it committed; its row is visible now.
+        var concurrent = coupons.lockUsage(reservationKey);
+        if (concurrent.isPresent()) {
+            return replay(concurrent.get());
         }
         var now = clock.instant();
         var rejection = rejectionFor(coupon, verifiedEmail, eligibleSubtotalCents, now);
@@ -68,6 +70,12 @@ public class CouponReservationService {
         }
         var usageId = coupons.insertReservation(coupon.id(), normalizeEmail(verifiedEmail), reservationKey, now);
         return CouponReservationResult.reserved(usageId, coupon.discount(), false);
+    }
+
+    private static CouponReservationResult replay(CouponUsageRepository.UsageRow usage) {
+        return usage.state() == CouponUsageState.RELEASED
+                ? CouponReservationResult.rejected(CouponRejection.INACTIVE)
+                : CouponReservationResult.reserved(usage.id(), usage.discount(), true);
     }
 
     private CouponRejection rejectionFor(
