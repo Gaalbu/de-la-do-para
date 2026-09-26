@@ -1025,3 +1025,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `PaymentWorkerIT` 4/4, `ArchitectureRulesTest` 3/3. Checkpoint anterior: suíte completa 115 unitários + 127 integração verdes na C58a. |
 | Limite | Provedor real só na C63; o worker exige `PAYMENTS_PROVIDER` quando habilitado. |
 | Próximo passo | C60 (webhook Asaas durável). |
+
+## Sessão 2026-09-25 — C60: webhooks Asaas duráveis (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Token próprio validado; evento persistido antes de 2xx; duplicatas identificadas; payload inválido rejeitado. |
+| Mudanças | V33; `ProviderEventInbox`; `AsaasWebhookController`; rota pública sem CSRF no `SecurityConfig`; contrato; formato do payload revalidado em `docs/integrations/asaas.md`. |
+| Verificação | `AsaasWebhookIT` 8/8, `RouteContractCoverageTest`, `ArchitectureRulesTest`; `contracts:check`; `check-secrets.sh`. |
+| Limite | Nenhum evento real do sandbox recebido (C04 depende de conta do usuário). |
+| Próximo passo | C61 (aplicar confirmação de pagamento). |

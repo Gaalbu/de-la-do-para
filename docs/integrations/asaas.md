@@ -26,6 +26,13 @@ oficial e o que o spike precisa provar. Não alegar integração comprovada.
 - Sandbox em <https://sandbox.asaas.com/>; túnel sugerido pelo próprio Asaas:
   ngrok ou Cloudflare Tunnel. Debug via página de Webhook Logs.
 
+## Payload de webhook de checkout (revalidado em 25/09/2026)
+
+Exemplo oficial em [Eventos para Checkout](https://docs.asaas.com/docs/eventos-para-checkout):
+`id`, `event`, `dateCreated` (sem fuso explícito), `account`, `checkout.{id, status, items, customer, …}`.
+Não há valor total na raiz: a C60 guarda só `id`/`event`/`checkout.id`/`checkout.status` e a confirmação
+consulta o provedor (C61/C64). `customerData` pode trazer dados pessoais e não é persistido.
+
 ## Mapeamento para os módulos
 
 - `payments`: adapter cria checkout a partir do snapshot (total = itens +

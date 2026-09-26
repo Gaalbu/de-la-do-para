@@ -1131,6 +1131,50 @@ paths:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
         '422': {$ref: '#/components/responses/Problem422'}
 
+  /api/v1/webhooks/asaas:
+    post:
+      operationId: receiveAsaasWebhook
+      summary: Receber notificação do Asaas Sandbox
+      description: >
+        Autenticado pelo cabeçalho `asaas-access-token` (token próprio de 32–255 caracteres configurado em
+        `payments.asaas.webhook-token`); sem sessão nem CSRF. O evento é gravado de forma durável antes do `200`;
+        reentregas do mesmo `id` também recebem `200` e não duplicam. Só identificadores e estados são guardados.
+        A notificação não confirma pagamento sozinha: a confirmação consulta o provedor (C61).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, event]
+              properties:
+                id: {type: string, maxLength: 120}
+                event: {type: string, maxLength: 40, example: CHECKOUT_PAID}
+                dateCreated: {type: string}
+                checkout:
+                  type: object
+                  properties:
+                    id: {type: string}
+                    status: {type: string}
+      responses:
+        '200': {description: Evento gravado (ou já gravado antes)}
+        '400':
+          description: Payload inválido (PAYMENT_012)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Token ausente, inválido ou não configurado (PAYMENT_010)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '413':
+          description: Corpo acima de 64 KiB (PAYMENT_011)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+
   /api/v1/cart/items:
     put:
       operationId: replaceGuestCartItems

@@ -34,7 +34,8 @@ public class SecurityConfig {
                                 "/api/v1/accounts/reset",
                                 "/api/v1/sessions",
                                 "/api/v1/cart/**",
-                                "/api/v1/checkout/**")
+                                "/api/v1/checkout/**",
+                                "/api/v1/webhooks/asaas")
                         .permitAll()
                         .requestMatchers("/actuator/**")
                         .permitAll()
@@ -54,7 +55,8 @@ public class SecurityConfig {
                         .authenticated())
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(handler)
-                        .ignoringRequestMatchers("/api/v1/sessions", "/api/v1/accounts/verify"))
+                        .ignoringRequestMatchers(
+                                "/api/v1/sessions", "/api/v1/accounts/verify", "/api/v1/webhooks/asaas"))
                 .sessionManagement(session -> session.sessionFixation(fix -> fix.changeSessionId()))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, exc) ->
                                 writeProblem(res, 401, "IDENTITY_006", "Não autenticado", "Sessão ausente ou expirada"))
