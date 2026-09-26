@@ -9,6 +9,7 @@ import br.com.deladopara.pricing.domain.CouponDiscount;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,15 +52,19 @@ public class CouponAdminService {
             throw new CouponCodeConflictException();
         }
         var id = UUID.randomUUID();
-        coupons.insert(
-                id,
-                code,
-                discount,
-                request.validFrom(),
-                request.validUntil(),
-                request.globalLimit(),
-                request.perEmailLimit(),
-                clock.instant());
+        try {
+            coupons.insert(
+                    id,
+                    code,
+                    discount,
+                    request.validFrom(),
+                    request.validUntil(),
+                    request.globalLimit(),
+                    request.perEmailLimit(),
+                    clock.instant());
+        } catch (DuplicateKeyException concurrentCreate) {
+            throw new CouponCodeConflictException();
+        }
         return coupons.find(id).orElseThrow();
     }
 
