@@ -1462,6 +1462,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C29, C30. **Alvos:** cupom/uso, repository/migration e testes; M.
 - **Aceite:** validade/mínimo/limite; reserva/consumo/liberação atômicos; concorrência não excede a política aprovada.
 - **Verificar:** BI(CouponReservation), incluindo V11.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c31-coupon-reservation`, empilhada na PR #82): migration V27 (`coupon`, `coupon_usage`), `CouponReservationService` com reserva idempotente por chave, consumo, liberação e reembolso integral; lock de linha do cupom impede exceder limites sob concorrência. Regra aplicada segue a recomendação ainda não aprovada da SPEC-pricing §5: reembolso integral devolve só a elegibilidade por e-mail; o limite global histórico permanece consumido. Aguarda aprovação dessa regra.
 
 ### C32 — `feat(pricing): add administrative coupon management`
 
