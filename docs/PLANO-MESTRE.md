@@ -1696,6 +1696,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C56. **Alvos:** idempotency store, migration, regra de hash e testes; M.
 - **Aceite:** claim por sujeito/operação/chave; payload alterado é conflito; resultado pendente/concluído tem replay definido.
 - **Verificar:** BI(CheckoutIdempotency), V02/V03 e disputa simultânea pela mesma chave.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c58-checkout-idempotency`): V32 `checkout_idempotency` (PK sujeito+operação+chave, forma do resultado por CHECK), `CheckoutIdempotency` (claim na transação do aceite, replay `COMPLETED`, hash diferente → conflito, `PENDING` visível → em curso, chave 16–160 visíveis) e hash canônico SHA-256 da intenção.
 
 ### C58a — `feat(checkout): accept purchases in one database transaction`
 
