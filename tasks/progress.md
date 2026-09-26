@@ -954,3 +954,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `contracts:check-events` 5/5 exemplos; `docs:check`; aislop. |
 | Limite | Proposta não aprovada; PAY-Q01/Q02/Q03 abertas; Asaas não homologado (C04). PRs #83–#87 aguardam merge manual: o merge automatizado da pilha foi negado pela permissão da sessão. |
 | Próximo passo | C54 (persistir intent e operação externa antes de efeitos). |
+
+## Sessão 2026-09-24 — C54: intents de pagamento antes de efeitos externos (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Referência e valor imutáveis; solicitação gera outbox; cada tentativa externa com identidade e estado duráveis; nenhuma chamada HTTP dentro de transação. |
+| Mudanças | V30; módulo `payments` (`PaymentStatus`, `PaymentTransitions`, `OperationKind/Status`, `PaymentRepository`, `PaymentIntentService`, `CheckoutOperations`, `CheckoutOperationRunner`, port `PaymentProvider`). Versão do agregado só avança com evento (`CREATING_CHECKOUT` não emite), para o consumidor da C48 não ver lacuna. |
+| Verificação | `PaymentTransitionsTest` 3/3, `PaymentIntentIT` 7/7, `CheckoutOperationRunnerIT` 5/5, `ArchitectureRulesTest` 3/3 (PostgreSQL real, `-Xint`); Spotless e Checkstyle. |
+| Limite | Runner sem worker agendado nem adapter real (C59); simulador WireMock em C55. PRs #83–#88 aguardam merge manual. |
+| Próximo passo | C55 (simulador do provedor e suíte de contrato do adapter). |

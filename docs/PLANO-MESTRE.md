@@ -1666,6 +1666,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C46, C53. **Alvos:** intent/operação externa, migration, aplicação e testes; M.
 - **Aceite:** referência e valor imutáveis; solicitação gera outbox; cada tentativa externa possui identidade e estado duráveis.
 - **Verificar:** BI(PaymentIntent), concorrência e rollback; nenhuma chamada HTTP dentro da transação.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c54-payment-intents`): V30 (`payment_intent` com referência/valor imutáveis por trigger, `payment_external_operation` com uma operação de checkout e um reembolso por intent), transições da SPEC-payments §7.2 com evento por destino e versão contígua, claim `SKIP LOCKED` com lease de 60 s, chamada ao provedor fora de transação, timeout → `UNKNOWN` sem nova cobrança, lease vencido → `UNKNOWN`. Sem adapter Asaas (C59).
 
 ### C55 — `test(payments): model provider success failure and ambiguity`
 
