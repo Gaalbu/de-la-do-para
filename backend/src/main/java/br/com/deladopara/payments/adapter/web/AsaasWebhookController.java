@@ -4,6 +4,8 @@ import br.com.deladopara.payments.application.ProviderEventInbox;
 import br.com.deladopara.payments.application.ProviderEventInbox.Notification;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import org.slf4j.Logger;
@@ -14,14 +16,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Receives Asaas notifications: authenticates the shared token, stores the event and only then answers 2xx. A
- * database failure propagates as 5xx, so Asaas keeps the event and retries it.
+ * database failure propagates as 5xx, so Asaas keeps the event and retries it. The body is read by hand, after the
+ * token and the declared length are checked and never past the limit, so an anonymous caller cannot make the public
+ * endpoint buffer a large payload.
  */
 @RestController
 @RequestMapping("/api/v1/webhooks/asaas")
@@ -49,14 +52,19 @@ public class AsaasWebhookController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> receive(
-            @RequestHeader(name = "asaas-access-token", required = false) String token, @RequestBody byte[] body) {
+            @RequestHeader(name = "asaas-access-token", required = false) String token, HttpServletRequest request)
+            throws IOException {
         if (expectedToken == null
                 || token == null
                 || !MessageDigest.isEqual(expectedToken, token.getBytes(StandardCharsets.UTF_8))) {
             return problem(HttpStatus.UNAUTHORIZED, "PAYMENT_010", "token de webhook ausente ou inválido");
         }
+        if (request.getContentLengthLong() > MAX_BODY_BYTES) {
+            return tooLarge();
+        }
+        var body = request.getInputStream().readNBytes(MAX_BODY_BYTES + 1);
         if (body.length > MAX_BODY_BYTES) {
-            return problem(HttpStatus.CONTENT_TOO_LARGE, "PAYMENT_011", "corpo do webhook excede 64 KiB");
+            return tooLarge();
         }
         var notification = parse(body);
         if (notification == null) {
@@ -66,11 +74,15 @@ public class AsaasWebhookController {
         return ResponseEntity.ok().build();
     }
 
+    private static ResponseEntity<Problem> tooLarge() {
+        return problem(HttpStatus.CONTENT_TOO_LARGE, "PAYMENT_011", "corpo do webhook excede 64 KiB");
+    }
+
     private Notification parse(byte[] body) {
         JsonNode root;
         try {
             root = objectMapper.readTree(body);
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             return null;
         }
         var id = text(root, "id", 120);

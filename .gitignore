@@ -4,6 +4,10 @@ backend/target/
 *.class
 backend/.flattened-pom.xml
 
+# Diagnósticos de crash da JVM (hs_err/replay), gerados em qualquer diretório
+hs_err_pid*.log
+replay_pid*.log
+
 # Maven wrapper
 !.mvn/wrapper/maven-wrapper.jar
 !.mvn/wrapper/maven-wrapper.properties
@@ -12,6 +16,7 @@ backend/.flattened-pom.xml
 node_modules/
 frontend/dist/
 frontend/.angular/
+/.angular/
 frontend/test-results/
 frontend/playwright-report/
 frontend/src/generated/
