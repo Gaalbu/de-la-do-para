@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/sessions/current")
                         .authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*", "/api/v1/orders/*/pickup")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**")
                         .permitAll()

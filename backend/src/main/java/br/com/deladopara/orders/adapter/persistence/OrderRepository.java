@@ -162,20 +162,18 @@ public class OrderRepository {
     }
 
     public Optional<OrderHead> findByCheckoutKey(String checkoutKey) {
-        return jdbc
-                .query("SELECT * FROM purchase_order WHERE checkout_key = ?", OrderRepository::head, checkoutKey)
-                .stream()
+        return jdbc.query("SELECT * FROM purchase_order WHERE checkout_key = ?", this::head, checkoutKey).stream()
                 .findFirst();
     }
 
     public Optional<OrderHead> find(UUID id) {
-        return jdbc.query("SELECT * FROM purchase_order WHERE id = ?", OrderRepository::head, id).stream()
+        return jdbc.query("SELECT * FROM purchase_order WHERE id = ?", this::head, id).stream()
                 .findFirst();
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<OrderHead> lock(UUID id) {
-        return jdbc.query("SELECT * FROM purchase_order WHERE id = ? FOR UPDATE", OrderRepository::head, id).stream()
+        return jdbc.query("SELECT * FROM purchase_order WHERE id = ? FOR UPDATE", this::head, id).stream()
                 .findFirst();
     }
 
@@ -280,7 +278,7 @@ public class OrderRepository {
                 id);
     }
 
-    private static OrderHead head(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+    private OrderHead head(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
         return new OrderHead(
                 rs.getObject("id", UUID.class),
                 rs.getString("checkout_key"),
@@ -288,7 +286,16 @@ public class OrderRepository {
                 OrderStatus.valueOf(rs.getString("status")),
                 rs.getInt("status_sequence"),
                 rs.getLong("total_cents"),
-                rs.getString("coupon_code"));
+                rs.getString("coupon_code"),
+                jsonMap(rs.getString("destination")));
+    }
+
+    private Map<String, Object> jsonMap(String value) {
+        try {
+            return objectMapper.readValue(value, new TypeReference<Map<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Stored order destination is not valid JSON", e);
+        }
     }
 
     public record OrderHead(
@@ -298,7 +305,8 @@ public class OrderRepository {
             OrderStatus status,
             int sequence,
             long totalCents,
-            String couponCode) {}
+            String couponCode,
+            Map<String, Object> destination) {}
 
     public record HistoryRow(
             int sequence, OrderStatus from, OrderStatus to, OrderActor actor, String reason, Instant occurredAt) {}

@@ -4,19 +4,13 @@ import br.com.deladopara.identity.application.AccountService;
 import br.com.deladopara.orders.application.OrderQueryService;
 import br.com.deladopara.orders.application.OrderQueryService.InvalidOrderTokenException;
 import br.com.deladopara.orders.application.OrderQueryService.OrderNotVisibleException;
-import br.com.deladopara.orders.application.OrderService;
 import br.com.deladopara.orders.application.OrderView;
-import br.com.deladopara.orders.domain.OrderStatus;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,12 +24,10 @@ public class OrderController {
 
     private final OrderQueryService queries;
     private final AccountService accounts;
-    private final OrderService orders;
 
-    public OrderController(OrderQueryService queries, AccountService accounts, OrderService orders) {
+    public OrderController(OrderQueryService queries, AccountService accounts) {
         this.queries = queries;
         this.accounts = accounts;
-        this.orders = orders;
     }
 
     /** Guest with the order token, or the owning customer's session; anything else is 401 or 404. */
@@ -72,12 +64,6 @@ public class OrderController {
         return noStore(queries.forAdmin(id));
     }
 
-    @PostMapping("/admin/orders/{id}/pickup")
-    public ResponseEntity<OrderView> pickupAction(@PathVariable UUID id, @Valid @RequestBody PickupActionRequest body) {
-        orders.transitionPickup(id, body.action().target(), UUID.randomUUID());
-        return noStore(queries.forAdmin(id));
-    }
-
     private UUID accountId(Authentication auth) {
         return accounts.accountIdByEmail(auth.getName()).orElseThrow(OrderNotVisibleException::new);
     }
@@ -86,23 +72,5 @@ public class OrderController {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore().cachePrivate())
                 .body(body);
-    }
-
-    public record PickupActionRequest(@NotNull PickupAction action) {}
-
-    public enum PickupAction {
-        START_PREPARATION(OrderStatus.PREPARING),
-        MARK_READY(OrderStatus.READY_FOR_PICKUP),
-        CONFIRM_PICKUP(OrderStatus.PICKED_UP);
-
-        private final OrderStatus target;
-
-        PickupAction(OrderStatus target) {
-            this.target = target;
-        }
-
-        OrderStatus target() {
-            return target;
-        }
     }
 }

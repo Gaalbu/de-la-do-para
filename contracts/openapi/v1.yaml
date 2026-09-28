@@ -604,57 +604,147 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
-  /api/v1/admin/orders/{id}/pickup:
+  /api/v1/orders/{id}/pickup:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getPickupDetails
+      summary: Consultar o código de retirada do pedido próprio
+      description: >
+        Exige sessão da conta dona ou X-Order-Token daquele pedido. Disponível somente enquanto o pedido
+        está pronto para retirada e ainda não foi retirado. Não inclui data final enquanto o calendário C25
+        não estiver configurado. Resposta private, no-store.
+      security:
+        - sessionCookie: []
+        - orderToken: []
+      parameters:
+        - in: header
+          name: X-Order-Token
+          required: false
+          schema: {type: string}
+      responses:
+        '200':
+          description: Código de uso único e instruções do ponto de retirada
+          headers:
+            Cache-Control:
+              schema: {type: string, example: 'private, no-store'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PickupInfo'}
+        '400':
+          description: UUID inválido (SHIPPING_001)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401':
+          description: Prova de acesso ausente ou inválida (ORDER_003)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Pedido inexistente ou de outra conta (ORDER_001)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Pedido ainda não está pronto ou o código já foi consumido (SHIPPING_006)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/orders/{id}/pickup/ready:
     parameters:
       - in: path
         name: id
         required: true
         schema: {type: string, format: uuid}
     post:
-      operationId: applyPickupAction
-      summary: Avançar operação administrativa de retirada
-      description: >
-        Somente ADMIN. A transição é aplicada sob lock do pedido e aceita apenas pedidos PICKUP.
-        START_PREPARATION move PAID para PREPARING, MARK_READY move PREPARING para READY_FOR_PICKUP,
-        e CONFIRM_PICKUP move READY_FOR_PICKUP para PICKED_UP. Repetir a ação que corresponde ao
-        estado atual é idempotente. Esta operação registra a confirmação do atendente; não implementa
-        código de retirada, cuja política ainda não foi definida.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: {$ref: '#/components/schemas/PickupActionRequest'}
+      operationId: markOrderReadyForPickup
+      summary: Marcar pedido de retirada como pronto
+      description: Gera o código cifrado de uso único e avança o pedido sob o lock de orders. Não devolve o código.
+      security:
+        - sessionCookie: []
+      parameters:
+        - {$ref: '#/components/parameters/CsrfToken'}
       responses:
-        '200':
-          description: Pedido e histórico atualizados
-          content:
-            application/json:
-              schema: {$ref: '#/components/schemas/Order'}
-        '400':
-          description: Ação inválida ou UUID inválido (ORDER_004)
-          content:
-            application/problem+json:
-              schema: {$ref: '#/components/schemas/ProblemDetail'}
-        '401':
-          description: Sessão ausente ou expirada
-          content:
-            application/problem+json:
-              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '204': {description: Pedido pronto para retirada}
+        '401': {$ref: '#/components/responses/Problem401'}
         '403':
           description: Papel insuficiente ou CSRF ausente
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
-        '404':
-          description: Pedido não encontrado (ORDER_001)
-          content:
-            application/problem+json:
-              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404': {$ref: '#/components/responses/Problem404'}
         '409':
-          description: Modalidade não é retirada ou estado não permite a ação (ORDER_002)
+          description: Pedido não é de retirada ou não está em preparação (SHIPPING_006)
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/orders/{id}/pickup/prepare:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: startPickupPreparation
+      summary: Iniciar a preparação do pedido para retirada
+      description: Transiciona pedido PICKUP pago para PREPARING sob o lock de orders.
+      security:
+        - sessionCookie: []
+      parameters:
+        - {$ref: '#/components/parameters/CsrfToken'}
+      responses:
+        '204': {description: Preparação iniciada}
+        '401': {$ref: '#/components/responses/Problem401'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409':
+          description: Pedido não é de retirada ou não está pago (SHIPPING_006)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/orders/{id}/pickup/confirm:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: confirmOrderPickup
+      summary: Confirmar retirada com o código do cliente
+      description: Consome o código cifrado e transiciona o pedido uma única vez, sob o lock de orders.
+      security:
+        - sessionCookie: []
+      parameters:
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ConfirmPickupRequest'}
+      responses:
+        '204': {description: Retirada confirmada}
+        '400': {$ref: '#/components/responses/Problem400'}
+        '401': {$ref: '#/components/responses/Problem401'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409':
+          description: Pedido não está pronto ou o código já foi consumido (SHIPPING_006)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '422': {$ref: '#/components/responses/Problem422'}
   /api/v1/admin/products:
     get:
       operationId: listAdminProducts
@@ -1277,6 +1367,9 @@ components:
     Problem404:
       description: Recurso não encontrado
       content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
+    Problem401:
+      description: Sessão ausente ou prova de acesso inválida
+      content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
     Problem422:
       description: Operação sem modalidade compatível
       content: {application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}}
@@ -1325,6 +1418,11 @@ components:
       in: path
       required: true
       schema: {type: string, format: uuid}
+    CsrfToken:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      schema: {type: string}
   securitySchemes:
     orderToken:
       type: apiKey
@@ -2031,14 +2129,22 @@ components:
     OrderStatus:
       type: string
       enum: [PENDING_PAYMENT, PAID, PREPARING, READY_FOR_PICKUP, IN_TRANSIT, DELIVERED, PICKED_UP, CANCELLED, EXPIRED, UNDER_REVIEW]
-    PickupActionRequest:
+    PickupInfo:
       type: object
       additionalProperties: false
-      required: [action]
+      required: [orderId, code, point, window, retentionBusinessDays]
       properties:
-        action:
-          type: string
-          enum: [START_PREPARATION, MARK_READY, CONFIRM_PICKUP]
+        orderId: {type: string, format: uuid}
+        code: {type: string, pattern: '^[A-Z0-9]{10}$'}
+        point: {type: string}
+        window: {type: string}
+        retentionBusinessDays: {type: integer, const: 3, description: Prazo de guarda aprovado; não representa uma data final calculada.}
+    ConfirmPickupRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: {type: string, pattern: '^[A-Z0-9]{10}$'}
     OrderSummary:
       type: object
       additionalProperties: false

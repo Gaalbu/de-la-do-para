@@ -3,10 +3,8 @@ package br.com.deladopara.orders.adapter.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,7 +20,6 @@ import br.com.deladopara.orders.domain.OrderStatus;
 import br.com.deladopara.support.PostgresTestContainer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -213,82 +210,6 @@ class OrderAccessIT {
         mvc.perform(get("/api/v1/admin/orders").with(user(ana).roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/orders")).andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void adminAdvancesPaidPickupAndRepeatedConfirmationDoesNotDuplicateHistory() throws Exception {
-        var id = order("pickup-admin-1", "convidado@example.com", null, FulfillmentMode.PICKUP);
-        orders.transition(id, OrderStatus.PAID, OrderActor.SYSTEM, null, UUID.randomUUID());
-
-        mvc.perform(post("/api/v1/admin/orders/" + id + "/pickup")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(Map.of("action", "START_PREPARATION"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PREPARING"));
-        mvc.perform(post("/api/v1/admin/orders/" + id + "/pickup")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(Map.of("action", "MARK_READY"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("READY_FOR_PICKUP"));
-        mvc.perform(post("/api/v1/admin/orders/" + id + "/pickup")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(Map.of("action", "CONFIRM_PICKUP"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PICKED_UP"))
-                .andExpect(jsonPath("$.history", hasSize(5)));
-        mvc.perform(post("/api/v1/admin/orders/" + id + "/pickup")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(Map.of("action", "CONFIRM_PICKUP"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PICKED_UP"))
-                .andExpect(jsonPath("$.history", hasSize(5)));
-        assertThat(jdbc.queryForObject(
-                        "SELECT count(*) FROM event_outbox WHERE event_type = 'order.status_changed' AND aggregate_id = ?",
-                        Integer.class,
-                        id.toString()))
-                .isEqualTo(4);
-    }
-
-    @Test
-    void pickupActionsRequireAdminPaidPickupAndValidState() throws Exception {
-        var unpaid = order("pickup-admin-unpaid", "convidado@example.com", null, FulfillmentMode.PICKUP);
-        var delivery = order("pickup-admin-delivery", "convidado@example.com", null);
-        orders.transition(delivery, OrderStatus.PAID, OrderActor.SYSTEM, null, UUID.randomUUID());
-
-        var startPreparation = objectMapper.writeValueAsString(Map.of("action", "START_PREPARATION"));
-        mvc.perform(post("/api/v1/admin/orders/" + unpaid + "/pickup")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(startPreparation))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.codigo").value("ORDER_002"));
-        mvc.perform(post("/api/v1/admin/orders/" + delivery + "/pickup")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(startPreparation))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.codigo").value("ORDER_002"));
-        mvc.perform(post("/api/v1/admin/orders/" + unpaid + "/pickup")
-                        .with(user("cliente").roles("CUSTOMER"))
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(startPreparation))
-                .andExpect(status().isForbidden());
-        mvc.perform(post("/api/v1/admin/orders/" + unpaid + "/pickup")
-                        .with(csrf())
-                        .contentType("application/json")
-                        .content(startPreparation))
-                .andExpect(status().isUnauthorized());
     }
 
     @Test
