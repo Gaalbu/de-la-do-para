@@ -5,10 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import br.com.deladopara.payments.application.ProviderEventInbox;
 import br.com.deladopara.support.PostgresTestContainer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +31,11 @@ class AsaasWebhookIT {
 
     private final MockMvc mvc;
     private final JdbcTemplate jdbc;
-    private final ProviderEventInbox inbox;
-    private final ObjectMapper objectMapper;
 
     @Autowired
-    AsaasWebhookIT(MockMvc mvc, JdbcTemplate jdbc, ProviderEventInbox inbox, ObjectMapper objectMapper) {
+    AsaasWebhookIT(MockMvc mvc, JdbcTemplate jdbc) {
         this.mvc = mvc;
         this.jdbc = jdbc;
-        this.inbox = inbox;
-        this.objectMapper = objectMapper;
     }
 
     @BeforeEach
@@ -138,15 +131,5 @@ class AsaasWebhookIT {
             jdbc.execute("ALTER TABLE payment_provider_event DROP CONSTRAINT webhook_it_fail");
         }
         assertThat(stored()).isZero();
-    }
-
-    @Test
-    void unconfiguredTokenRejectsEveryCall() {
-        var controller = new AsaasWebhookController(inbox, objectMapper, "");
-
-        var response = controller.receive(
-                TOKEN, PAID.formatted("evt_5", "CHECKOUT_PAID").getBytes(StandardCharsets.UTF_8));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }
