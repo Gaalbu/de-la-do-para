@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-@SpringBootTest
+@SpringBootTest(properties = "payments.worker.lease=PT90S")
 @Import(PostgresTestContainer.class)
 class CheckoutOperationRunnerIT {
 
@@ -153,6 +153,18 @@ class CheckoutOperationRunnerIT {
         assertThat(operationStatus(id)).isEqualTo("UNKNOWN");
         assertThat(jdbc.queryForObject("SELECT checkout_url FROM payment_intent WHERE id = ?", String.class, id))
                 .isNull();
+    }
+
+    @Test
+    void claimHoldsTheConfiguredLease() {
+        intents.request(UUID.randomUUID(), 5_250, UUID.randomUUID());
+        var claimed = operations.claim().orElseThrow();
+
+        assertThat(jdbc.queryForObject(
+                        "SELECT EXTRACT(EPOCH FROM lease_until - started_at) FROM payment_external_operation WHERE id = ?",
+                        Double.class,
+                        claimed.operationId()))
+                .isEqualTo(90.0);
     }
 
     @Test
