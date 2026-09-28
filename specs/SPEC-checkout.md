@@ -161,7 +161,7 @@ convidado, o token de acesso mostrado uma única vez.
 | `PENDING_PAYMENT` | `ACTIVE` | `RESERVED` | `REQUESTED`…`AWAITING_PAYMENT`/`UNKNOWN` | aguardando pagamento |
 | `PAID` | `COMMITTED` | `CONSUMED` | `CONFIRMED` | compra efetivada |
 | `EXPIRED` | `RELEASED` | `RELEASED` | qualquer não confirmado | prazo esgotado sem pagamento |
-| `UNDER_REVIEW` | `RELEASED` | `RELEASED` | `UNDER_REVIEW`→`REFUND_REQUESTED` | pagamento tardio (D13) |
+| `UNDER_REVIEW` | `RELEASED` | `RELEASED` | `CONFIRMED`→`REFUND_REQUESTED` (`LATE_PAYMENT`) | pagamento tardio (D13) |
 | `CANCELLED` | `RELEASED` ou devolvida | `RELEASED` ou `CONSUMED` até reembolso | `REFUND_REQUESTED`/`REFUNDED` se pago | cancelada |
 
 ## A6. Transições coordenadas
@@ -172,7 +172,7 @@ qualquer outra linha, sempre na ordem pedido → reserva → cupom → pagamento
 | Gatilho | Precondição (lida sob lock) | Efeitos atômicos | Eventos |
 |---|---|---|---|
 | Pagamento `CONFIRMED` (C61) | pedido `PENDING_PAYMENT`, reserva `ACTIVE` e `now < expiresAt`, valor igual | reserva `COMMITTED`, cupom `CONSUMED`, pedido `PAID` | `order.status_changed` |
-| Pagamento `CONFIRMED` tardio (D13, V10) | reserva vencida ou liberada | pedido `PENDING_PAYMENT`→`UNDER_REVIEW` (`LATE_PAYMENT`) se ainda pendente; reserva e cupom liberados; pagamento `UNDER_REVIEW`→`REFUND_REQUESTED` | `order.status_changed`, `payment.refund_requested` |
+| Pagamento `CONFIRMED` tardio (D13, V10) | reserva vencida ou liberada | pedido `PENDING_PAYMENT`→`UNDER_REVIEW` (`LATE_PAYMENT`) se ainda pendente; reserva e cupom liberados; pagamento `CONFIRMED`→`REFUND_REQUESTED` com motivo `LATE_PAYMENT` (a SPEC-payments não permite `CONFIRMED`→`UNDER_REVIEW`) | `order.status_changed`, `payment.refund_requested` |
 | Pagamento `CONFIRMED` com valor divergente | qualquer | pedido inalterado; pagamento `UNDER_REVIEW` (SPEC-payments R07) | `payment.status_changed` |
 | Expiração (job, relógio controlado) | pedido `PENDING_PAYMENT`, reserva `ACTIVE`, `now >= expiresAt`, pagamento não confirmado | reserva e cupom liberados, pedido `EXPIRED` | `order.status_changed` |
 | Cancelamento sem pagamento | pedido `PENDING_PAYMENT` | reserva e cupom liberados, pedido `CANCELLED` | `order.status_changed` |
