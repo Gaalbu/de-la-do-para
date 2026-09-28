@@ -1059,3 +1059,11 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | C61 PR #108 integrada em `8788339`; PR C62 #111 draft contra `main`, commits `118ad12` (API) e `b8493db` (UI), branch sincronizada com `eb8a783`. CI `36468336277` passou 7/7 no SHA `1a57423`; a atualização deste registro iniciará novo CI. |
 | Limite | A UI usa respostas simuladas no Playwright; nenhuma confirmação Asaas externa foi testada. Chrome DevTools MCP não está configurado; Chromium via Playwright foi usado. C62 ainda não foi merged. |
 | Próximo passo | Enviar este registro, acompanhar o CI atualizado da PR #111 e deixá-la pronta para revisão quando os checks finais passarem; depois seguir a próxima tarefa elegível de acordo com as dependências e o acesso real exigido por C63. |
+
+### Revisão de privacidade C62 — 2026-09-28
+
+- Revisão apontou que a chave de `sessionStorage` continha a intenção serializada, incluindo e-mail/endereço. O commit atômico `2207582` substitui o nome por HMAC-SHA-256 com sal aleatório da sessão; retry da mesma intenção mantém a chave idempotente, e os nomes não revelam dados pessoais.
+- Se WebCrypto/sessionStorage falhar, a compra não é enviada com uma chave compartilhada; a mensagem é recuperável e `accepting` sempre é liberado.
+- Regressões verificam estabilidade do retry, ausência de e-mail/endereço/nome/seleção em chaves e falha segura quando SubtleCrypto não está disponível.
+- Verificação local: `test:ci` 28/28; lint, `format:check`, Playwright checkout 3/3, `git diff --check`; `aislop` 100/100, zero diagnósticos. CI anterior no SHA `4a8c633` passou 7/7 antes desta revisão; novo CI do SHA `2207582` está em andamento.
+- PR #111 permanece draft até confirmar todos os checks do novo SHA.
