@@ -1821,7 +1821,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [x] **Depende:** C14, C45, C50, C53, C41. **Alvos:** `specs/SPEC-notifications.md`, matriz evento→mensagem; S.
 - **Aceite:** notificações realmente necessárias; destinatário e conteúdo mínimo; política de retry/duplicata e limite da entrega SMTP explícitos.
 - **Verificar:** DOC; nunca afirmar exatamente uma entrega de e-mail sem garantia do provedor.
-- **Estado atual (2026-09-28):** concluída e publicada no PR #114. A SPEC define destinatário pelo pedido, conteúdo mínimo por fatos persistidos, estados de pagamento que não devem gerar mensagens contraditórias, deduplicação/retry e a fronteira de aceitação SMTP. Códigos de retirada e avisos logísticos ficam para C70–C73; link convidado bloqueado até resolver transporte seguro de CHK-Q02/ORD-Q02. Mailpit comprova somente o ambiente local.
+- **Estado atual (2026-09-28):** concluída e publicada no PR #115 (CI em execução). A SPEC define destinatário pelo pedido, conteúdo mínimo por fatos persistidos, estados de pagamento que não devem gerar mensagens contraditórias, deduplicação/retry e a fronteira de aceitação SMTP. Códigos de retirada e avisos logísticos ficam para C70–C73; link convidado bloqueado até resolver transporte seguro de CHK-Q02/ORD-Q02. Mailpit comprova somente o ambiente local.
 
 ### C75 — `feat(notifications): deliver purchase notifications through Mailpit`
 

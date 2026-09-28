@@ -1097,6 +1097,6 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | Publicar somente a especificação comercial de notificações e sua rastreabilidade |
 | Mudanças | Incluídos `specs/SPEC-notifications.md`, estado de C74 no plano, linha de rastreabilidade e este registro. A11/A12 continuam propostas pendentes, sem virar decisão aprovada. |
 | Verificação | `npm run docs:check --prefix frontend` (25 Markdown, links válidos); `git diff --check`; revisão manual do escopo documental |
-| Remoto | PR #114 aberto, base `main`; aguarda CI/revisão |
+| Remoto | PR #115 aberto, base `main`; CI em execução |
 | Limite | Nenhuma implementação C75, chamada SMTP externa ou decisão sobre link convidado/retention foi incluída |
 | Próximo passo | Após integrar C74, avançar C75 apenas para mensagens sem segredo enquanto as decisões de convidado/retention aguardam resposta; C63 continua dependente de sandbox Asaas. |
