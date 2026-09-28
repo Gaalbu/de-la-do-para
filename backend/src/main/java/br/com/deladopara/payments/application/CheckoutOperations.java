@@ -10,33 +10,47 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The durable steps around one CREATE_CHECKOUT call. Each method is its own short transaction, so the provider call
- * that happens between {@link #claim()} and a {@code record*} method never holds a database transaction.
+ * that happens between {@link #claim()} and a {@code record*} method never holds a database transaction. The lease
+ * ({@code payments.worker.lease}, 60 s by default) must outlast the provider call: a real adapter's timeout has to stay
+ * below {@link #lease()}, otherwise a slow call is marked UNKNOWN while still in flight.
  */
 @Service
 public class CheckoutOperations {
 
-    static final Duration LEASE = Duration.ofSeconds(60);
-
     private final PaymentRepository payments;
     private final PaymentIntentService intents;
     private final Clock clock;
+    private final Duration lease;
 
-    public CheckoutOperations(PaymentRepository payments, PaymentIntentService intents, Clock clock) {
+    public CheckoutOperations(
+            PaymentRepository payments,
+            PaymentIntentService intents,
+            Clock clock,
+            @Value("${payments.worker.lease:PT60S}") Duration lease) {
+        if (lease.isZero() || lease.isNegative()) {
+            throw new IllegalArgumentException("payments.worker.lease must be positive");
+        }
         this.payments = payments;
         this.intents = intents;
         this.clock = clock;
+        this.lease = lease;
+    }
+
+    public Duration lease() {
+        return lease;
     }
 
     /** Marks the oldest pending checkout operation IN_FLIGHT and commits before any provider call. */
     @Transactional
     public Optional<Claimed> claim() {
         var now = clock.instant();
-        return payments.claimPendingCheckout(now, now.plus(LEASE)).map(operation -> {
+        return payments.claimPendingCheckout(now, now.plus(lease)).map(operation -> {
             var intent = payments.find(operation.intentId()).orElseThrow();
             intents.transition(intent.id(), PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
             return new Claimed(
