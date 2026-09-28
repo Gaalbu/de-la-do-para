@@ -54,10 +54,27 @@ public class OrderRepository {
                                 history(id).stream()
                                         .map(h -> new OrderView.Transition(
                                                 h.sequence(), h.from(), h.to(), h.actor(), h.reason(), h.occurredAt()))
-                                        .toList()),
+                                        .toList(),
+                                payment(id)),
                         id)
                 .stream()
                 .findFirst();
+    }
+
+    private OrderView.PaymentProgress payment(UUID orderId) {
+        return jdbc
+                .query(
+                        "SELECT status, checkout_url, checkout_expires_at FROM payment_intent WHERE order_id = ?",
+                        (rs, row) -> new OrderView.PaymentProgress(
+                                rs.getString("status"),
+                                rs.getString("checkout_url"),
+                                rs.getTimestamp("checkout_expires_at") == null
+                                        ? null
+                                        : rs.getTimestamp("checkout_expires_at").toInstant()),
+                        orderId)
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
     public boolean ownedBy(UUID id, UUID accountId) {

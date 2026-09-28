@@ -26,7 +26,10 @@ public record OrderView(
         Instant createdAt,
         Instant updatedAt,
         List<Item> items,
-        List<Transition> history) {
+        List<Transition> history,
+        PaymentProgress payment) {
+
+    public record PaymentProgress(String status, String checkoutUrl, Instant checkoutExpiresAt) {}
 
     public record Item(String productName, String skuLabel, int quantity, long unitPriceCents, long lineTotalCents) {}
 
