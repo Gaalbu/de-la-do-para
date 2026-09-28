@@ -238,18 +238,7 @@ export class CheckoutService {
     if (!snapshot || !summary || this.accepting()) return null;
     this.accepting.set(true);
     this.purchaseError.set('');
-    const intent = JSON.stringify({
-      snapshotId: snapshot.snapshotId,
-      selection,
-      summaryVersion: summary.summaryVersion,
-    });
     const storage = this.document.defaultView?.sessionStorage;
-    const storageKey = `dlp.purchase-key.${encodeURIComponent(intent)}`;
-    let idempotencyKey = storage?.getItem(storageKey) ?? null;
-    if (!idempotencyKey) {
-      idempotencyKey = this.document.defaultView?.crypto.randomUUID() ?? this.uuidFallback();
-      storage?.setItem(storageKey, idempotencyKey);
-    }
     const body: Record<string, unknown> = {
       snapshotVersion: snapshot.snapshotVersion,
       mode: selection.mode,
@@ -261,6 +250,17 @@ export class CheckoutService {
     if (selection.email?.trim()) body['email'] = selection.email.trim();
     if (selection.address) body['address'] = selection.address;
     try {
+      const intent = JSON.stringify({
+        snapshotId: snapshot.snapshotId,
+        selection,
+        summaryVersion: summary.summaryVersion,
+      });
+      const storageKey = await this.purchaseKeyStorageName(intent, storage);
+      let idempotencyKey = storage?.getItem(storageKey) ?? null;
+      if (!idempotencyKey) {
+        idempotencyKey = this.document.defaultView?.crypto.randomUUID() ?? this.uuidFallback();
+        storage?.setItem(storageKey, idempotencyKey);
+      }
       const accepted = await firstValueFrom(
         this.http.post<AcceptedPurchase>(`/api/v1/checkout/${snapshot.snapshotId}/purchase`, body, {
           headers: { 'Idempotency-Key': idempotencyKey },
@@ -286,5 +286,35 @@ export class CheckoutService {
       const random = Math.floor(Math.random() * 16);
       return (character === 'x' ? random : (random & 3) | 8).toString(16);
     });
+  }
+
+  private async purchaseKeyStorageName(
+    intent: string,
+    storage: Storage | undefined,
+  ): Promise<string> {
+    if (!storage || !globalThis.crypto?.subtle) {
+      throw new Error('Secure purchase retry storage is unavailable');
+    }
+    let salt = storage.getItem('dlp.purchase-key-salt');
+    if (!salt) {
+      salt = this.document.defaultView?.crypto.randomUUID() ?? this.uuidFallback();
+      storage.setItem('dlp.purchase-key-salt', salt);
+    }
+    const key = await globalThis.crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(salt),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const signature = await globalThis.crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(intent),
+    );
+    const fingerprint = Array.from(new Uint8Array(signature), (byte) =>
+      byte.toString(16).padStart(2, '0'),
+    ).join('');
+    return `dlp.purchase-key.${fingerprint}`;
   }
 }

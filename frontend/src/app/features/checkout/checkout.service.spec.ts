@@ -1,6 +1,8 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { TestRequest } from '@angular/common/http/testing';
+import { vi } from 'vitest';
 import { CheckoutService } from './checkout.service';
 
 describe('CheckoutService', () => {
@@ -15,7 +17,10 @@ describe('CheckoutService', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    vi.unstubAllGlobals();
+  });
 
   it('creates a snapshot before requesting server-owned delivery options', async () => {
     const quote = service.quote('66053-000');
@@ -189,6 +194,7 @@ describe('CheckoutService', () => {
   });
 
   it('keeps the idempotency key when an acceptance request can be retried', async () => {
+    window.sessionStorage.clear();
     service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
     service.summary.set({
       snapshotId: 'snapshot-1',
@@ -213,17 +219,31 @@ describe('CheckoutService', () => {
       mode: 'PICKUP' as const,
       pickupOptionId: 'PONTO-DEMO-BELEM',
       email: 'ana@example.com',
+      address: {
+        recipientName: 'Ana Teste',
+        street: 'Rua das Mangueiras',
+        number: '123',
+        district: 'Centro',
+        city: 'Belém',
+        state: 'PA',
+      },
     };
 
     const first = service.acceptPurchase(intent);
-    const firstRequest = http.expectOne('/api/v1/checkout/snapshot-1/purchase');
+    let firstRequest!: TestRequest;
+    await vi.waitFor(() => {
+      firstRequest = http.expectOne('/api/v1/checkout/snapshot-1/purchase');
+    });
     const key = firstRequest.request.headers.get('Idempotency-Key');
     expect(key?.length).toBeGreaterThanOrEqual(16);
     firstRequest.flush({ codigo: 'CHECKOUT_010' }, { status: 409, statusText: 'Conflict' });
     expect(await first).toBeNull();
 
     const retry = service.acceptPurchase(intent);
-    const retryRequest = http.expectOne('/api/v1/checkout/snapshot-1/purchase');
+    let retryRequest!: TestRequest;
+    await vi.waitFor(() => {
+      retryRequest = http.expectOne('/api/v1/checkout/snapshot-1/purchase');
+    });
     expect(retryRequest.request.headers.get('Idempotency-Key')).toBe(key);
     retryRequest.flush({
       orderId: 'order-1',
@@ -236,5 +256,42 @@ describe('CheckoutService', () => {
 
     expect((await retry)?.orderId).toBe('order-1');
     expect(window.sessionStorage.getItem('dlp.order-token.order-1')).toBe('guest-order-token');
+    const storageKeys = Object.keys(window.sessionStorage);
+    expect(storageKeys.some((storageKey) => storageKey.startsWith('dlp.purchase-key.'))).toBe(true);
+    expect(storageKeys.join(' ')).not.toContain('ana@example.com');
+    expect(storageKeys.join(' ')).not.toContain('Rua das Mangueiras');
+    expect(storageKeys.join(' ')).not.toContain('Ana Teste');
+    expect(storageKeys.join(' ')).not.toContain('PONTO-DEMO-BELEM');
+  });
+
+  it('releases the accepting state when secure retry storage is unavailable', async () => {
+    vi.stubGlobal('crypto', { subtle: undefined });
+    service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    service.summary.set({
+      snapshotId: 'snapshot-1',
+      snapshotVersion: 3,
+      lines: [],
+      fulfillment: {
+        mode: 'PICKUP',
+        optionId: 'PONTO-DEMO-BELEM',
+        label: 'Ponto de demonstração — Belém',
+        shippingCents: 0,
+        preparationDays: 1,
+        deliveryDays: null,
+      },
+      couponCode: null,
+      subtotalCents: 2000,
+      shippingCents: 0,
+      discountCents: 0,
+      totalCents: 2000,
+      summaryVersion: 'summary-hash',
+    });
+
+    expect(
+      await service.acceptPurchase({ mode: 'PICKUP', pickupOptionId: 'PONTO-DEMO-BELEM' }),
+    ).toBe(null);
+    expect(service.accepting()).toBe(false);
+    expect(service.purchaseError()).toContain('tente novamente');
+    http.expectNone('/api/v1/checkout/snapshot-1/purchase');
   });
 });
