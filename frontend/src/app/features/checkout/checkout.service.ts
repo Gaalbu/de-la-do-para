@@ -238,7 +238,6 @@ export class CheckoutService {
     if (!snapshot || !summary || this.accepting()) return null;
     this.accepting.set(true);
     this.purchaseError.set('');
-    const storage = this.document.defaultView?.sessionStorage;
     const body: Record<string, unknown> = {
       snapshotVersion: snapshot.snapshotVersion,
       mode: selection.mode,
@@ -250,6 +249,7 @@ export class CheckoutService {
     if (selection.email?.trim()) body['email'] = selection.email.trim();
     if (selection.address) body['address'] = selection.address;
     try {
+      const storage = this.document.defaultView?.sessionStorage;
       const intent = JSON.stringify({
         snapshotId: snapshot.snapshotId,
         selection,

@@ -294,4 +294,37 @@ describe('CheckoutService', () => {
     expect(service.purchaseError()).toContain('tente novamente');
     http.expectNone('/api/v1/checkout/snapshot-1/purchase');
   });
+
+  it('releases the accepting state when reading session storage throws', async () => {
+    vi.spyOn(window, 'sessionStorage', 'get').mockImplementation(() => {
+      throw new Error('Storage access is blocked');
+    });
+    service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    service.summary.set({
+      snapshotId: 'snapshot-1',
+      snapshotVersion: 3,
+      lines: [],
+      fulfillment: {
+        mode: 'PICKUP',
+        optionId: 'PONTO-DEMO-BELEM',
+        label: 'Ponto de demonstração — Belém',
+        shippingCents: 0,
+        preparationDays: 1,
+        deliveryDays: null,
+      },
+      couponCode: null,
+      subtotalCents: 2000,
+      shippingCents: 0,
+      discountCents: 0,
+      totalCents: 2000,
+      summaryVersion: 'summary-hash',
+    });
+
+    expect(
+      await service.acceptPurchase({ mode: 'PICKUP', pickupOptionId: 'PONTO-DEMO-BELEM' }),
+    ).toBe(null);
+    expect(service.accepting()).toBe(false);
+    expect(service.purchaseError()).toContain('tente novamente');
+    http.expectNone('/api/v1/checkout/snapshot-1/purchase');
+  });
 });
