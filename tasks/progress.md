@@ -1036,14 +1036,67 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | Nenhum evento real do sandbox recebido (C04 depende de conta do usuário). |
 | Próximo passo | C61 (aplicar confirmação de pagamento). |
 
-## Sessão 2026-09-28 — retomada, publicação atômica e C61
+## Sessão 2026-09-26 — C61: confirmação transacional de pagamento (verificado localmente)
 
 | Campo | Conteúdo |
 |---|---|
-| Base | `origin/main@3745f6a`; política de publicação adicionada em `0c77910` na branch `docs/atomic-commit-pr-publish`, PR #107 aberta com CI 7/7 verde e estado CLEAN. O lote original permanece intacto no checkout de trabalho. |
-| Tarefa | Separar a regra global de publicação e a implementação C61 em commits/PRs próprios; desacoplar C61 do contrato de logística C72. |
-| Mudanças | Plano mestre agora exige commit de intenção única, push após gates locais e PR por tarefa/subtarefa; alterações acumuladas foram isoladas. C61 confirma eventos consultando o estado do provedor, confere checkout/valor/ordem, aplica pedido+estoque+cupom na mesma transação e encaminha pagamento tardio para revisão/reembolso. `OrderService.lock` usa o cabeçalho de pedido sem antecipar `OrderFulfillmentPort` de C72. |
-| Verificação | `PaymentOutcomeIT` 7/7, `PaymentWorkerIT` 4/4 e `ArchitectureRulesTest` 3/3 passaram com PostgreSQL 18.6/Testcontainers via `./mvnw -q -DargLine=-Xint -Dtest=PaymentOutcomeIT,PaymentWorkerIT,ArchitectureRulesTest test`; `spotless:check`, `checkstyle:check`, `git diff --check`, `npm run docs:check --prefix frontend` e `aislop scan --changes --json` (100/100, zero diagnósticos) passaram. |
-| Remoto | Política: PR #107, base `main`, commit `0c77910`, CI 7/7 verde, CLEAN/OPEN. C61: commits `31effbe` (implementação) e `fab5096` (progresso) enviados na branch `feat/c61-payment-outcomes-atomic`; PR #108 sobre `docs/atomic-commit-pr-publish`, CI `36466323748` 7/7 verde no SHA `fab5096`, CLEAN/OPEN. |
-| Limite | Não rodado o `verify` completo localmente, sem homologação real Asaas e sem merge. |
-| Próximo passo | C62 — acompanhamento assíncrono do pedido e pagamento, em branch/PR separada empilhada sobre C61; PR #108 segue aguardando revisão/merge manual. |
+| Base | branch local `work/c61-payment-outcomes`, criada sobre `origin/main@3745f6a` após integração dos PRs #92–#99; checkout anterior preservado sem alterações |
+| Tarefa | Validar fato financeiro do provedor e aplicar confirmação junto com pedido, reserva de estoque, cupom e recibo de consumo |
+| Mudanças | `ProviderEventProcessor` consulta o simulador fora da transação, processa inbox vinculada ao checkout e emite estado financeiro somente após conferir estado/checkout/valor; `PaymentOutcomeHandler` bloqueia pedido e intenção e coordena confirmação atual ou pagamento tardio sob a transação do consumidor. Worker processa eventos recebidos por lote |
+| Verificação | RED: testes C61 falharam inicialmente porque o processador não existia. GREEN: `PaymentOutcomeIT` 7/7 e `PaymentWorkerIT` 4/4 com PostgreSQL 18.6/Testcontainers e `-Xint`; `./mvnw -q -DargLine=-Xint verify` passou com Temurin 25.0.4 (274 testes em 75 relatórios, zero falhas/erros/skips; Failsafe 148); `RouteContractCoverageTest` 1/1 e `ArchitectureRulesTest` 3/3 passaram usando Temurin 25.0.4; `git diff --check`, `docs:check` e `contracts:check` passaram (8 warnings Redocly preexistentes); `aislop scan --changes --json` 100/100 sem achados |
+| Limite | Não houve PR/push/merge. GraalVM SIGSEGV no gate combinado de arquitetura/contrato; os mesmos testes passaram separadamente com Temurin. Simulador não comprova comportamento Asaas; C63 segue dependente de conta, credenciais e consulta segura de resultado incerto no sandbox (C04) |
+| Próximo passo | C62 concluída localmente para retirada. C63 depende de acesso e evidência do sandbox Asaas |
+
+## Sessão 2026-09-26 — C62: aceite e acompanhamento do pedido (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `work/c61-payment-outcomes`, após C61 `26357cc`, base `origin/main@3745f6a`; checkout original preservado |
+| Tarefa | Aceitar compra com idempotência e exibir estado real do pedido depois do aceite e na recarga |
+| Mudanças | Entrega e retirada consultam resumo do servidor e aceitam o pedido com `Idempotency-Key` estável por snapshot; a entrega inclui endereço, e o token de convidado e referência de pedido persistem na sessão do navegador. `/orders/:id` consulta API, mostra total, itens e histórico, permite atualizar e consulta automaticamente a cada 10 segundos. Checkout/pedido usam renderização cliente para acessar a credencial somente no navegador. |
+| Verificação | 28 testes frontend; 2 E2E de checkout (workers=1 por storage de sessão isolado), incluindo seleção exclusiva de modalidade; build Angular; lint; Prettier; `contracts:check` (8 avisos preexistentes); `docs:check`; E2E provou reload e estado `PAID` vindo da API |
+| Limite | API controlada no E2E; sem Asaas real. Link hospedado depende de C63; sem PR/push/merge |
+| Próximo passo | C63 aguarda sandbox; C65 depende C63/C64; C66 fica após C65; C72 já tem prova transacional parcial; próximo slice C73/C72 é a ação administrativa e apresentação do código depois de regra definida |
+
+## Sessão 2026-09-26 — C01: auditoria do mapa de escopo
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Reconciliar `docs/scope.md` com as decisões explícitas e o storyboard aprovado |
+| Mudanças | Corrigido D49 no resumo do escopo: vídeo principal vertical em loop de até 30 s, sem legendas, conforme `docs/decisions.md` e `docs/design/storyboard.md`. C01 registrado como auditado nesta cópia de trabalho. |
+| Verificação | Revisão cruzada dos resumos e IDs de decisão; `docs:check`; `git diff --check` |
+| Limite | C01 não confirma marca, domínio, sandbox ou disponibilidade de ativos; nenhuma decisão nova inferida |
+| Próximo passo | Continuar fatias dependentes locais; C63 requer sandbox e C65/C66 aguardam dependências financeiras |
+
+## Sessão 2026-09-26 — C72: ciclo transacional de retirada (slice local)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch local `work/c61-payment-outcomes`, após C62 `c896654`; checkout original preservado |
+| Tarefa | Garantir que retirada só avance em pedido pago, de modalidade PICKUP, e seja confirmada uma vez |
+| Mudanças | Sem alterar a regra já existente: teste integrado novo prova `PAID → PREPARING → READY_FOR_PICKUP → PICKED_UP`, persistência da história e eventos de outbox contíguos, no-op em repetição e rejeição para pedido não pago/entrega |
+| Verificação | `./mvnw -q spotless:apply`; `./mvnw -q -DargLine=-Xint -Dit.test=PickupLifecycleTest verify`; relatório Failsafe 2 testes, 0 falhas/erros/skips; `git diff --check` |
+| Limite | Slice de prova/persistência, não fecha C72: falta endpoint de ação administrativa; C73 cobre operação; regra de emissão, exposição e validação de código de retirada não está definida e exige decisão antes de expor um código. Sem PR/push/merge |
+| Próximo passo | C72/C73: fechar contrato e autorização da ação administrativa e decisão do código; C63 continua aguardando conta/credenciais/evidência do sandbox |
+
+## Sessão 2026-09-26 — C74: especificação de notificações comerciais
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Definir matriz de eventos e mensagens úteis, privacidade, retry, deduplicação e limite do SMTP |
+| Mudanças | `specs/SPEC-notifications.md`: separa `order.status_changed` de estados intermediários de pagamento; define destinatário pelo pedido, conteúdo mínimo, chave local de dedupe e tentativas fora da transação Kafka; link convidado e mensagens logísticas ficam condicionados às regras de segurança/modalidade |
+| Verificação | `npm run docs:check` (26 Markdown); `git diff --check`; revisão contra `SPEC-orders`, `SPEC-payments`, `SPEC-eventing`, `SPEC-shipping` e C08 Mailpit |
+| Limite | Spec não declara entrega SMTP final nem comportamento de provedor externo; ponto/código de retirada depende de C72/C73; token de pedido exige resolução de CHK-Q02/ORD-Q02; C04 não homologado |
+| Próximo passo | C75 pode começar por avisos sem segredo ligados a eventos de pedido; C63 aguarda sandbox e o link hospedado/token de convidado continua condicionado |
+
+## Sessão 2026-09-28 — C74: PR atômica aberta
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `origin/main@7a1e3c7`; branch `docs/c74-notifications-atomic` |
+| Tarefa | Publicar somente a especificação comercial de notificações e sua rastreabilidade |
+| Mudanças | Incluídos `specs/SPEC-notifications.md`, estado de C74 no plano, linha de rastreabilidade e este registro. A11/A12 continuam propostas pendentes, sem virar decisão aprovada. |
+| Verificação | `npm run docs:check --prefix frontend` (25 Markdown, links válidos); `git diff --check`; revisão manual do escopo documental |
+| Remoto | PR #114 aberto, base `main`; aguarda CI/revisão |
+| Limite | Nenhuma implementação C75, chamada SMTP externa ou decisão sobre link convidado/retention foi incluída |
+| Próximo passo | Após integrar C74, avançar C75 apenas para mensagens sem segredo enquanto as decisões de convidado/retention aguardam resposta; C63 continua dependente de sandbox Asaas. |

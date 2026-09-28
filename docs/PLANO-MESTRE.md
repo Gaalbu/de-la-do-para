@@ -2,7 +2,7 @@
 
 Documento autossuficiente para um executor de código com contexto limitado. Data de consolidação: 20/09/2026. Contém todas as decisões e os oito documentos de planejamento, com referências internas e complementos de execução/CI/CD.
 
-**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D65.
+**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D76.
 
 ## Índice de leitura
 
@@ -43,15 +43,13 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 1. Ler esta seção, o registro de progresso e apenas a spec/módulo/tarefa relevante. Não reler todo o documento a cada pequena mudança.
 2. Conferir `git status --short`, branch, remoto e último SHA antes de editar. Preservar mudanças do usuário. Não usar reset/clean/force-push para resolver dúvidas.
 3. Selecionar o primeiro ID pendente com dependências concluídas. Trabalhar em uma intenção por vez, em branch curta.
-4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D65.
+4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D76.
 5. Definir contrato e exemplos. Para comportamento, escrever teste que falha pelo motivo esperado; implementar o mínimo e refatorar com o teste passando.
 6. Atualizar documentação e exemplos no mesmo conjunto da mudança. Cada endpoint deve ter teste HTTP e contrato; cada regra crítica deve ter teste de limite/falha.
 7. Rodar os gates previstos e revisar o diff. Não pular testes para economizar tempo; não alegar aprovação se Docker, navegador, sandbox ou ferramenta não executou.
 8. Fazer commit atômico com mensagem descritiva. Não dividir teste da correção em commits que deixem main quebrada.
 9. Registrar ID, requisito, arquivos, comandos, resultado real, SHA e próximo passo. Atualizar o progresso apenas depois da evidência; marcar bloqueio sem marcar a tarefa concluída.
 10. A cada até três commits funcionais, executar o checkpoint; nos marcos G0–G9, executar gates completos aplicáveis e validar a jornada.
-
-**Cadência obrigatória de publicação:** cada commit deve representar uma única intenção revisável e manter o conjunto coerente e verificável. Depois dos gates locais dessa intenção, enviar o commit imediatamente para sua branch remota e abrir ou atualizar uma PR dedicada à tarefa/subtarefa do plano. PRs empilhadas são permitidas quando a dependência ainda não foi integrada; cada uma deve ter base explícita na tarefa predecessora e conter somente sua própria intenção. Não acumular alterações de tarefas diferentes para publicar depois, não criar commits com muitos arquivos apenas porque ficaram modificados juntos e não usar `git add .`. Se um lote local já contiver tarefas distintas, separá-las em commits e branches/PRs próprias, na ordem de dependência, preservando arquivos e resíduos fora de escopo. Registrar no progresso o SHA, branch, PR, base e estado dos checks após cada publicação.
 
 Se uma tarefa exigir mais de aproximadamente cinco arquivos manuais ou mais de uma intenção independente, dividi-la em sufixos antes de codificar. Bootstrap gerado é exceção documentada. A contagem de commits é uma previsão, nunca uma meta artificial.
 
@@ -1216,9 +1214,9 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C01 — `docs(scope): record approved scope and capability map`
 
-- [ ] **Depende:** C00b. **Alvos:** mapa e registro de decisões; S.
+- [x] **Depende:** C00b. **Alvos:** mapa e registro de decisões; S. Mapa existente auditado contra D01–D64 e matriz de capacidades; divergência herdada de D49 corrigida em 2026-09-26.
 - **Aceite:** respostas do usuário transcritas sem inferência; módulos/dependências revisados; perguntas pendentes do registro de decisões encaminhadas no momento definido; repositório público desde o início da implementação conforme D42, sem criação nesta etapa de planejamento.
-- **Verificar:** DOC; usuário revisa o mapa antes das specs de módulos.
+- **Verificar:** DOC; mapa e decisões rastreiam capacidades e limites; specs já implementadas foram precedidas de C01 no histórico da main.
 
 ### C02 — `docs(sdd): define specification and evidence conventions`
 
@@ -1723,15 +1721,17 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C61 — `feat(checkout): apply confirmed payment outcomes transactionally`
 
-- [ ] **Depende:** C48, C51, C57, C58a, C59, C60. **Alvos:** handler/coordenador de confirmação e testes; M.
+- [x] **Depende:** C48, C51, C57, C58a, C59, C60. **Alvos:** handler/coordenador de confirmação e testes; M.
 - **Aceite:** evento confirmado valida referência/valor/estado; pedido/estoque/cupom avançam juntos; evento velho não regride o pedido.
 - **Verificar:** BI(PaymentOutcome), V06/V08/V09/V11 com simulador do provedor.
+- **Estado atual (2026-09-26):** implementado e verificado localmente na base `origin/main@3745f6a`. `ProviderEventProcessor` consulta o provedor fora da transação e só gera fato `CONFIRMED` para o checkout vinculado, estado `PAID` e valor correspondente. `PaymentOutcomeHandler` trava pedido/intenção e aplica `PAID` + reserva `COMMITTED` + cupom `CONSUMED` atomicamente; confirmação tardia põe o pedido pendente em análise, libera reserva/cupom e solicita reembolso. Intenção ligada a outro pedido ou evento repetido não altera pedido/estoque. Testes focados passaram; sem PR/merge nesta cópia de trabalho.
 
 ### C62 — `feat(checkout-ui): follow asynchronous payment and order progress`
 
-- [ ] **Depende:** C44, C52, C58a, C61. **Alvos:** confirmação/retorno/status do checkout Angular e testes; M.
-- **Aceite:** manter chave por intenção; apresentar pendência, link hospedado, erro e sucesso reais; reload retoma estado do pedido.
+- [x] **Depende:** C44, C52, C58a, C61. **Alvos:** confirmação/retorno/status do checkout Angular e testes; M.
+- **Aceite:** manter chave por intenção; apresentar pendência, erro e sucesso reais; reload retoma estado do pedido. O link hospedado depende da resposta/consulta de pagamento integrada na C63.
 - **Verificar:** F/E; redirecionamento de sucesso isolado não mostra pedido pago.
+- **Estado atual (2026-09-26):** jornada local aceita entrega e retirada: resumo calculado no servidor, chave idempotente mantida por snapshot, token de convidado preservado em `sessionStorage`, e `/orders/:id` consulta o pedido na API ao abrir/recarregar e atualiza o estado a cada 10s ou por ação. Entrega envia endereço normalizado e retirada envia sua modalidade; E2E confirma a seleção da modalidade e prova que o cliente só mostra `PAID` depois que a API devolve esse estado. Link hospedado depende do adapter/consulta de pagamento C63. Sem PR/merge para esta fatia.
 
 **G4:** primeira compra completa em ambiente determinístico, com eventos duráveis e falhas selecionadas. B/F/C/E e demonstração de V01/V04/V05/V08. Este marco não encerra as integrações externas.
 
@@ -1800,6 +1800,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
 - **Aceite:** ponto/prazo informados; código e papel autorizados; entrega/retirada confirmada uma vez.
 - **Verificar:** BI(PickupLifecycle), código inválido/repetido e pedido não pago.
+- **Estado atual (2026-09-26):** `OrderTransitions` já restringe `PAID → PREPARING → READY_FOR_PICKUP → PICKED_UP` a `FulfillmentMode.PICKUP`, com transição final somente pelo ator `ADMIN`; `OrderService.transition` bloqueia o pedido e grava estado, histórico append-only e outbox em uma transação, e repetição do estado atual é no-op. `PickupLifecycleTest` exercita Postgres real: caminho até retirada confirmada uma vez, eventos/histórico contíguos, modalidade errada e pedido não pago rejeitados. Continua sem endpoint administrativo de ação; o código de retirada tem regra de emissão/validação pendente e não será inventado aqui. Sem PR/merge.
 
 ### C73 — `feat(shipping-ui): operate dispatch and pickup from the admin area`
 
@@ -1817,9 +1818,10 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C74 — `docs(notifications): specify delivery and message privacy`
 
-- [ ] **Depende:** C14, C45, C50, C53, C41. **Alvos:** `specs/SPEC-notifications.md`, matriz evento→mensagem; S.
+- [x] **Depende:** C14, C45, C50, C53, C41. **Alvos:** `specs/SPEC-notifications.md`, matriz evento→mensagem; S.
 - **Aceite:** notificações realmente necessárias; destinatário e conteúdo mínimo; política de retry/duplicata e limite da entrega SMTP explícitos.
 - **Verificar:** DOC; nunca afirmar exatamente uma entrega de e-mail sem garantia do provedor.
+- **Estado atual (2026-09-28):** concluída e publicada no PR #114. A SPEC define destinatário pelo pedido, conteúdo mínimo por fatos persistidos, estados de pagamento que não devem gerar mensagens contraditórias, deduplicação/retry e a fronteira de aceitação SMTP. Códigos de retirada e avisos logísticos ficam para C70–C73; link convidado bloqueado até resolver transporte seguro de CHK-Q02/ORD-Q02. Mailpit comprova somente o ambiente local.
 
 ### C75 — `feat(notifications): deliver purchase notifications through Mailpit`
 
