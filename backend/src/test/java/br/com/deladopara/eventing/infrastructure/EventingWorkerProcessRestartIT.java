@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -109,6 +110,9 @@ class EventingWorkerProcessRestartIT {
         builder.environment().put("APP_EVENTING_LEASE", LEASE.toString());
         builder.environment().put("APP_EVENTING_BATCH_SIZE", "1");
         builder.environment().put("APP_EVENTING_POLL_DELAY", POLL_DELAY.toString());
+        // The child JVM does not load src/test/resources/application.yml.
+        builder.environment()
+                .put("SHIPPING_PICKUP_ENCRYPTION_KEY", Base64.getEncoder().encodeToString(new byte[32]));
         var process = builder.start();
         process.getOutputStream().close();
         return process;
