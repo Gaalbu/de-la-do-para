@@ -3,6 +3,7 @@ package br.com.deladopara.payments.infrastructure;
 import br.com.deladopara.payments.application.CheckoutOperationRunner;
 import br.com.deladopara.payments.application.CheckoutOperations;
 import br.com.deladopara.payments.application.PaymentProvider;
+import br.com.deladopara.payments.application.ProviderEventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,21 +28,26 @@ public class PaymentWorker {
 
     private final CheckoutOperations operations;
     private final CheckoutOperationRunner runner;
+    private final ProviderEventProcessor events;
     private final int batchSize;
 
     public PaymentWorker(
             CheckoutOperations operations,
             PaymentProvider provider,
+            ProviderEventProcessor events,
             @Value("${payments.worker.batch-size:10}") int batchSize) {
         if (batchSize < 1) {
             throw new IllegalArgumentException("Payment worker batch size must be positive");
         }
         this.operations = operations;
         this.runner = new CheckoutOperationRunner(operations, provider);
+        this.events = events;
         this.batchSize = batchSize;
     }
 
-    /** Returns how many operations ran; abandoned leases become UNKNOWN before new claims. */
+    /**
+     * Returns how many operations and notifications ran; abandoned leases become UNKNOWN before new claims.
+     */
     @Scheduled(fixedDelayString = "${payments.worker.poll-delay:PT1S}")
     public int tick() {
         var recovered = operations.recoverAbandoned();
@@ -52,6 +58,10 @@ public class PaymentWorker {
         while (ran < batchSize && runner.runNext()) {
             ran++;
         }
-        return ran;
+        var processed = 0;
+        while (processed < batchSize && events.processNext()) {
+            processed++;
+        }
+        return ran + processed;
     }
 }

@@ -7,6 +7,7 @@ import br.com.deladopara.payments.adapter.simulated.SimulatedPaymentProvider.Out
 import br.com.deladopara.payments.application.CheckoutOperations;
 import br.com.deladopara.payments.application.PaymentIntentService;
 import br.com.deladopara.payments.application.PaymentProvider;
+import br.com.deladopara.payments.application.ProviderEventProcessor;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 @Import(PostgresTestContainer.class)
@@ -31,14 +33,17 @@ class PaymentWorkerIT {
     private final PaymentIntentService intents;
     private final CheckoutOperations operations;
     private final JdbcTemplate jdbc;
+    private final TransactionTemplate tx;
     private final SimulatedPaymentProvider simulator = new SimulatedPaymentProvider(Clock.systemUTC());
     private final ConcurrentHashMap<UUID, AtomicInteger> calls = new ConcurrentHashMap<>();
 
     @Autowired
-    PaymentWorkerIT(PaymentIntentService intents, CheckoutOperations operations, JdbcTemplate jdbc) {
+    PaymentWorkerIT(
+            PaymentIntentService intents, CheckoutOperations operations, JdbcTemplate jdbc, TransactionTemplate tx) {
         this.intents = intents;
         this.operations = operations;
         this.jdbc = jdbc;
+        this.tx = tx;
     }
 
     @BeforeEach
@@ -65,6 +70,15 @@ class PaymentWorkerIT {
         };
     }
 
+    private PaymentWorker worker(int batchSize) {
+        var provider = counting();
+        return new PaymentWorker(
+                operations,
+                provider,
+                new ProviderEventProcessor(jdbc, tx, intents, provider, Clock.systemUTC()),
+                batchSize);
+    }
+
     private int countStatus(String status) {
         return jdbc.queryForObject("SELECT count(*) FROM payment_intent WHERE status = ?", Integer.class, status);
     }
@@ -74,7 +88,7 @@ class PaymentWorkerIT {
         for (int i = 0; i < 3; i++) {
             intents.request(UUID.randomUUID(), 1_000 + i, UUID.randomUUID());
         }
-        var worker = new PaymentWorker(operations, counting(), 2);
+        var worker = worker(2);
 
         assertThat(worker.tick()).isEqualTo(2);
         assertThat(worker.tick()).isEqualTo(1);
@@ -87,7 +101,7 @@ class PaymentWorkerIT {
     void uncertainOutcomeStaysUnknownAcrossTicks() {
         var id = intents.request(UUID.randomUUID(), 5_250, UUID.randomUUID());
         simulator.failNextCreate(Outcome.TIMEOUT_AFTER_EFFECT);
-        var worker = new PaymentWorker(operations, counting(), 10);
+        var worker = worker(10);
 
         worker.tick();
         worker.tick();
@@ -102,7 +116,7 @@ class PaymentWorkerIT {
         operations.claim().orElseThrow();
         jdbc.update("UPDATE payment_external_operation SET lease_until = now() - interval '1 second'");
 
-        new PaymentWorker(operations, counting(), 10).tick();
+        worker(10).tick();
 
         assertThat(calls).doesNotContainKey(id);
         assertThat(countStatus("UNKNOWN")).isEqualTo(1);
@@ -118,7 +132,7 @@ class PaymentWorkerIT {
         try {
             var tasks = new ArrayList<Callable<Integer>>();
             for (int w = 0; w < 3; w++) {
-                var worker = new PaymentWorker(operations, counting(), 50);
+                var worker = worker(50);
                 tasks.add(() -> {
                     start.await();
                     return worker.tick();

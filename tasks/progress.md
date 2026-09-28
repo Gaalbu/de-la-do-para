@@ -1035,3 +1035,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `AsaasWebhookIT` 8/8, `RouteContractCoverageTest`, `ArchitectureRulesTest`; `contracts:check`; `check-secrets.sh`. |
 | Limite | Nenhum evento real do sandbox recebido (C04 depende de conta do usuário). |
 | Próximo passo | C61 (aplicar confirmação de pagamento). |
+
+## Sessão 2026-09-28 — retomada, publicação atômica e C61
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `origin/main@3745f6a`; política de publicação adicionada em `0c77910` na branch `docs/atomic-commit-pr-publish`, PR #107 aberta com CI 7/7 verde e estado CLEAN. O lote original permanece intacto no checkout de trabalho. |
+| Tarefa | Separar a regra global de publicação e a implementação C61 em commits/PRs próprios; desacoplar C61 do contrato de logística C72. |
+| Mudanças | Plano mestre agora exige commit de intenção única, push após gates locais e PR por tarefa/subtarefa; alterações acumuladas foram isoladas. C61 confirma eventos consultando o estado do provedor, confere checkout/valor/ordem, aplica pedido+estoque+cupom na mesma transação e encaminha pagamento tardio para revisão/reembolso. `OrderService.lock` usa o cabeçalho de pedido sem antecipar `OrderFulfillmentPort` de C72. |
+| Verificação | `PaymentOutcomeIT` 7/7, `PaymentWorkerIT` 4/4 e `ArchitectureRulesTest` 3/3 passaram com PostgreSQL 18.6/Testcontainers via `./mvnw -q -DargLine=-Xint -Dtest=PaymentOutcomeIT,PaymentWorkerIT,ArchitectureRulesTest test`; `spotless:check`, `checkstyle:check`, `git diff --check`, `npm run docs:check --prefix frontend` e `aislop scan --changes --json` (100/100, zero diagnósticos) passaram. |
+| Remoto | Política: PR #107, base `main`, commit `0c77910`, CI 7/7 verde, CLEAN/OPEN. C61: commits `31effbe` (implementação) e `fab5096` (progresso) enviados na branch `feat/c61-payment-outcomes-atomic`; PR #108 sobre `docs/atomic-commit-pr-publish`, CI `36466323748` 7/7 verde no SHA `fab5096`, CLEAN/OPEN. |
+| Limite | Não rodado o `verify` completo localmente, sem homologação real Asaas e sem merge. |
+| Próximo passo | C62 — acompanhamento assíncrono do pedido e pagamento, em branch/PR separada empilhada sobre C61; PR #108 segue aguardando revisão/merge manual. |

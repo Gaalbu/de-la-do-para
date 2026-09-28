@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -66,6 +67,12 @@ public class OrderService {
                 command.correlationId(),
                 payload));
         return new CreatedOrder(id, true);
+    }
+
+    /** Locks the order row for a coordinator that must decide under the lock (SPEC-checkout §A6). */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public OrderRepository.OrderHead lock(UUID orderId) {
+        return orders.lock(orderId).orElseThrow(OrderNotFoundException::new);
     }
 
     @Transactional
