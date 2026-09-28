@@ -76,7 +76,10 @@ public class SimulatedPaymentProvider implements PaymentProvider {
                         new CheckoutState(checkout.created().checkoutId(), checkout.status(), checkout.amountCents()));
     }
 
-    /** Simulates the buyer paying on the hosted page; returns the notification the provider would send. */
+    /**
+     * Simulates the buyer paying on the hosted page; the checkout then reports the amount actually paid. Returns the
+     * notification the provider would send.
+     */
     public ProviderEvent pay(String checkoutId, long paidAmountCents) {
         return settle(checkoutId, CheckoutStatus.PAID, ProviderEvent.Type.CHECKOUT_PAID, paidAmountCents);
     }
@@ -106,7 +109,7 @@ public class SimulatedPaymentProvider implements PaymentProvider {
         if (current.status() != CheckoutStatus.PENDING) {
             throw new IllegalStateException("Simulated checkout is already " + current.status());
         }
-        byIntent.put(intentId, new Checkout(current.created(), status, current.amountCents()));
+        byIntent.put(intentId, new Checkout(current.created(), status, amount));
         var event = new ProviderEvent("sim_evt_" + UUID.randomUUID(), type, checkoutId, amount, clock.instant());
         synchronized (delivered) {
             delivered.add(event);
