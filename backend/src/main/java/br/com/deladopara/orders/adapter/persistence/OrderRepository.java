@@ -270,11 +270,18 @@ public class OrderRepository {
                 FulfillmentMode.valueOf(rs.getString("fulfillment_mode")),
                 OrderStatus.valueOf(rs.getString("status")),
                 rs.getInt("status_sequence"),
-                rs.getLong("total_cents"));
+                rs.getLong("total_cents"),
+                rs.getString("coupon_code"));
     }
 
     public record OrderHead(
-            UUID id, String checkoutKey, FulfillmentMode mode, OrderStatus status, int sequence, long totalCents) {}
+            UUID id,
+            String checkoutKey,
+            FulfillmentMode mode,
+            OrderStatus status,
+            int sequence,
+            long totalCents,
+            String couponCode) {}
 
     public record HistoryRow(
             int sequence, OrderStatus from, OrderStatus to, OrderActor actor, String reason, Instant occurredAt) {}
