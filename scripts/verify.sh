@@ -14,8 +14,12 @@ case "${1:-all}" in
     ;;
   security)
     ./scripts/check-secrets.sh
-    npm --prefix frontend audit --omit=dev --audit-level=high
-    echo "Nota: audit completo (dev incluso) apresenta 4 high em js-yaml via @hey-api/openapi-ts (GHSA-52cp, GHSA-5p4m, GHSA-2883); dev-only, sem runtime, triagem em docs/ci.md"
+    npm --prefix frontend audit --audit-level=high
+    if ! command -v osv-scanner >/dev/null; then
+      echo "ERRO: osv-scanner ausente; instale a versão fixada em docs/ci.md" >&2
+      exit 1
+    fi
+    osv-scanner scan source -L backend/pom.xml
     ;;
   commits)
     ./scripts/check-commits.sh origin/main HEAD

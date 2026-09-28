@@ -64,19 +64,24 @@ imagens e não altera configuração da máquina do usuário.
 
 Dependabot (`.github/dependabot.yml`) propõe atualizações semanais para npm,
 Maven e GitHub Actions (PRs pequenos, agrupamento por ecossistema, sem
-auto-merge). Auditoria de dependências:
+auto-merge). Auditoria de dependências, em `scripts/verify.sh security`:
 
-- Runtime (`--omit=dev --audit-level=high`): 0 vulnerabilidades — gate
-  verificável em `scripts/verify.sh security`.
-- Completo (dev incluso): 4 high em `js-yaml` 4.0.0-4.3.1 via
-  `@hey-api/openapi-ts` → `@hey-api/json-schema-ref-parser`/`@hey-api/shared`
-  (GHSA-52cp, GHSA-5p4m, GHSA-2883, CVE-2026-59870 sem backport). Dev-only
-  (geração de cliente), sem impacto em runtime/browser; triagem registrada
-  como risco aceito até correção upstream, correção via `npm audit fix --force`
-  implicaria quebrar para 0.97.0.
-- Backend: BOM Spring Boot 4.1.1 pinado; `mvn dependency:tree` sem divergência
-  de versões; OWASP Dependency-Check requer NVD API key e não roda em CI
-  sem segredo — limitação documentada, não alegado como verificado.
+- npm (`audit --audit-level=high`, dev incluso): 0 vulnerabilidades. Os 4 high
+  em `js-yaml` 4.2.0, que `@hey-api/json-schema-ref-parser` fixa exatamente
+  (GHSA-52cp, GHSA-5p4m, GHSA-2883), foram corrigidos com `overrides` para
+  4.3.2, mesma major e mesmas dependências. `contracts:check` (geração do
+  cliente) segue verde. Remover o override quando o upstream subir o pino.
+- Maven: `osv-scanner scan source -L backend/pom.xml` (v2.6.0, binário com
+  SHA-256 fixado no job `security`) resolve as dependências transitivas pelo
+  Maven Central e consulta a base OSV, sem chave de API. Qualquer achado
+  reprova. Pinos de segurança no `pom.xml`: `tomcat.version` 11.0.26 (o Boot
+  4.1.1 traz 11.0.24, com GHSA-9xv2, GHSA-gcx9 e GHSA-h3x4, críticos) e
+  `lz4-java` 1.11.4 (o `kafka-clients` 4.2.1 traz 1.10.1, com GHSA-xx22).
+  Remover cada pino quando o BOM gerenciar uma versão igual ou maior. Localmente,
+  instale o mesmo binário no `PATH`.
+- Exceções: nenhuma ativa. Se um achado crítico/alto não tiver correção, a
+  exceção (§3.1 do plano) é registrada aqui com o advisory, o motivo, o
+  responsável e a data de validade, e só entra com a aprovação do usuário.
 
 Segredos: `scripts/check-secrets.sh` varre arquivos rastreados (exceto
 `node_modules`, `target`, `generated`, `api-reference` e o próprio script)

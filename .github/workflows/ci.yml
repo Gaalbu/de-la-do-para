@@ -110,6 +110,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm install --global npm@12.0.2
       - run: npm ci --prefix frontend
+      - name: Install osv-scanner v2.6.0 (checksum pinned)
+        run: |
+          bin="$RUNNER_TEMP/bin"
+          mkdir -p "$bin"
+          curl -fsSLo "$bin/osv-scanner" https://github.com/google/osv-scanner/releases/download/v2.6.0/osv-scanner_linux_amd64
+          echo "ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108  $bin/osv-scanner" | sha256sum -c -
+          chmod +x "$bin/osv-scanner"
+          echo "$bin" >> "$GITHUB_PATH"
       - run: scripts/verify.sh security
 
   commit-policy:
