@@ -51,6 +51,8 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 9. Registrar ID, requisito, arquivos, comandos, resultado real, SHA e próximo passo. Atualizar o progresso apenas depois da evidência; marcar bloqueio sem marcar a tarefa concluída.
 10. A cada até três commits funcionais, executar o checkpoint; nos marcos G0–G9, executar gates completos aplicáveis e validar a jornada.
 
+**Cadência obrigatória de publicação:** cada commit deve representar uma única intenção revisável e manter o conjunto coerente e verificável. Depois dos gates locais dessa intenção, enviar o commit imediatamente para sua branch remota e abrir ou atualizar uma PR dedicada à tarefa/subtarefa do plano. PRs empilhadas são permitidas quando a dependência ainda não foi integrada; cada uma deve ter base explícita na tarefa predecessora e conter somente sua própria intenção. Não acumular alterações de tarefas diferentes para publicar depois, não criar commits com muitos arquivos apenas porque ficaram modificados juntos e não usar `git add .`. Se um lote local já contiver tarefas distintas, separá-las em commits e branches/PRs próprias, na ordem de dependência, preservando arquivos e resíduos fora de escopo. Registrar no progresso o SHA, branch, PR, base e estado dos checks após cada publicação.
+
 Se uma tarefa exigir mais de aproximadamente cinco arquivos manuais ou mais de uma intenção independente, dividi-la em sufixos antes de codificar. Bootstrap gerado é exceção documentada. A contagem de commits é uma previsão, nunca uma meta artificial.
 
 ### Registro para continuidade
