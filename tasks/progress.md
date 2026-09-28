@@ -1067,3 +1067,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 - Regressões verificam estabilidade do retry, ausência de e-mail/endereço/nome/seleção em chaves e falha segura quando SubtleCrypto não está disponível.
 - Verificação local: `test:ci` 28/28; lint, `format:check`, Playwright checkout 3/3, `git diff --check`; `aislop` 100/100, zero diagnósticos. CI anterior no SHA `4a8c633` passou 7/7 antes desta revisão; novo CI do SHA `2207582` está em andamento.
 - PR #111 permanece draft até confirmar todos os checks do novo SHA.
+
+## Sessão 2026-09-28 — C72: preparação e confirmação de retirada local
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `feat/c72-pickup-lifecycle-atomic`, empilhada sobre C62 #111 no SHA `8486174`; permanece separada do checkout principal com alterações locais acumuladas. |
+| Tarefa | Implementar o fluxo de retirada pago → em preparação → pronto com código de uso único → retirado, com autorização do dono e confirmação administrativa. |
+| Mudanças | V34 persiste código cifrado AES-GCM e consumo; `PickupService` usa o `OrderFulfillmentPort` para compartilhar o lock do pedido com cancelamento. GET autenticado/tokenizado retorna código, ponto e janela `private, no-store`; endpoints admin iniciam preparo, marcam pronto e confirmam com código. Removida a antiga ação administrativa genérica que permitia avançar status sem validar o código. Configuração `SHIPPING_PICKUP_ENCRYPTION_KEY`, D71, contrato e guia local registrados. |
+| Verificação | `PickupLifecycleIT` 8/8, PostgreSQL 18.6/Testcontainers; `ArchitectureRulesTest` 4/4; backend surefire 126/126. `contracts:lint` válido com 8 avisos existentes, `contracts:check-events`, `contracts:generate` e `tsc --noEmit` passaram. `docs:check`, `git diff --check` e `check-secrets.sh` passaram. |
+| Remoto | Commits e PR ainda pendentes; C72 será publicada numa branch própria empilhada sobre C62 #111. PR não mesclada. |
+| Limite | `scripts/verify.sh backend` percorreu suites unitárias e algumas de integração, mas foi interrompido após conexões repetidas de encerramento do broker no `EventingWorkerConfigIT`; relatórios mostram `EventingWorkerConfigIT` 5/5 e `PickupLifecycleIT` 8/8 verdes, mas o gate completo não terminou. Sem UI C73 nem homologação externa. |
+| Próximo passo | Revisar diff/aislop, criar commits atômicos, publicar branch, abrir PR e confirmar CI remoto; depois continuar a próxima tarefa elegível do plano. |

@@ -80,6 +80,7 @@ respondidas em D01–D65.
 | D68 | Após qualquer pacote ser entregue à transportadora, os demais pacotes continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
 | D69 | Alocação de estoque entre lotes elegíveis por FEFO (primeiro a vencer, primeiro alocado), desempate por recebimento e UUID; só entre lotes que já passaram validade, bloqueio e saldo (aprovado em 2026-09-24, C57) |
 | D70 | Bloquear lote com reserva ativa mantém as reservas existentes e só impede novas; ajuste que deixaria o físico abaixo do reservado é recusado e segue para reconciliação administrativa, sem liberar ou trocar lote automaticamente (aprovado em 2026-09-24, C57) |
+| D71 | Código de retirada de uso único aparece somente na tela segura do pedido; atendente/admin confirma a retirada informando esse código (aprovado em 2026-09-25, C72) |
 
 ## Propostas técnicas (revisão do plano, não respostas do usuário)
 

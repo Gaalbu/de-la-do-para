@@ -15,6 +15,12 @@ Sandbox real é opt-in e separado (ver `docs/integrations/homologation.md`).
 
 Tudo configurável via `.env` (ver `.env.example`).
 
+Para habilitar o fluxo de retirada, defina `SHIPPING_PICKUP_ENCRYPTION_KEY`
+com uma chave Base64 de 32 bytes, por exemplo gerada por
+`openssl rand -base64 32`. Mantenha a mesma chave enquanto houver códigos
+cifrados no banco; não a registre no Git nem em logs. Os testes usam uma chave
+fixa restrita a `src/test/resources`.
+
 ## Subir, verificar, derrubar
 
 ```bash
