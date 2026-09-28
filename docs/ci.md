@@ -30,6 +30,21 @@ necessária porque os artefatos em `frontend/src/generated/` são derivados e
 ignorados pelo Git; assim, o job funciona em checkout limpo sem depender do
 estado de outro job ou de uma execução local prévia de `contracts:check`.
 
+`backend` mede cobertura com JaCoCo (D38): os agentes de `prepare-agent` e
+`prepare-agent-integration` registram unitários e integração, e o `merge`
+gera um relatório único em `backend/target/site/jacoco/` na fase
+`post-integration-test`, antes de o failsafe reprovar. Assim o relatório também
+sai quando algum IT falha. `scripts/coverage-summary.sh` resume a cobertura de
+branches por módulo no resumo do job e marca a meta de 80% dos módulos críticos
+(checkout, payments, inventory, pricing). Por enquanto é só relatório: a meta
+ainda não reprova o build. Se a base medida ficar abaixo de 80%, a decisão de
+ativar o limite, e quando, fica com o usuário (§9.2); a meta não é reduzida. O
+HTML segue no artefato `backend-reports`.
+
+```bash
+scripts/verify.sh backend && scripts/coverage-summary.sh
+```
+
 `security` verifica segredos (`scripts/check-secrets.sh`) e dependências
 (`npm audit --omit=dev --audit-level=high` para runtime; audit completo
 informativo). Achado controlado com fixture `AKIA...` falha como esperado;
