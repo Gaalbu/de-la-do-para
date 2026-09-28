@@ -1047,3 +1047,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Política: PR #107, base `main`, commit `0c77910`, CI 7/7 verde, CLEAN/OPEN. C61: commits `31effbe` (implementação) e `fab5096` (progresso) enviados na branch `feat/c61-payment-outcomes-atomic`; PR #108 sobre `docs/atomic-commit-pr-publish`, CI `36466323748` 7/7 verde no SHA `fab5096`, CLEAN/OPEN. |
 | Limite | Não rodado o `verify` completo localmente, sem homologação real Asaas e sem merge. |
 | Próximo passo | C62 — acompanhamento assíncrono do pedido e pagamento, em branch/PR separada empilhada sobre C61; PR #108 segue aguardando revisão/merge manual. |
+
+## Sessão 2026-09-28 — C62: acompanhamento assíncrono do pedido e pagamento
+
+| Campo | Conteúdo |
+|---|---|
+| Base | `origin/main@eb8a783`, com PR #107 (regra de publicação) e PR #108 (C61) já integradas. Branch `feat/c62-order-payment-progress-atomic`, sincronizada com essa base sem reescrever commits públicos. |
+| Tarefa | Expor estado/link de pagamento no pedido e completar a jornada checkout → pedido pendente → resultado financeiro consultado pela API. |
+| Mudanças | Commit `118ad12` adiciona `Order.payment` opcional ao DTO, repositório, contrato OpenAPI e teste do aceite; commit `b8493db` adiciona aceite idempotente no checkout, rota de pedido client-only, acompanhamento/polling e estados pendente, recusado, incerto e pago. C84/cupom ficou fora desta fatia. |
+| Verificação | Backend `PurchaseAcceptanceIT` 7/7, `OrderAccessIT` 7/7 e `ArchitectureRulesTest` 3/3 com PostgreSQL 18.6/Testcontainers; Spotless/Checkstyle. Frontend `test:ci` 27/27 em 9 arquivos, lint, formato, build SSR (`GOMAXPROCS=1`, 1 rota prerender), Playwright `checkout.spec.ts` 3/3; `contracts:check` (8 avisos Redocly existentes), `docs:check`, `git diff --check`; `aislop` 100/100, zero diagnósticos. |
+| Remoto | C61 PR #108 integrada em `8788339`; C62 commits enviados na PR #111, base `main`, atualmente draft enquanto os checks da revisão rodam. |
+| Limite | A UI usa respostas simuladas no Playwright; nenhuma confirmação Asaas externa foi testada. Chrome DevTools MCP não está configurado; Chromium via Playwright foi usado. C62 ainda não foi merged. |
+| Próximo passo | Acompanhar CI da PR #111, corrigir gates se necessário e deixá-la pronta para revisão; depois seguir a próxima tarefa elegível de acordo com as dependências e o acesso real exigido por C63. |
