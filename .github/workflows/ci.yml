@@ -29,6 +29,9 @@ jobs:
           cache-dependency-path: backend/pom.xml
       - name: Verify backend with real PostgreSQL and Kafka
         run: scripts/verify.sh backend
+      - name: Summarize branch coverage by module (D38)
+        if: always() && hashFiles('backend/target/site/jacoco/jacoco.csv') != ''
+        run: scripts/coverage-summary.sh >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve test reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -37,6 +40,7 @@ jobs:
           path: |
             backend/target/surefire-reports/
             backend/target/failsafe-reports/
+            backend/target/site/jacoco/
           retention-days: 7
           if-no-files-found: warn
 
@@ -110,6 +114,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm install --global npm@12.0.2
       - run: npm ci --prefix frontend
+      - name: Install osv-scanner v2.6.0 (checksum pinned)
+        run: |
+          bin="$RUNNER_TEMP/bin"
+          mkdir -p "$bin"
+          curl -fsSLo "$bin/osv-scanner" https://github.com/google/osv-scanner/releases/download/v2.6.0/osv-scanner_linux_amd64
+          echo "ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108  $bin/osv-scanner" | sha256sum -c -
+          chmod +x "$bin/osv-scanner"
+          echo "$bin" >> "$GITHUB_PATH"
       - run: scripts/verify.sh security
 
   commit-policy:
