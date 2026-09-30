@@ -31,6 +31,9 @@
     <tomcat.version>11.0.26</tomcat.version>
     <!-- lz4-java 1.10.1 do kafka-clients 4.2.1: GHSA-xx22-p4ch-683r. -->
     <lz4-java.version>1.11.4</lz4-java.version>
+    <!-- jackson-databind 2.21.5/3.1.5 do Boot 4.1.1: GHSA-gx83-3vf8-gh7j, GHSA-q4xh-88c3-wmh7, GHSA-wjgm-6hv5-3cvf, GHSA-cxp5-3px4-pw24, GHSA-wv8q-qhhj-9h54. -->
+    <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+    <jackson-bom.version>3.1.7</jackson-bom.version>
   </properties>
 
   <dependencyManagement>
