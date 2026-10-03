@@ -1102,3 +1102,5 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Commit atômico `ee6b7ae` enviado para `test/eventing-worker-context-cleanup`; merge normal de atualização do `main` após avanço pelo PR #118; ponta publicada `8ece64d`. PR #123 aberta contra `main`; checks remotos observados em andamento. |
 | Limite | Nenhum merge da PR #123; gate completo local ainda não terminou no momento deste registro. |
 | Próximo passo | Confirmar o gate backend completo, atualizar este registro e observar checks/estado da PR #123. |
+
+- Atualização 2026-10-03: gate completo `JAVA_HOME=/home/gaalbu/.sdkman/candidates/java/25.0.4-tem GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify` terminou em BUILD SUCCESS, Surefire 122/122 e Failsafe 183/183; Spotless e Checkstyle sem violações. O Failsafe emitiu `Corrupted channel by directly writing to native stream`; `dumpstream` mostra parâmetros/configuração e logs do Kafka escrevendo no stdout nativo, sem falha de teste. Checks remotos no SHA `8360a1c`: frontend, contracts, docs e commit-policy verdes; backend e security em execução.
