@@ -3,6 +3,7 @@ package br.com.deladopara.payments.application;
 import br.com.deladopara.payments.adapter.persistence.PaymentRepository;
 import br.com.deladopara.payments.application.PaymentProvider.CheckoutRequest;
 import br.com.deladopara.payments.application.PaymentProvider.CreatedCheckout;
+import br.com.deladopara.payments.domain.OperationKind;
 import br.com.deladopara.payments.domain.OperationStatus;
 import br.com.deladopara.payments.domain.PaymentStatus;
 import java.time.Clock;
@@ -84,14 +85,19 @@ public class CheckoutOperations {
         }
     }
 
-    /** An expired lease never authorizes a new call: the request may have reached the provider. */
+    /**
+     * An expired lease never authorizes a new call: the request may have reached the provider. An abandoned lookup
+     * only counts as an inconclusive one; its intent is already UNKNOWN.
+     */
     @Transactional
     public int recoverAbandoned() {
         var now = clock.instant();
         List<PaymentRepository.Operation> abandoned = payments.lockAbandonedInFlight(now);
         for (var operation : abandoned) {
             payments.finishOperation(operation.id(), OperationStatus.UNKNOWN, "LEASE_EXPIRED", now);
-            intents.transition(operation.intentId(), PaymentStatus.UNKNOWN, "LEASE_EXPIRED", UUID.randomUUID());
+            if (operation.kind() == OperationKind.CREATE_CHECKOUT) {
+                intents.transition(operation.intentId(), PaymentStatus.UNKNOWN, "LEASE_EXPIRED", UUID.randomUUID());
+            }
         }
         return abandoned.size();
     }

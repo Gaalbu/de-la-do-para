@@ -97,6 +97,9 @@ payments:
     enabled: ${PAYMENTS_WORKER_ENABLED:false}
     batch-size: ${PAYMENTS_WORKER_BATCH_SIZE:10}
     poll-delay: ${PAYMENTS_WORKER_POLL_DELAY:PT1S}
+  reconciliation:
+    # Consultas inconclusivas antes de uma intent UNKNOWN ir para análise (proposta PAY-Q02, pendente).
+    max-lookups: ${PAYMENTS_RECONCILIATION_MAX_LOOKUPS:3}
 
 management:
   endpoints:

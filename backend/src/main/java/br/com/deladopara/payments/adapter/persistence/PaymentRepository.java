@@ -131,6 +131,60 @@ public class PaymentRepository {
                 intentId);
     }
 
+    /**
+     * Locks UNKNOWN intents that have no lookup in flight, skipping rows another worker holds, with how many lookups
+     * already ran and when the last one finished.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<UnknownIntent> lockUnknownWithoutActiveQuery(int limit) {
+        return jdbc.query(
+                """
+                SELECT i.id, i.amount_cents, i.updated_at,
+                       (SELECT count(*) FROM payment_external_operation q
+                        WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS lookups,
+                       (SELECT max(q.finished_at) FROM payment_external_operation q
+                        WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS last_lookup_at
+                FROM payment_intent i
+                WHERE i.status = 'UNKNOWN'
+                  AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
+                                  WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
+                ORDER BY i.updated_at, i.id
+                LIMIT ?
+                FOR UPDATE OF i SKIP LOCKED
+                """,
+                (rs, row) -> {
+                    var last = rs.getTimestamp("last_lookup_at");
+                    return new UnknownIntent(
+                            rs.getObject("id", UUID.class),
+                            rs.getLong("amount_cents"),
+                            rs.getInt("lookups"),
+                            last == null ? rs.getTimestamp("updated_at").toInstant() : last.toInstant());
+                },
+                limit);
+    }
+
+    /** Records a provider lookup as already in flight, in the same transaction that chose the intent. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void startQuery(UUID id, UUID intentId, Instant now, Instant leaseUntil) {
+        jdbc.update(
+                "INSERT INTO payment_external_operation (id, intent_id, kind, status, lease_until, created_at,"
+                        + " started_at) VALUES (?, ?, 'QUERY', 'IN_FLIGHT', ?, ?, ?)",
+                id,
+                intentId,
+                Timestamp.from(leaseUntil),
+                Timestamp.from(now),
+                Timestamp.from(now));
+    }
+
+    /** Links the checkout a lookup found, so its notifications can be matched; never replaces a known one. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void linkCheckout(UUID intentId, String checkoutId) {
+        jdbc.update(
+                "UPDATE payment_intent SET provider_checkout_id = ? WHERE id = ? AND provider_checkout_id IS NULL",
+                checkoutId,
+                intentId);
+    }
+
     public Instant checkoutExpiresAt(UUID intentId) {
         var value = jdbc.queryForObject(
                 "SELECT checkout_expires_at FROM payment_intent WHERE id = ?", Timestamp.class, intentId);
@@ -158,6 +212,9 @@ public class PaymentRepository {
     }
 
     public record Intent(UUID id, UUID orderId, long amountCents, PaymentStatus status, int version) {}
+
+    /** {@code since} is when the last lookup finished, or when the intent became UNKNOWN. */
+    public record UnknownIntent(UUID id, long amountCents, int lookups, Instant since) {}
 
     public record Operation(
             UUID id, UUID intentId, OperationKind kind, OperationStatus status, Instant leaseUntil, String lastError) {}
