@@ -1091,3 +1091,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Ainda não publicado. C72 #117 permanece OPEN; sua CI do SHA documental `6788499` está em andamento. |
 | Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
 | Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
+
+## Sessão 2026-10-03 — C63: adapter de checkout hospedado Asaas
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Implementar o adapter Asaas (Pix + cartão hospedado) contra a referência oficial, sem credenciais reais |
+| Mudanças | `AsaasPaymentProvider`/`AsaasConfig`/`AsaasProperties` em `payments/adapter/asaas`, ativos só com `PAYMENTS_PROVIDER=asaas`. Criação via `POST /v3/checkouts` com o total do snapshot; link aceito só em HTTPS e host permitido; 4xx (exceto 408/409) = recusa, demais falhas = `UNKNOWN` sem nova tentativa. Consulta por `GET /v3/payments?externalReference=`. `CheckoutRequest.payBy` (criação da intent + 15 min da reserva) faz o link nunca durar mais que a reserva; com menos de 10 min restantes, recusa sem chamar a API (`RESERVATION_TOO_SHORT`) |
+| Verificação | `AsaasPaymentProviderTest` 17/17, contrato do simulador 6/6, `CheckoutOperationRunnerTest` 3/3. `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: 143 unitários ok, 155/156 IT ok, Spotless e Checkstyle limpos; a falha foi `EventingWorkerProcessRestartIT` (espera fixa de 30 s pelo JVM filho), que passou ao rodar isolado em seguida. `docs:check` ok (26 arquivos) |
+| Limite | Respostas HTTP gravadas a partir da doc, não evidência de sandbox. Herança de `externalReference` pela cobrança e host do link precisam do spike C04. C63 segue parcial |
+| Próximo passo | C64 (reconciliação de webhook contra o estado no provedor) |
