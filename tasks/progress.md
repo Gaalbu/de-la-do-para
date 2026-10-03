@@ -1091,3 +1091,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Ainda não publicado. C72 #117 permanece OPEN; sua CI do SHA documental `6788499` está em andamento. |
 | Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
 | Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
+
+## Sessão 2026-10-03 — C93: upgrade com dados e restauração isolada
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Provar migrations em banco vazio e com dados de versão anterior, e restauração em banco separado |
+| Mudanças | `DatabaseUpgradeAndRestoreIT` (banco vazio até a última versão; snapshot V30 com cadeia de compra migra sem perder chaves/valores; dump restaurado em banco separado preserva dados e constraints) com seed `db/snapshots/v30-seed.sql`; procedimento em `docs/backup-restore.md` |
+| Verificação | `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS` em 15min44s; 126 unitários e 159 IT sem falhas; Spotless e Checkstyle limpos. Uma execução anterior travou no encerramento do fork do Failsafe e foi interrompida |
+| Limite | Cada cenário usa banco próprio em PostgreSQL de teste; o banco do ambiente local não é tocado. Restauração sobre o banco principal e recuperação após restore antigo ficam para C94 |
+| Próximo passo | C94 após C63–C68 |
