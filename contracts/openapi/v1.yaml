@@ -2026,6 +2026,7 @@ components:
         history:
           - {sequence: 0, to: PENDING_PAYMENT, actor: SYSTEM, occurredAt: '2026-09-24T12:00:00Z'}
           - {sequence: 1, from: PENDING_PAYMENT, to: PAID, actor: SYSTEM, occurredAt: '2026-09-24T12:05:00Z'}
+        payment: {status: CONFIRMED, checkoutUrl: null, checkoutExpiresAt: null}
       properties:
         id: {type: string, format: uuid}
         status: {$ref: '#/components/schemas/OrderStatus'}
@@ -2070,6 +2071,16 @@ components:
               actor: {type: string, enum: [SYSTEM, CUSTOMER, ADMIN]}
               reason: {type: [string, 'null']}
               occurredAt: {type: string, format: date-time}
+        payment:
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [status, checkoutUrl, checkoutExpiresAt]
+              properties:
+                status: {type: string, enum: [REQUESTED, CREATING_CHECKOUT, AWAITING_PAYMENT, CONFIRMED, DECLINED, UNKNOWN, UNDER_REVIEW, REFUND_REQUESTED, REFUNDED]}
+                checkoutUrl: {type: [string, 'null'], format: uri}
+                checkoutExpiresAt: {type: [string, 'null'], format: date-time}
+            - type: 'null'
     PurchaseSummary:
       type: object
       required: [snapshotId, snapshotVersion, lines, fulfillment, subtotalCents, shippingCents, discountCents, totalCents, summaryVersion]

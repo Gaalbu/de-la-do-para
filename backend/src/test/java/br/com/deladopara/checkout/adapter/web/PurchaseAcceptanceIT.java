@@ -234,7 +234,11 @@ class PurchaseAcceptanceIT {
                         String.class))
                 .containsExactly("order.created", "payment.checkout_requested");
         assertThat(count("cart_items")).isZero();
-        perform(get("/api/v1/orders/" + orderId).header("X-Order-Token", token)).andExpect(status().isOk());
+        perform(get("/api/v1/orders/" + orderId).header("X-Order-Token", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
+                .andExpect(jsonPath("$.payment.status").value("REQUESTED"))
+                .andExpect(jsonPath("$.payment.checkoutUrl").isEmpty());
     }
 
     @Test
