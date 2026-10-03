@@ -1914,7 +1914,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C84 — `feat(pricing-ui): manage coupon rules and availability`
 
-- [ ] **Depende:** C16, C32. **Alvos:** `F/admin/coupons`, formulário e testes; M.
+- [ ] **Depende:** C16, C32. **Alvos:** `F/admin/coupons`, formulário e testes; M. A política de reserva/reembolso recomendada em C31/SPEC-pricing §5 segue aguardando aprovação; manter C84 aberto até resolver essa dependência.
 - **Aceite:** criar/editar/desativar cupom; explicar validade/mínimo/limites; mudança não reescreve pedidos antigos.
 - **Verificar:** F/E; aplicar no checkout um cupom válido e tentar um expirado.
 
