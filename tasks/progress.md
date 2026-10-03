@@ -1079,3 +1079,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Branch `feat/c72-pickup-lifecycle-atomic` publicada nos commits `9824f8b` (implementação), `d11e03c` (evidência), `40d4ecc` (estado de PR) e `6a843a2` (chave de teste para worker em processo filho). PR #117 aberta contra C62 #111; OPEN/MERGEABLE no SHA `6a843a2`; CI 7/7 passou, incluindo backend, frontend, contratos, docs, segurança, política de commits e quality gate. PR não mesclada. |
 | Limite | A suíte local completa usa Docker/Testcontainers e passou; sem UI administrativa C73 nem homologação externa. |
 | Próximo passo | Continuar a próxima tarefa elegível do plano em novo slice atômico; PR #117 aguarda revisão/decisão de merge. |
+
+## Sessão 2026-09-28 — C74: proposta de especificação de notificações
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `docs/c74-notifications-spec-atomic`, empilhada sobre a branch publicada de C72/PR #117. |
+| Tarefa | Especificar mensagens comerciais necessárias, destinatário/conteúdo mínimo, privacidade, deduplicação, retry e limites SMTP sem declarar entrega `exactly-once`. |
+| Mudanças | Criada `specs/SPEC-notifications.md` com matriz proposta de fatos `payment.*` e `order.*`, fronteira de falha SMTP, mapa de capacidades, verificações para C75 e perguntas abertas. `docs/PLANO-MESTRE.md` e `docs/traceability.md` registram que as políticas ainda aguardam revisão. |
+| Verificação | `scripts/verify.sh docs` passou: 25 Markdown sem links quebrados, contratos válidos, fixtures de eventos, geração OpenAPI e `tsc --noEmit`; 8 avisos Redocly existentes. `git diff --check` passou; `aislop scan --changes --json` 100/100, zero diagnósticos. A revisão explícita das propostas da §10 deve preceder a implementação C75. |
+| Remoto | Ainda não publicado. C72 #117 permanece OPEN; sua CI do SHA documental `6788499` está em andamento. |
+| Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
+| Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
