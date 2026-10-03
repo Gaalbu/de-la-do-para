@@ -1973,6 +1973,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C13, C63, C73, C73a, C81, C81a, C81b, C83. **Alvos:** Dockerfiles, profiles release, documentação de versões; M.
 - **Aceite:** API e worker usam o mesmo artefato/versionamento; frontend SSR empacotado; runtime sem ferramenta de desenvolvimento e sem segredo embutido.
 - **Verificar:** build local a partir dos lockfiles, smoke das imagens e inspeção de usuário/health/readiness.
+- **Estado atual (2026-10-03):** **parcial.** Dockerfiles de API/worker (mesma imagem, perfil `worker`) e frontend SSR, `scripts/release-smoke.sh` e `docs/release.md` entregues em `claude/c92-release-images`; falta o profile de release no compose com gateway (C92a) e as imagens ainda não contêm as funcionalidades das dependências abertas (C63, C73, C73a, C81, C81a, C81b, C83). Manter aberta até cumpri-las.
 
 ### C92a — `ci(delivery): produce and smoke test reproducible release artifacts`
 
