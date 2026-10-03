@@ -1822,6 +1822,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C14, C45, C50, C53, C41. **Alvos:** `specs/SPEC-notifications.md`, matriz evento→mensagem; S.
 - **Aceite:** notificações realmente necessárias; destinatário e conteúdo mínimo; política de retry/duplicata e limite da entrega SMTP explícitos.
 - **Verificar:** DOC; nunca afirmar exatamente uma entrega de e-mail sem garantia do provedor.
+- **Estado atual (2026-09-28):** proposta documental criada em `specs/SPEC-notifications.md`, com matriz evento→mensagem, dados mínimos, privacidade, retries e fronteira entre aceitação SMTP e entrega final. Ainda aguarda revisão das perguntas §10 antes de C75; não considerar as políticas propostas como aprovadas.
 
 ### C75 — `feat(notifications): deliver purchase notifications through Mailpit`
 
