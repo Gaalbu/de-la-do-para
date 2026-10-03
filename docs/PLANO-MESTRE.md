@@ -1983,7 +1983,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C93 — `test(database): verify upgrades backups and isolated restores`
 
-- [ ] **Depende:** C92. **Alvos:** testes de migration, procedimento backup/restore e fixture; M.
+- [x] **Depende:** C92. **Alvos:** testes de migration, procedimento backup/restore e fixture; M. `DatabaseUpgradeAndRestoreIT` 3/3 e `docs/backup-restore.md`; restauração sobre o banco principal fica para C94.
 - **Aceite:** banco vazio sobe; snapshot da versão anterior migra; restore em banco separado preserva dados e constraints.
 - **Verificar:** B + restauração isolada; não sobrescrever dados do ambiente principal para demonstrar recuperação.
 
