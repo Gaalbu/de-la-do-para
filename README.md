@@ -54,6 +54,7 @@ scripts/verify.sh frontend
 - [CI e requisitos](docs/ci.md): gates reproduzíveis, relatórios e limitações.
 - [API](docs/api-guide.md): contrato canônico e exemplos executáveis.
 - [Observabilidade](docs/observability.md): correlação, logs e probes.
+- [Imagens de release](docs/release.md): API, worker e frontend em imagens imutáveis.
 
 ## Regras do repositório
 

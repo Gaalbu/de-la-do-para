@@ -1,0 +1,12 @@
+# Lista de permissão: só o que o build do frontend precisa.
+*
+!frontend
+!contracts/openapi/v1.yaml
+frontend/node_modules
+frontend/dist
+frontend/.angular
+frontend/src/generated
+frontend/e2e
+frontend/test-results
+frontend/playwright-report
+frontend/api-reference

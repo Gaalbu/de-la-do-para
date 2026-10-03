@@ -1,0 +1,7 @@
+# Lista de permissão: só o que o empacotamento da API precisa.
+*
+!backend/mvnw
+!backend/pom.xml
+!backend/.mvn
+!backend/src/main
+!contracts/events/envelope.schema.json
