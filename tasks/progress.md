@@ -1096,9 +1096,9 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 
 | Campo | Conteúdo |
 |---|---|
-| Tarefa | Publicar a interface local já implementada para criar, editar, desativar e consultar cupons, sem marcar C84 pronta para integração enquanto C32 depender da decisão de política de reserva/reembolso. |
+| Tarefa | Publicar a interface local já implementada para criar, editar, desativar e consultar cupons, sem marcar C84 pronta para integração enquanto a política de reserva/reembolso recomendada em C31/SPEC-pricing §5 aguardar aprovação. |
 | Mudanças | Rota Angular protegida por `adminGuard`, navegação, formulário/lista de cupons, estados de erro/vazio e teste de integração da interface; Playwright cobre criação, edição e desativação sem alterar código existente. |
 | Verificação | `GOMAXPROCS=1 scripts/verify.sh frontend` em base `origin/main@5bf81bc`: lint e Prettier passaram, Vitest 31/31, build SSR/prerender passou, Playwright 7/7 incluindo `admin-coupons.spec.ts`. `aislop scan --staged --json` 100/100 sem diagnósticos; `git diff --check` passou. |
 | Remoto | Commit atômico `e739c55` enviado à branch `feat/c84-coupon-admin-draft`; PR #124 aberta em draft contra `main`. |
-| Limite | C84 continua bloqueada pela política pendente de C32; PR é somente para revisão e não deve ser mesclada antes da decisão e da validação válida/expirada com a integração final. Checks remotos ainda não concluídos no momento desta nota. |
-| Próximo passo | Resolver C32, concluir integração/contrato do checkout e revalidar C84; em paralelo seguir slices independentes elegíveis do plano. |
+| Limite | C84 continua bloqueada pela política recomendada em C31/SPEC-pricing §5; PR é somente para revisão e não deve ser mesclada antes da decisão e da validação válida/expirada com a integração final. Checks remotos ainda não concluídos no momento desta nota. |
+| Próximo passo | Resolver a política pendente de C31, concluir integração/contrato do checkout e revalidar C84; em paralelo seguir slices independentes elegíveis do plano. |
