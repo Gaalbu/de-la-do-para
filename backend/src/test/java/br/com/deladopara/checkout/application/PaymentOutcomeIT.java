@@ -344,7 +344,8 @@ class PaymentOutcomeIT {
         deliverPaymentEvents(purchase.intentId());
 
         assertThat(jdbc.queryForObject("SELECT status FROM payment_provider_event", String.class))
-                .isEqualTo("IGNORED");
+                .as("kept for a later lookup, never trusted")
+                .isEqualTo("RECEIVED");
         assertThat(intentStatus(purchase.intentId())).isEqualTo("AWAITING_PAYMENT");
         assertThat(orderStatus(purchase.orderId())).isEqualTo("PENDING_PAYMENT");
     }

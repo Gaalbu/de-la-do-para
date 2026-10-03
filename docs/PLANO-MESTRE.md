@@ -1748,6 +1748,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C60, C63. **Alvos:** consulta/correlação de pagamento, normalização e testes; M.
 - **Aceite:** confirmação financeira consulta/valida o recurso correto; referencia checkout↔pagamento; webhook fora de ordem não regrede estado.
 - **Verificar:** BI(PaymentReconciliation), SB e V08/V09.
+- **Estado atual (2026-10-03):** **parcial.** `PaymentReconciliationIT` cobre a parte BI e V08/V09 na branch `claude/c64-payment-reconciliation`: consulta sem prova reconsultada com backoff até `REVIEW`, checkout↔pagamento conferido, fora de ordem sem regressão. Também liga o processador ao worker (bean ausente no `main`). Falta SB (C04).
 
 ### C65 — `feat(payments): retain and reconcile unknown external operations`
 
