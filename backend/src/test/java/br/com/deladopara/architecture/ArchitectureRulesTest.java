@@ -29,6 +29,15 @@ class ArchitectureRulesTest {
             .because("logs usam SLF4J com correlação (C12)");
 
     @ArchTest
+    static final ArchRule shippingUsesOrderApplicationBoundaries = noClasses()
+            .that()
+            .resideInAPackage("br.com.deladopara.shipping..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("br.com.deladopara.orders.adapter.persistence..")
+            .because("shipping coordena pedidos somente pelo contrato application de orders (C72)");
+
+    @ArchTest
     void noCyclesBetweenPackages(JavaClasses classes) {
         var slices = com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices()
                 .matching("br.com.deladopara.(*)..")

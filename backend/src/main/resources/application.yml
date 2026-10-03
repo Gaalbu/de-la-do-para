@@ -48,6 +48,9 @@ app:
   identity:
     bcrypt-strength: 12
 
+shipping:
+  pickup-code-encryption-key: ${SHIPPING_PICKUP_ENCRYPTION_KEY}
+
 management:
   endpoints:
     web:

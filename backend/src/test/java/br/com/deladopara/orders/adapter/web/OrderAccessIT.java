@@ -77,21 +77,26 @@ class OrderAccessIT {
     }
 
     private UUID order(String key, String email, UUID accountId) {
+        return order(key, email, accountId, FulfillmentMode.DELIVERY);
+    }
+
+    private UUID order(String key, String email, UUID accountId, FulfillmentMode mode) {
         var destination = objectMapper.createObjectNode().put("label", "Ponto de demonstração — Belém");
+        var shippingCents = mode == FulfillmentMode.DELIVERY ? 750 : 0;
         return orders.create(new CreateOrderCommand(
                         key,
                         accountId,
                         email,
-                        FulfillmentMode.DELIVERY,
+                        mode,
                         4_500,
-                        750,
+                        shippingCents,
                         null,
                         null,
                         0,
                         null,
-                        5_250,
+                        4_500 + shippingCents,
                         1,
-                        5,
+                        mode == FulfillmentMode.DELIVERY ? 5 : null,
                         "pricing-v1",
                         destination,
                         List.of(new CreateOrderCommand.Item(UUID.randomUUID(), "Farinha", "500 g", 2, 2_250, 4_500)),

@@ -1797,15 +1797,17 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C72 — `feat(shipping): prepare and confirm local pickup`
 
-- [ ] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
+- [x] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
 - **Aceite:** ponto/prazo informados; código e papel autorizados; entrega/retirada confirmada uma vez.
 - **Verificar:** BI(PickupLifecycle), código inválido/repetido e pedido não pago.
+- **Estado atual (2026-09-28):** implementado e publicado em `feat/c72-pickup-lifecycle-atomic`, na PR #117 empilhada sobre C62 #111. O estado/histórico/outbox é transacional; shipping acessa orders por `OrderFulfillmentPort`. Admin inicia preparação, marca pronto (gera código aleatório cifrado AES-GCM) e confirma com código válido, sob o mesmo lock de cancelamento. Só o dono autenticado ou o token daquele pedido consulta ponto/janela/código, com resposta `private, no-store`; código é removido ao consumir e nunca aparece em admin/outbox/logs. A guarda informada é de 3 dias úteis (D66), sem data final calculada até C25 configurar calendário. Maven `verify`: Surefire 126/126 e Failsafe 156/156; CI remoto 7/7 verde no SHA `6a843a2`. PR permanece OPEN/MERGEABLE e não foi mesclada; detalhes e limites em `tasks/progress.md`.
 
 ### C73 — `feat(shipping-ui): operate dispatch and pickup from the admin area`
 
 - [ ] **Depende:** C16, C69, C70, C71, C72. **Alvos:** admin expedição, ações e testes; M.
 - **Aceite:** operador prepara/envia/entrega ou confirma retirada; ações respeitam estado; impressão deixa claro que etiqueta é de teste.
 - **Verificar:** F/E; operar uma entrega e uma retirada; cancelamento concorre com transição logística conforme V16.
+- **Estado atual (2026-09-28):** operações backend de retirada pertencem a C72; C73 ainda precisa de tela administrativa e operação de expedição. Dependências C69–C71 e teste visual continuam pendentes.
 
 ### C73a — `feat(orders-ui): display delivery and pickup progress`
 

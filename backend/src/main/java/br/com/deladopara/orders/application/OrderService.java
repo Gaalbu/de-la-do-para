@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
  * failed transition leaves all three untouched.
  */
 @Service
-public class OrderService {
+public class OrderService implements OrderFulfillmentPort {
 
     private final OrderRepository orders;
     private final OutboxEventWriter outbox;
@@ -71,11 +71,20 @@ public class OrderService {
 
     /** Locks the order row for a coordinator that must decide under the lock (SPEC-checkout §A6). */
     @Transactional(propagation = Propagation.MANDATORY)
-    public OrderRepository.OrderHead lock(UUID orderId) {
-        return orders.lock(orderId).orElseThrow(OrderNotFoundException::new);
+    public OrderFulfillmentPort.LockedOrder lock(UUID orderId) {
+        var order = orders.lock(orderId).orElseThrow(OrderNotFoundException::new);
+        return new OrderFulfillmentPort.LockedOrder(
+                order.id(),
+                order.mode(),
+                order.status(),
+                order.sequence(),
+                order.totalCents(),
+                order.couponCode(),
+                order.destination());
     }
 
     @Transactional
+    @Override
     public OrderStatus transition(UUID orderId, OrderStatus to, OrderActor actor, String reason, UUID correlationId) {
         var order = orders.lock(orderId).orElseThrow(OrderNotFoundException::new);
         if (order.status() == to) {

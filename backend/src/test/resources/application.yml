@@ -1,0 +1,6 @@
+app:
+  identity:
+    bcrypt-strength: 10
+
+shipping:
+  pickup-code-encryption-key: dGVzdC1vbmx5LWtleS0zMi1ieXRlcy1leGFjdGx5ISE=
