@@ -10,10 +10,16 @@ localmente, sem custo de serviços.
   idempotentes e conciliação de resultado desconhecido.
 - Integrações de teste: Asaas Sandbox e Melhor Envio Sandbox (opt-in).
 
-**Estado:** bootstrap C06–C11b implementado; observabilidade HTTP C12 e CI
-inicial C13 disponíveis nesta branch. A loja, checkout e integrações reais
-continuam em desenvolvimento. Plano em [docs/PLANO-MESTRE.md](docs/PLANO-MESTRE.md)
-e evidências em [tasks/progress.md](tasks/progress.md).
+**Estado:** em desenvolvimento ativo. O backend já cobre catálogo, carrinho,
+contas, cupons, estoque por lote, aceitação de compra, pedidos com retirada,
+intenção de pagamento (provedor simulado) e webhook autenticado do Asaas. A CI
+roda mais de 280 testes de backend contra PostgreSQL e Kafka reais, além de
+contratos, navegador, segurança e política de commits. O adapter do Asaas Sandbox
+e a conciliação automática de pagamentos desconhecidos ainda não existem. As
+decisões de confiabilidade do checkout, com código e testes, estão no
+[estudo de caso](docs/checkout-case-study.md). Plano em
+[docs/PLANO-MESTRE.md](docs/PLANO-MESTRE.md) e evidências em
+[tasks/progress.md](tasks/progress.md).
 
 ## Começar
 
@@ -39,9 +45,10 @@ npm --prefix frontend start
 ```
 
 A API real oferece `/actuator/health`, `/actuator/health/liveness` e
-`/actuator/health/readiness`. `/api/v1/status` é apenas um stub WireMock;
-catálogo e checkout ainda não estão implementados. O proxy Angular `/api`
-ainda aponta para 8080; ajustar a porta quando integrar endpoints de negócio.
+`/actuator/health/readiness`. `/api/v1/status` é apenas um stub WireMock.
+Os endpoints de negócio ficam em `/api/v1`. O proxy Angular encaminha `/api` para
+`http://localhost:8080`; como o comando acima sobe a API em 18080, ajuste
+`frontend/proxy.conf.json` ou suba a API com `--server.port=8080`.
 
 ## Verificar
 
@@ -53,6 +60,7 @@ scripts/verify.sh frontend
 
 - [CI e requisitos](docs/ci.md): gates reproduzíveis, relatórios e limitações.
 - [API](docs/api-guide.md): contrato canônico e exemplos executáveis.
+- [Estudo de caso do checkout](docs/checkout-case-study.md): idempotência, outbox e resultado desconhecido.
 - [Observabilidade](docs/observability.md): correlação, logs e probes.
 - [Imagens de release](docs/release.md): API, worker e frontend em imagens imutáveis.
 
