@@ -9,6 +9,13 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     labels: [dependencies, frontend]
+    groups:
+      # Pacotes @angular/* exigem a mesma versão entre si (peer dependencies exatas).
+      angular:
+        patterns: ["@angular/*"]
+        update-types: [minor, patch]
+      frontend-minor-patch:
+        update-types: [minor, patch]
     commit-message:
       prefix: chore
       include: scope
@@ -20,6 +27,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     labels: [dependencies, backend]
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
     commit-message:
       prefix: chore
       include: scope
@@ -31,6 +41,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     labels: [dependencies, ci]
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
     commit-message:
       prefix: ci
       include: scope
