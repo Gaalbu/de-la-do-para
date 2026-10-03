@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Protótipo visual de revisão para De Lá do Pará"
+    />
+    <title>De Lá do Pará — protótipo C03</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #faf5eb;
+        --ink: #1c3a2a;
+        --clay: #c05b2e;
+        --line: #e7dcc8;
+        --white: #fff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        overflow-x: clip;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          16px/1.5 Inter,
+          system-ui,
+          sans-serif;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: Fraunces, Georgia, serif;
+        font-weight: 500;
+        line-height: 1.12;
+      }
+      a {
+        color: inherit;
+      }
+      .review {
+        padding: 0.55rem 1rem;
+        background: var(--ink);
+        color: var(--paper);
+        text-align: center;
+        font-size: 0.8rem;
+      }
+      header,
+      main {
+        width: min(1160px, calc(100% - 40px));
+        margin: auto;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        padding: 1.25rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        font:
+          1.4rem Fraunces,
+          Georgia,
+          serif;
+        text-decoration: none;
+      }
+      nav {
+        display: flex;
+        gap: 0.8rem;
+        font-size: 0.9rem;
+      }
+      nav a {
+        display: inline-block;
+        padding: 0.65rem 0.25rem;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 4px;
+      }
+      .skip {
+        position: absolute;
+        top: -5rem;
+        left: 1rem;
+        z-index: 2;
+        padding: 0.5rem 0.75rem;
+        background: var(--white);
+      }
+      .skip:focus {
+        top: 0.5rem;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: end;
+        gap: 2rem;
+        padding: 3.5rem 0 2rem;
+      }
+      .eyebrow {
+        color: var(--ink);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      h1 {
+        max-width: 680px;
+        margin: 0.5rem 0;
+        font-size: clamp(2.2rem, 5vw, 4rem);
+      }
+      .intro {
+        max-width: 560px;
+        margin: 0.75rem 0 0;
+      }
+      .filter {
+        border: 1px solid var(--ink);
+        border-radius: 2px;
+        padding: 0.7rem 1rem;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+      }
+      .catalog {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.25rem;
+        padding: 1rem 0 4rem;
+      }
+      figure {
+        margin: 0;
+      }
+      .card {
+        min-width: 0;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 1rem;
+      }
+      .card img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        background: #eee5d7;
+      }
+      .credit {
+        padding-top: 0.35rem;
+        font-size: 0.75rem;
+        color: #344b3b;
+      }
+      .credit a {
+        text-underline-offset: 2px;
+      }
+      .kind {
+        margin: 0.9rem 0 0.2rem;
+        color: #47594c;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .card h2 {
+        margin: 0;
+        font-size: 1.25rem;
+      }
+      .details {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+        font-size: 1rem;
+      }
+      .price {
+        font-weight: 700;
+      }
+      .availability {
+        font-size: 0.875rem;
+      }
+      .note {
+        margin: 0 0 2rem;
+        border-left: 3px solid var(--clay);
+        padding: 0.7rem 1rem;
+        background: #f2eadb;
+        font-size: 0.9rem;
+      }
+      :focus-visible {
+        outline: 3px solid var(--clay);
+        outline-offset: 3px;
+      }
+      .screen {
+        margin: 1rem 0 4rem;
+        padding: 2rem;
+        border: 1px solid var(--line);
+        background: var(--white);
+      }
+      .screen-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .screen-head h2 {
+        margin: 0.3rem 0 1rem;
+        font-size: 1.8rem;
+      }
+      .label {
+        border: 1px solid var(--line);
+        border-radius: 99px;
+        padding: 0.25rem 0.7rem;
+        font-size: 0.75rem;
+      }
+      .product {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 2rem;
+        align-items: start;
+      }
+      .product img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4/3;
+        object-fit: cover;
+        background: #eee5d7;
+      }
+      .product h3 {
+        margin: 0.25rem 0 0.6rem;
+        font-size: 2rem;
+      }
+      .product .price {
+        font-size: 1.35rem;
+      }
+      .facts {
+        margin: 1rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .facts div {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1.5fr 0.8fr;
+        gap: 1.5rem;
+      }
+      .box {
+        border: 1px solid var(--line);
+        padding: 1rem;
+      }
+      .box h3 {
+        margin: 0.1rem 0 0.8rem;
+        font-size: 1.25rem;
+      }
+      fieldset.box {
+        margin: 0;
+      }
+      .box legend {
+        padding: 0 0.35rem;
+        font:
+          500 1.25rem/1.12 Fraunces,
+          Georgia,
+          serif;
+      }
+      .choice {
+        display: block;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .choice input {
+        accent-color: var(--ink);
+        margin-right: 0.45rem;
+      }
+      .summary-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.4rem 0;
+      }
+      .summary-total {
+        margin-top: 0.6rem;
+        border-top: 1px solid var(--line);
+        padding-top: 0.8rem;
+        font-weight: 700;
+      }
+      .action {
+        display: inline-block;
+        margin-top: 0.8rem;
+        padding: 0.7rem 1rem;
+        background: var(--ink);
+        color: var(--paper);
+        font-weight: 700;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin: 1.2rem 0;
+      }
+      .step {
+        border-top: 3px solid var(--line);
+        padding-top: 0.6rem;
+        font-size: 0.8rem;
+      }
+      .step.done {
+        border-color: var(--ink);
+      }
+      .step.current {
+        border-color: var(--clay);
+      }
+      .step strong {
+        display: block;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.95rem;
+      }
+      th,
+      td {
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .crafts {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .crafts .card img {
+        aspect-ratio: 1 / 1;
+      }
+      footer {
+        padding: 1rem 0 3rem;
+        color: #47594c;
+        font-size: 0.8rem;
+      }
+      @media (max-width: 800px) {
+        .catalog {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 800px) {
+        .crafts {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 560px) {
+        header,
+        main {
+          width: min(100% - 28px, 1160px);
+        }
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        nav {
+          flex-wrap: wrap;
+          gap: 0.9rem;
+        }
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+          padding-top: 2rem;
+        }
+        .filter {
+          justify-self: start;
+        }
+        .catalog {
+          gap: 1rem 0.75rem;
+        }
+        .card h2 {
+          font-size: 1.05rem;
+        }
+        .details {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 0;
+        }
+        .screen {
+          margin: 0.75rem 0 2rem;
+          padding: 1rem;
+        }
+        .screen-head {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .product {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+        .product h3 {
+          font-size: 1.6rem;
+        }
+        .steps {
+          grid-template-columns: repeat(2, 1fr);
+          row-gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="review">
+      Protótipo C03 · imagens e conteúdo em revisão · nada nesta página
+      representa operação real
+    </div>
+    <a class="skip" href="#catalogo">Pular para o conteúdo</a>
+    <header>
+      <a class="brand" href="#catalogo">De Lá do Pará</a>
+      <nav aria-label="Navegação principal">
+        <a href="#catalogo">Alimentos</a><a href="#artesanato">Artesanato</a
+        ><a href="#jornadas">Acompanhar pedido</a
+        ><a href="#admin">Administração</a>
+      </nav>
+    </header>
+    <main id="catalogo">
+      <section class="hero" aria-labelledby="title">
+        <div>
+          <div class="eyebrow">Loja de demonstração · Belém, PA</div>
+          <h1 id="title">Sabores e formas do Pará</h1>
+          <p class="intro">
+            Uma seleção de alimentos e peças de artesanato fictícias,
+            apresentada com informações de demonstração.
+          </p>
+        </div>
+        <span class="filter"
+          >Filtros de produto <span aria-hidden="true">＋</span></span
+        >
+      </section>
+      <p class="note">
+        Fotos do Wikimedia Commons propostas para revisão. São ilustrações: não
+        comprovam origem, produtor, teor de cacau ou autoria das peças
+        fictícias. Créditos e licenças estão junto a cada imagem.
+      </p>
+      <section class="catalog" aria-label="Catálogo de demonstração">
+        <article class="card">
+          <figure>
+            <img
+              src="https://commons.wikimedia.org/wiki/Special:Redirect/file/FARINHA_DE_MANDIOCA,_EM_CESTO_DE_PALHA_DE_CARNA%C3%9ABA_-_panoramio.jpg?width=720"
+              alt="Foto candidata de farinha de mandioca em cesto de palha"
+            />
+            <figcaption class="credit">
+              <a
+                href="https://commons.wikimedia.org/wiki/File:FARINHA_DE_MANDIOCA,_EM_CESTO_DE_PALHA_DE_CARNA%C3%9ABA_-_panoramio.jpg"
+                >MACÍLIO GOMES · CC BY 3.0</a
+              >
+            </figcaption>
+          </figure>
+          <p class="kind">Alimento · 500 g</p>
+          <h2>Farinha de mandioca</h2>
+          <div class="details">
+            <span class="price">R$ 18,00</span
+            ><span class="availability">Disponível na demonstração</span>
+          </div>
+        </article>
+        <article class="card">
+          <figure>
+            <img
+              src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Castanha-do-Par%C3%A1.JPG?width=720"
+              alt="Foto candidata de castanhas-do-pará"
+            />
+            <figcaption class="credit">
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Castanha-do-Par%C3%A1.JPG"
+                >P. S. Sena · CC BY-SA 4.0</a
+              >
+            </figcaption>
+          </figure>
+          <p class="kind">Alimento · 200 g</p>
+          <h2>Castanha-do-pará</h2>
+          <div class="details">
+            <span class="price">R$ 28,00</span
+            ><span class="availability">Disponível na demonstração</span>
+          </div>
+        </article>
+        <article class="card">
+          <figure>
+            <img
+              src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Chocolate%2Bbar.JPG?width=720"
+              alt="Foto candidata de uma barra genérica de chocolate"
+            />
+            <figcaption class="credit">
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Chocolate%2Bbar.JPG"
+                >Salcan · CC BY-SA 4.0</a
+              >
+            </figcaption>
+          </figure>
+          <p class="kind">Alimento · 80 g · somente retirada</p>
+          <h2>Chocolate 70%</h2>
+          <div class="details">
+            <span class="price">R$ 22,00</span
+            ><span class="availability">Disponível na demonstração</span>
+          </div>
+        </article>
+        <article class="card">
+          <figure>
+            <img
+              src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Cocoa_powder.jpg?width=720"
+              alt="Foto candidata de cacau em pó em uma tigela"
+            />
+            <figcaption class="credit">
+              <a href="https://commons.wikimedia.org/wiki/File:Cocoa_powder.jpg"
+                >blair · CC BY-SA 2.0</a
+              >
+            </figcaption>
+          </figure>
+          <p class="kind">Alimento · 200 g</p>
+          <h2>Cacau em pó</h2>
+          <div class="details">
+            <span class="price">R$ 24,00</span
+            ><span class="availability">Disponível na demonstração</span>
+          </div>
+        </article>
+      </section>
+      <section class="screen" id="produto" aria-labelledby="product-title">
+        <div class="screen-head">
+          <div>
+            <h2 id="product-title">Cacau em pó</h2>
+          </div>
+          <span class="label">Página de demonstração</span>
+        </div>
+        <div class="product">
+          <figure>
+            <img
+              src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Cocoa_powder.jpg?width=900"
+              alt="Foto candidata de cacau em pó, sem associação a produtor real"
+            />
+            <figcaption class="credit">
+              <a href="https://commons.wikimedia.org/wiki/File:Cocoa_powder.jpg"
+                >Foto: blair · CC BY-SA 2.0 · Wikimedia Commons</a
+              >
+            </figcaption>
+          </figure>
+          <div>
+            <p class="eyebrow">Alimento · 200 g</p>
+            <h3>Cacau para bolos, bebidas e outras receitas</h3>
+            <p>
+              Produto e texto editorial fictícios. A localidade ampla é
+              informação de demonstração; esta imagem não comprova origem nem
+              relação comercial.
+            </p>
+            <p class="price">R$ 24,00</p>
+            <div class="facts">
+              <div>
+                <span>Disponibilidade</span><strong>Em demonstração</strong>
+              </div>
+              <div>
+                <span>Validade restante</span
+                ><strong>Informada por lote</strong>
+              </div>
+              <div>
+                <span>Entrega</span><strong>Consultar no checkout</strong>
+              </div>
+            </div>
+            <span class="action">Adicionar à sacola</span>
+          </div>
+        </div>
+      </section>
+      <section class="screen" id="checkout" aria-labelledby="checkout-title">
+        <div class="screen-head">
+          <div>
+            <h2 id="checkout-title">Como quer receber?</h2>
+          </div>
+          <span class="label">Fluxo visual · sem envio</span>
+        </div>
+        <div class="layout">
+          <fieldset class="box">
+            <legend>Escolha uma modalidade</legend>
+            <label class="choice"
+              ><input type="radio" name="delivery" checked />Entrega · cotação
+              de demonstração</label
+            ><label class="choice"
+              ><input type="radio" name="delivery" />Retirada · ponto de
+              demonstração em Belém</label
+            >
+            <p class="credit">
+              As opções, prazo e valor dependem do estado retornado pelo
+              backend; nenhum dado será enviado por este protótipo.
+            </p>
+            <h3>Resumo do pedido</h3>
+            <div class="summary-line">
+              <span>Farinha de mandioca · 500 g</span><strong>R$ 18,00</strong>
+            </div>
+            <div class="summary-line">
+              <span>Castanha-do-pará · 200 g</span><strong>R$ 28,00</strong>
+            </div>
+          </fieldset>
+          <aside class="box">
+            <h3>Total da demonstração</h3>
+            <div class="summary-line">
+              <span>Produtos</span><strong>R$ 46,00</strong>
+            </div>
+            <div class="summary-line">
+              <span>Frete</span><span>Aguardando cotação</span>
+            </div>
+            <div class="summary-line summary-total">
+              <span>Total</span><span>A calcular</span>
+            </div>
+            <p class="credit">
+              Pagamento por sandbox somente na implementação integrada.
+            </p>
+            <span class="action">Continuar</span>
+          </aside>
+        </div>
+      </section>
+      <section class="screen" id="jornadas" aria-labelledby="tracking-title">
+        <div class="screen-head">
+          <div>
+            <h2 id="tracking-title">Seu pedido, etapa por etapa</h2>
+          </div>
+          <span class="label">Dados fictícios · estado ilustrativo</span>
+        </div>
+        <p>
+          <strong>Pedido de demonstração #DL-2048</strong> · Aguardando
+          confirmação de pagamento
+        </p>
+        <div class="steps" aria-label="Etapas ilustrativas do pedido">
+          <div class="step done"><strong>Recebido</strong>Pedido aceito</div>
+          <div class="step current">
+            <strong>Pagamento</strong>Em processamento
+          </div>
+          <div class="step">
+            <strong>Preparação</strong>Aguardando confirmação
+          </div>
+          <div class="step"><strong>Entrega</strong>Modalidade escolhida</div>
+        </div>
+        <p>
+          Esta tela deve refletir o histórico persistido pela API, inclusive
+          quando atualizada ou reaberta. O estado acima é apenas uma proposta
+          visual.
+        </p>
+      </section>
+      <section class="screen" id="artesanato" aria-labelledby="craft-title">
+        <div class="screen-head">
+          <div>
+            <h2 id="craft-title">Candidatos de artesanato</h2>
+          </div>
+          <span class="label"
+            >Não atribuir autoria/origem às lojas fictícias</span
+          >
+        </div>
+        <section
+          class="catalog crafts"
+          aria-label="Candidatos de imagens de artesanato"
+        >
+          <article class="card">
+            <figure>
+              <img
+                src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Cuia_de_Tacac%C3%A1_07.jpg?width=600"
+                alt="Cuia ornamentada identificada na página como utensílio para tacacá"
+              />
+              <figcaption class="credit">
+                <a
+                  href="https://commons.wikimedia.org/wiki/File:Cuia_de_Tacac%C3%A1_07.jpg"
+                  >Sintegrity · CC BY-SA 4.0</a
+                >
+              </figcaption>
+            </figure>
+            <p class="kind">Candidato · cuia ornamentada</p>
+            <h2>Cuia</h2>
+          </article>
+          <article class="card">
+            <figure>
+              <img
+                src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Basket,_palm_leaf_strips,_Karaj%C3%A1_-_AMNH_-_DSC06162.JPG?width=600"
+                alt="Cesta Karajá registrada em coleção de museu"
+              />
+              <figcaption class="credit">
+                <a
+                  href="https://commons.wikimedia.org/wiki/File:Basket,_palm_leaf_strips,_Karaj%C3%A1_-_AMNH_-_DSC06162.JPG"
+                  >Daderot · CC0 1.0</a
+                >
+              </figcaption>
+            </figure>
+            <p class="kind">Candidato · acervo Karajá</p>
+            <h2>Cesto de fibra</h2>
+          </article>
+          <article class="card">
+            <figure>
+              <img
+                src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Simple-ceramic-bowl.jpg?width=600"
+                alt="Tigela simples com borda azul, sem origem local confirmada"
+              />
+              <figcaption class="credit">
+                <a
+                  href="https://commons.wikimedia.org/wiki/File:Simple-ceramic-bowl.jpg"
+                  >Yonkeltron · CC BY 3.0</a
+                >
+              </figcaption>
+            </figure>
+            <p class="kind">Candidato · origem não confirmada</p>
+            <h2>Tigela de cerâmica</h2>
+          </article>
+          <article class="card">
+            <figure>
+              <img
+                src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Vaso_de_Cer%C3%A2mica_Marajoara_de_Icoaraci_Bel%C3%A9m_do_Par%C3%A1.jpg?width=600"
+                alt="Peça Marajoara real adquirida em Icoaraci; não é obra fictícia"
+              />
+              <figcaption class="credit">
+                <a
+                  href="https://commons.wikimedia.org/wiki/File:Vaso_de_Cer%C3%A2mica_Marajoara_de_Icoaraci_Bel%C3%A9m_do_Par%C3%A1.jpg"
+                  >Halley Pacheco de Oliveira · CC BY-SA 4.0</a
+                >
+              </figcaption>
+            </figure>
+            <p class="kind">Candidato · peça Marajoara real</p>
+            <h2>Vaso de cerâmica</h2>
+          </article>
+        </section>
+        <p class="note">
+          A cesta e o vaso mostram peças reais com contextos culturais próprios.
+          A cuia fotografada também tem ornamentação específica. Se a associação
+          desses objetos com produtos fictícios ficar ambígua, usar cartão
+          tipográfico ou substituir por fotografia autorizada, após decisão do
+          usuário.
+        </p>
+      </section>
+      <section class="screen" id="admin" aria-labelledby="admin-title">
+        <div class="screen-head">
+          <div>
+            <h2 id="admin-title">Produtos e disponibilidade</h2>
+          </div>
+          <span class="label">Amostra estática · conteúdo fictício</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption class="credit">
+              Dados fictícios para demonstrar a visão administrativa
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Produto</th>
+                <th scope="col">Categoria</th>
+                <th scope="col">Estoque livre</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Farinha de mandioca</td>
+                <td>Alimento</td>
+                <td>12 un.</td>
+                <td>Ativo</td>
+                <td>Editar</td>
+              </tr>
+              <tr>
+                <td>Cuia</td>
+                <td>Artesanato frágil</td>
+                <td>4 un.</td>
+                <td>Ativo</td>
+                <td>Editar</td>
+              </tr>
+              <tr>
+                <td>Cacau em pó</td>
+                <td>Alimento</td>
+                <td>0 un.</td>
+                <td>Indisponível</td>
+                <td>Consultar lote</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="credit">
+          A versão real deve usar a API administrativa autorizada; reservado não
+          será apresentado como disponível.
+        </p>
+      </section>
+      <footer id="revisao">
+        <strong>Para revisar:</strong> adequação das fotos ao catálogo fictício,
+        proposta dos tempos do vídeo e direção visual das cinco jornadas.
+        Protótipo sem JavaScript, persistência, cotação ou envio de formulário.
+      </footer>
+    </main>
+  </body>
+</html>

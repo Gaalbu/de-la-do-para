@@ -97,26 +97,26 @@ e o conjunto final de tipos de cupom precisam ser revisados antes de C30.
   falhar não pode marcar uso consumido.
 - D34: uso associado ao e-mail só volta a ser elegível após reembolso integral
   confirmado. Reembolso solicitado, pendente ou desconhecido não libera.
+- D76: somente um cupom pode ser aplicado por pedido.
+- D77: após reembolso integral confirmado, a elegibilidade por e-mail volta;
+  o limite global histórico continua consumido.
 
 ## 5. Limites reservados para revisão
 
 - Arredondamento, ordem de subtotal/frete/desconto, comportamento quando o
   desconto excede o subtotal e exemplos de centavos.
-- Tipos de desconto, mínimo de compra, validade, fuso/instante de expiração e
-  combinações de cupons.
-- Reserva concorrente do contador global, momento de consumo, liberação após
-  falha/expiração e efeito de reembolso integral sobre esse contador.
-- A semântica de D34 não autoriza reset ilimitado de limite global; propor e
-  revisar regra explícita em C29 antes de codificar.
+- Tipos de desconto, mínimo de compra, validade e fuso/instante de expiração.
+- Reserva concorrente do contador global, momento de consumo e liberação após
+  falha/expiração.
+- D76 e D77 fecham, respectivamente, a combinação de cupons e o efeito do
+  reembolso integral; não autorizam reset ilimitado do limite global.
 
 ### Recomendações ainda não aprovadas
 
-Esta proposta não está aprovada: reservar capacidade global ao criar o pedido
-pendente, consumi-la quando o pagamento for confirmado e liberar a reserva se
-o pedido expirar ou o pagamento falhar. Após reembolso integral confirmado,
-restaurar a elegibilidade por e-mail prevista em D34, mas manter consumido o
-limite global histórico do cupom. Assim, reembolso não transforma um limite
-global finito em usos ilimitados. Confirmar a regra antes de implementá-la.
+Permanece pendente aprovar o ciclo geral: reservar capacidade global ao criar o
+pedido pendente, consumi-la quando o pagamento for confirmado e liberar a
+reserva se o pedido expirar ou o pagamento falhar. A regra específica de
+reembolso integral foi aprovada em D77; o limite global permanece consumido.
 
 ## 6. Critérios de aceitação documental
 
