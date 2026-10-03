@@ -1091,3 +1091,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Ainda não publicado. C72 #117 permanece OPEN; sua CI do SHA documental `6788499` está em andamento. |
 | Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
 | Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
+
+## Sessão 2026-10-03 — correção do lifecycle do EventingWorkerConfigIT
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Encerrar o contexto Spring do teste de worker após a classe para fechar consumers/producers antes do container Kafka. |
+| Mudanças | `@DirtiesContext(AFTER_CLASS)` em `EventingWorkerConfigIT`; mudança isolada em branch baseada em `origin/main`. A regra de publicação atômica imediata já está no plano mestre em `origin/main`, introduzida pelo PR #107 merged. |
+| Verificação | Gate focado executado no SHA-base `a4febbf`: `JAVA_HOME=/home/gaalbu/.sdkman/candidates/java/25.0.4-tem GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint -Dit.test=EventingWorkerConfigIT test-compile failsafe:integration-test failsafe:verify spotless:check checkstyle:check` — BUILD SUCCESS, 5/5 IT, Spotless e Checkstyle limpos. `aislop scan --staged --json` 100/100, zero diagnósticos; `git diff --check` passou. Gate completo na checkout original segue em execução nesta sessão e não é condição omitida da PR. |
+| Remoto | Commit atômico `ee6b7ae` enviado para `test/eventing-worker-context-cleanup`; merge normal de atualização do `main` após avanço pelo PR #118; ponta publicada `8ece64d`. PR #123 aberta contra `main`; checks remotos observados em andamento. |
+| Limite | Nenhum merge da PR #123; gate completo local ainda não terminou no momento deste registro. |
+| Próximo passo | Confirmar o gate backend completo, atualizar este registro e observar checks/estado da PR #123. |
