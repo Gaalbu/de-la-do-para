@@ -1,4 +1,4 @@
-# Storyboard — vídeos de portfólio (revisão C03 aprovada em 20/09/2026)
+# Storyboard — vídeos de portfólio (sequência e proposta aprovadas em C03)
 
 Principal: vídeo **vertical em loop de no máximo ~30 s, sem legendas** —
 revisão do usuário em 20/09/2026 alterando D49 (antes 60–90 s legendado):
@@ -34,3 +34,6 @@ de onde vêm os produtos e o que ocorreu com o pedido.
 
 1. Principal revisto: loop ≤30 s, sem legendas, texto único (ver topo). ✅
 2. Roteiro técnico aprovado como está (V04/V05, V07/V08, V10 + traces). ✅
+3. Storyboard atual e distribuição das cenas aprovados pelo usuário em
+   2026-10-03 (D75). Tempos orientam a gravação e podem ser ajustados para
+   manter o vídeo final dentro do limite D49 e mostrar estados reais.

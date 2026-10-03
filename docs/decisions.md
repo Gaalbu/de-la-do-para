@@ -1,10 +1,10 @@
 # Registro de decisões — De Lá do Pará
 
-Transcrição fiel das decisões aprovadas pelo usuário (D01–D67), das propostas
-técnicas em revisão (A01–A10) e das perguntas com encaminhamento. Fonte:
+Transcrição fiel das decisões aprovadas pelo usuário (D01–D77), das propostas
+técnicas em revisão (A01–A13) e das perguntas com encaminhamento. Fonte:
 `docs/PLANO-MESTRE.md` (consolidação 20/09/2026). Quando houver sobreposição,
 a decisão mais recente e específica prevalece. Não repetir perguntas já
-respondidas em D01–D65.
+respondidas em D01–D77.
 
 ## Decisões confirmadas pelo usuário
 
@@ -81,6 +81,9 @@ respondidas em D01–D65.
 | D69 | Alocação de estoque entre lotes elegíveis por FEFO (primeiro a vencer, primeiro alocado), desempate por recebimento e UUID; só entre lotes que já passaram validade, bloqueio e saldo (aprovado em 2026-09-24, C57) |
 | D70 | Bloquear lote com reserva ativa mantém as reservas existentes e só impede novas; ajuste que deixaria o físico abaixo do reservado é recusado e segue para reconciliação administrativa, sem liberar ou trocar lote automaticamente (aprovado em 2026-09-24, C57) |
 | D71 | Código de retirada de uso único aparece somente na tela segura do pedido; atendente/admin confirma a retirada informando esse código (aprovado em 2026-09-25, C72) |
+| D75 | Aprovação C03 em 2026-10-03: protótipo, fotos sugeridas como imagens ilustrativas e storyboard/roteiro técnico atuais aprovados; usar assets com atribuição/licença registradas e sem atribuir fotos ou objetos reais aos produtores fictícios |
+| D76 | C29: permitir somente um cupom por pedido (aprovado em 2026-10-03) |
+| D77 | Após reembolso integral confirmado de pedido com cupom, a elegibilidade por e-mail é restaurada; o limite global histórico do cupom permanece consumido (aprovado em 2026-10-03, C31) |
 
 ## Propostas técnicas (revisão do plano, não respostas do usuário)
 
@@ -96,13 +99,12 @@ respondidas em D01–D65.
 | A08 | Uma moeda, um ponto, unidade/SKU | Confirmada em D17 |
 | A09 | 80% branches no núcleo + metas locais | Aprovadas em D38–D41 como metas futuras |
 | A10 | E-mail em Mailpit; conteúdo fictício identificado | Fluxos sem contratar serviço |
+| A13 | Código de uso único por e-mail para prova de pedido convidado, seguido de autorização curta vinculada ao pedido | Aprovada para C75/C78 em 2026-10-03; política permanente ORD-Q02 continua aberta |
 
 ## Perguntas e encaminhamento
 
-- **Q01 (aberta):** tons exatos, contraste, famílias de fontes e referências
-  dentro da direção aprovada (D43–D48); storyboard/roteiro técnico e seleção
-  de fotos (D51). **Momento:** C03 (design) — apresentar proposta concreta e
-  revisar com o usuário. Não fechar automaticamente.
+- **Q01 (respondida em 2026-10-03, C03; D75):** usuário aprovou o protótipo,
+  as fotos sugeridas e o storyboard atuais.
 - **Resolvidas:** Q02→D17; Q07→D18; Q03a→D21; Q03b→D22; Q03c→D23; Q03d→D24;
   Q03e→D25; Q03f→D26; Q04a→D27; Q05a→D29; Q05b→D30; Q05c→D31; Q06a→D33;
   Q06b→D34; Q10a→D37; Q08a→D38; Q08b→D39; Q08c→D40; Q08d→D41; Q09→D42;
@@ -125,5 +127,6 @@ respondidas em D01–D65.
   dados de remetente no sandbox (C04); capacidade/idempotência dos provedores
   (C04/C53/C65); feriados/lotes/datas (specs inventory/shipping); guarda da
   retirada e validade tardia (specs orders/shipping); despacho parcial
-  (specs checkout/payments/shipping); reserva global de cupons (spec pricing);
+  (specs checkout/payments/shipping); ciclo de reserva/consumo/liberação de
+  cupons (spec pricing; C29/C31);
   licença/destino de releases/publicação (preparação repo/release).

@@ -1,6 +1,6 @@
 # Escopo aprovado e mapa de capacidades — De Lá do Pará
 
-Transcrição do escopo confirmado pelo usuário (decisões D01–D64 em
+Transcrição do escopo confirmado pelo usuário (decisões D01–D77 em
 [`decisions.md`](decisions.md)). Fonte canônica: `docs/PLANO-MESTRE.md`
 (consolidação 20/09/2026). Nada aqui é inferência nova: qualquer mudança de
 escopo exige decisão explícita do usuário e atualização deste arquivo antes do
@@ -60,12 +60,14 @@ código. Revisão do mapa pelo usuário é pré-requisito das specs de módulos.
   margens em D54; medidas/pesos em D57; caixas P/M/G em D59; proteção em
   D58/D60. Dados fictícios, sem orientação de conservação real.
 - Nome **De Lá do Pará** (D45); paleta fundo marfim / verde profundo /
-  terracota (D46); títulos com serifa, textos/botões sem serifa (D47); tom
-  acolhedor e direto (D48). Vídeo principal vertical 60–90 s + demonstração
+  terracota (D46); Fraunces nos títulos e Inter nos textos/botões (D47); tom
+  acolhedor e direto (D48). Vídeo principal vertical em loop de até 30 s,
+  sem legendas, + demonstração
   técnica horizontal; sequência vitrine/origem → compra → falha breve →
   recuperação sem repetir a compra (D49/D50). Fotos gratuitas com licença
   verificada e autoria registrada; sem apresentar pessoas reais como
-  produtores fictícios (D51).
+  produtores fictícios (D51). Protótipo, shortlist de fotos e storyboard
+  aprovados em D75; fotos permanecem ilustrações, não prova de origem/autoria.
 - Autenticação: e-mail/senha, Spring Security com sessões no PostgreSQL,
   cookie protegido e CSRF; compra convidada preservada; confirmação e
   recuperação no Mailpit (D64). Documentação da API e testes obrigatórios por

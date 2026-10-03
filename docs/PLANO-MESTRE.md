@@ -2,7 +2,7 @@
 
 Documento autossuficiente para um executor de código com contexto limitado. Data de consolidação: 20/09/2026. Contém todas as decisões e os oito documentos de planejamento, com referências internas e complementos de execução/CI/CD.
 
-**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D65.
+**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D77.
 
 ## Índice de leitura
 
@@ -32,7 +32,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 
 - Este arquivo é suficiente para retomar o projeto: não depender do histórico do chat, de memória do modelo ou da existência da pasta de documentos original.
 - Requisitos adicionais desta consolidação: clone do **novo** repositório em `/home/gaalbu/codigos`, pipeline CI/CD obrigatória, documentação verificada, commits limpos e código enxuto. Eles atualizam trechos anteriores que chamavam CI de opcional.
-- As decisões D01–D70 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
+- As decisões D01–D77 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
 - A01/A03/A05/A06/A07/A10 são propostas técnicas detalhadas. Validar compatibilidade e registrar em ADR nas etapas indicadas; não apresentá-las como respostas explícitas do usuário. Decisões comerciais ou arquitetônicas ainda ambíguas devem ser perguntadas, uma de cada vez, com opções e recomendação. Não transformar silêncio em aprovação.
 - Dados de preços, produtores, lotes, embalagens e origem da demonstração são fictícios ou referências de teste identificadas. Não alegar proteção física de embalagem, segurança alimentar, operação em produção ou disponibilidade de marca.
 - Não copiar código, identidade, namespace, dados pessoais, credenciais ou histórico Git do LAPES Commerce. Usar apenas os aprendizados funcionais descritos neste documento.
@@ -43,7 +43,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 1. Ler esta seção, o registro de progresso e apenas a spec/módulo/tarefa relevante. Não reler todo o documento a cada pequena mudança.
 2. Conferir `git status --short`, branch, remoto e último SHA antes de editar. Preservar mudanças do usuário. Não usar reset/clean/force-push para resolver dúvidas.
 3. Selecionar o primeiro ID pendente com dependências concluídas. Trabalhar em uma intenção por vez, em branch curta.
-4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D65.
+4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D77.
 5. Definir contrato e exemplos. Para comportamento, escrever teste que falha pelo motivo esperado; implementar o mínimo e refatorar com o teste passando.
 6. Atualizar documentação e exemplos no mesmo conjunto da mudança. Cada endpoint deve ter teste HTTP e contrato; cada regra crítica deve ter teste de limite/falha.
 7. Rodar os gates previstos e revisar o diff. Não pular testes para economizar tempo; não alegar aprovação se Docker, navegador, sandbox ou ferramenta não executou.
@@ -164,8 +164,8 @@ Não criar uma nova sequência interminável de perguntas sobre preferências j�
 |---|---|---|
 | URL/owner/nome técnico do repo e namespace | C00a/C00b/C05 | Pedir informação ausente, então criar/clonar na pasta autorizada |
 | Aprovação final das specs e propostas técnicas ainda abertas | C01/C02 e spec do módulo | Mostrar fronteiras, contratos e alternativas em bloco pequeno; aplicar decisões existentes |
-| Tons exatos, fontes, imagens licenciadas e protótipo | C03 | Preparar proposta concreta com contraste/licença; revisar com usuário antes do frontend final |
-| Storyboard com cortes/legendas e roteiro técnico | C03, C96a/C96b | Sequência e formatos já aprovados; revisar somente os detalhes concretos |
+| Direção visual, protótipo, fotos sugeridas e storyboard | C03 | Aprovados pelo usuário em 2026-10-03 (D75); implementar e validar responsividade/acessibilidade no frontend |
+| Execução do vídeo e estados reais | C96a/C96b | Seguir roteiro aprovado em `docs/design/storyboard.md`; validar no ensaio |
 | Credenciais, dados de remetente aceitos no sandbox, acesso ao túnel | C04 | Pedir ao usuário; CEP e ponto fictício aprovados não fornecem CNPJ/CPF/endereço completo real |
 | Capacidade real das integrações e idempotência de provedores | C04/C53/C65 | Verificar docs oficiais e sandbox, registrar limitação, não inventar garantias |
 | Calendário concreto de feriados, lotes/estoque inicial e regras de datas | Specs inventory/shipping | Propor fixtures reproduzíveis e calendário com fonte; confirmar o que muda a regra comercial |
@@ -262,15 +262,15 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D40 | Meta local: processar 100 eventos acumulados em até 60 segundos após as dependências estarem disponíveis, sem perda de eventos nem efeitos duplicados. Ensaio com PostgreSQL/Kafka reais e provedores simulados; operações externas com resultado desconhecido avaliadas separadamente por conciliação. Meta futura a verificar |
 | D41 | Metas da vitrine mobile: LCP até 2,5 s e CLS até 0,1, em teste de laboratório com aparelho/rede simulados e perfil documentado; revisar também navegação, legibilidade e animações. Metas futuras a verificar, não resultados de usuários reais |
 | D42 | Futuro repositório público desde o início da implementação, permitindo acompanhar código, specs e commits. Decisão de planejamento; nenhum repositório criado ou publicado nesta etapa |
-| D43 | Direção visual editorial contemporânea para loja e vídeo: fotos grandes, fundo claro, tipografia marcante, visual elegante e cores paraenses nos detalhes, destacando produtos e histórias dos produtores. Nome definido em D45 e direção de cores em D46; estilo tipográfico definido em D47; tons exatos, famílias de fontes e propostas visuais concretas ainda serão revisados |
+| D43 | Direção visual editorial contemporânea para loja e vídeo: fotos grandes, fundo claro, tipografia marcante, visual elegante e cores paraenses nos detalhes, destacando produtos e histórias dos produtores. Nome em D45; paleta e tipografia em D46/D47; protótipo e shortlist visual aprovados em D75 |
 | D44 | Finalistas para pesquisa e comparação: Entre Rios e De Lá do Pará. Escolha posterior registrada em D45; seleção dos finalistas não confirma disponibilidade de marca |
 | D45 | Nome escolhido para desenvolver a identidade da demonstração: **De Lá do Pará**. A escolha não confirma disponibilidade no INPI, domínio ou redes sociais; pesquisa preliminar e limites em NAMING.md |
-| D46 | Paleta de De Lá do Pará: fundo marfim, texto verde profundo e detalhes em terracota. Direção de cores aprovada; tons exatos e contraste serão validados na proposta visual |
-| D47 | Tipografia: títulos com serifa e textos/botões sem serifa, de leitura simples. Famílias específicas serão apresentadas na proposta visual, verificando licença, acentos em português e legibilidade no celular |
+| D46 | Paleta aprovada: fundo marfim `#FAF5EB`, texto verde profundo `#1C3A2A` e detalhes terracota `#C05B2E`, conforme os usos de contraste do brief C03 |
+| D47 | Tipografia aprovada: Fraunces em títulos e Inter em textos/botões; ambas SIL OFL 1.1. Validar acentos, carregamento e legibilidade no celular em C07 |
 | D48 | Tom de voz acolhedor e direto, valorizando origem e produtores, com regionalismos pontuais e naturais. Mensagens de compra, pagamento e erro claras e objetivas. A frase apresentada na pergunta é exemplo de tom, não slogan aprovado |
-| D49 | Vídeo principal vertical de 60–90 segundos, com legendas e enquadramentos legíveis no celular; demonstração técnica completa separada em formato horizontal. Sequência do principal aprovada posteriormente em D50; detalhes dos roteiros continuam sujeitos à revisão |
-| D50 | História do vídeo principal: vitrine e origem dos produtos → compra → falha breve no processamento → recuperação e pedido confirmado, sem repetir a compra. Detalhes de Kafka no vídeo técnico; telas mostram estados reais da aplicação. Cortes, legendas e tempos exatos ainda serão revisados no storyboard |
-| D51 | Imagens de produtos e vitrine: fotos gratuitas com licença de uso verificada e autoria/fonte registradas, compatíveis com os produtos fictícios escolhidos. Seleção visual sujeita à revisão do usuário; não apresentar pessoas reais como produtores fictícios |
+| D49 | Vídeo principal vertical em loop de até 30 segundos, sem legendas e com texto único de acompanhamento; demonstração técnica horizontal. Revisado em 20/09/2026 |
+| D50 | História do vídeo principal: vitrine e origem → compra → falha breve → recuperação e pedido confirmado sem repetir compra; estados reais; Kafka no vídeo técnico. Sequência e storyboard aprovados em D75; executar dentro do formato D49 |
+| D51 | Imagens ilustrativas para os produtos fictícios: fotos gratuitas com licença e autoria registradas, sem apresentar pessoas reais como produtores. As sugestões atuais foram aprovadas em D75, mantendo seus créditos e limites de contexto |
 | D52 | Catálogo inicial com 8 produtos fictícios: 4 alimentos sem refrigeração e 4 peças de artesanato, incluindo frágeis e não frágeis. Composição e dados de cada produto serão apresentados para revisão |
 | D53 | Composição aprovada: farinha de mandioca, castanha-do-pará, chocolate 70%, cacau em pó, cuia decorativa, cesto de fibra, tigela de cerâmica decorativa e vaso de cerâmica. As duas cerâmicas são frágeis; proteção dos demais itens ainda será revisada; chocolate exclusivo para retirada conforme D55. Unidades, preços e margens aprovados posteriormente em D54; medidas aprovadas posteriormente em D57 |
 | D54 | Tabela simulada aprovada: farinha 500 g/R$ 18/30 dias; castanha 200 g/R$ 28/30 dias; chocolate 80 g/R$ 22/45 dias; cacau 200 g/R$ 24/60 dias. Por peça: cuia R$ 45, cesto R$ 75, tigela R$ 65, vaso R$ 95. Dias representam validade mínima restante na chegada prevista. Cada pacote/peça vendido por unidade/SKU. Dados fictícios, sem pesquisa de preços ou orientação de conservação; medidas aprovadas posteriormente em D57; proteção e embalagens ainda serão revisadas |
@@ -314,7 +314,7 @@ Estas decisões não foram resolvidas implicitamente. A tarefa dependente fica b
 
 | ID | Pergunta | Momento e tarefas afetadas |
 |---|---|---|
-| Q01 | Nome definido em D45, direção de cores em D46 e estilo tipográfico em D47; tom definido em D48; revisar tons exatos, contraste, famílias de fontes e referências dentro da direção editorial contemporânea aprovada em D43. Formato dos vídeos definido em D49 e sequência do principal em D50; revisar storyboard e roteiro técnico em DEMO-VIDEO.md e seleção de fotos conforme D51. | Design: C03; antes de namespace, marca e assets finais |
+| Q01 | Respondida em 2026-10-03 (D75): usuário aprovou protótipo, fotos sugeridas e storyboard atuais. Atribuição/licença e caráter ilustrativo permanecem registrados em `docs/design/assets.md`; implementação visual segue critérios C03. | C03 documental concluída; responsividade e acessibilidade verificadas durante implementação |
 
 Perguntas resolvidas: Q02 → D17; Q07 → D18; Q03a → D21; Q03b → D22; Q03c → D23; Q03d → D24; Q03e → D25; Q03f → D26; Q04a → D27; Q05a → D29; Q05b → D30; Q05c → D31; Q06a → D33; Q06b → D34; Q10a → D37; Q08a → D38; Q08b → D39; Q08c → D40; Q08d → D41; Q09 → D42; Q04b → D54; Q10b → D55; Q10 → D59/D60. A divisão em pacotes está aprovada; a separação entre alimentos e artesanato e o pacote individual por peça frágil estão aprovados em D35. Tamanhos e capacidades aprovados em D59; proteção simulada dos frágeis em D58. Materiais e preenchimento dos não frágeis aprovados em D60. O despacho parcial segue D30, sem autorização para cancelamento ou reembolso parcial.
 
@@ -365,7 +365,7 @@ Conteúdo incorporado de `CAPABILITY-MAP.md`; as referências a esses nomes apon
 
 # Mapa de capacidades — e-commerce paraense
 
-Nome da demonstração: **De Lá do Pará**, escolhido em D45; identidade editorial contemporânea.
+Nome da demonstração: **De Lá do Pará**, escolhido em D45; identidade editorial contemporânea aprovada em C03/D75.
 
 D52: catálogo inicial de 8 produtos fictícios, sendo 4 alimentos sem refrigeração e 4 artesanatos (frágeis e não frágeis). Composição aprovada em D53: farinha de mandioca, castanha-do-pará, chocolate 70%, cacau em pó, cuia decorativa, cesto de fibra, tigela de cerâmica decorativa e vaso de cerâmica. Unidades, preços e margens simuladas de validade aprovados em D54 constam em CATALOGO-DEMO.md; dimensões e pesos brutos unitários aprovados em D57 constam em CATALOGO-DEMO.md; caixas aprovadas em D59 e proteção simulada dos frágeis em D58; materiais e preenchimento aprovados em D60, e o chocolate é exclusivo para retirada conforme D55.
 
@@ -401,8 +401,8 @@ Data: 20/09/2026. `ecommerce-para` é uma identificação de trabalho, não o no
 - Cupons para convidados limitados por e-mail verificado, sem exigir conta; limite configurável por cupom. Uso devolvido ao e-mail somente após reembolso integral confirmado, mantendo histórico e respeitando validade e limite global; reembolso pendente não libera reutilização.
 - Repositório público desde o início da implementação; nenhuma criação ou publicação nesta etapa de planejamento.
 - D48: comunicação acolhedora e direta, valorizando origem e produtores, com regionalismos pontuais; compra, pagamento e erros com linguagem clara e objetiva.
-- D51: fotos gratuitas com licença verificada e autoria/fonte documentadas, compatíveis com os produtos fictícios e sujeitas à revisão visual; sem representar pessoas reais como produtores fictícios.
-- Direção visual editorial contemporânea: fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes; paleta de fundo marfim, texto verde profundo e detalhes em terracota aprovada em D46; títulos com serifa e textos/botões sem serifa conforme D47. Tons exatos, contraste e famílias de fontes ainda serão revisados, incluindo licença, acentos em português e legibilidade no celular.
+- D51: sugestões de fotos gratuitas aprovadas em D75 como ilustrações, com licença/autoria documentadas; sem representar pessoas reais como produtores fictícios.
+- Direção visual editorial contemporânea aprovada em C03/D75: paleta D46, Fraunces + Inter D47 e protótipo responsivo com cinco jornadas. Verificar contraste, teclado, movimento reduzido e estados reais durante implementação.
 - Experiência visual gravável para portfólio no LinkedIn, compreensível para público não técnico; proposta em [DEMO-VIDEO.md](#video).
 - Planejamento com SDD, commits atômicos, verificação e validação; sem código agora.
 
@@ -468,7 +468,7 @@ Aprovar responsabilidades, direção das dependências e ordem antes de fechar a
 
 ## Vídeos de portfólio
 
-- D49: apresentação principal vertical de 60–90 segundos, legendada e legível no celular; demonstração técnica completa separada em formato horizontal. D50 aprova produtos e procedência → compra → falha breve → recuperação e confirmação, sem repetir a compra e com estados reais. Storyboard e roteiro técnico ainda sujeitos à revisão.
+- D49: apresentação principal vertical em loop de até 30 segundos, sem legendas; demonstração técnica completa em formato horizontal. D50 aprova produtos e procedência → compra → falha breve → recuperação e confirmação, sem repetir a compra e com estados reais. Storyboard/roteiro técnico aprovados em D75; comprovar estados em C96a/C96b.
 
 - D56: cuia decorativa frágil, com pacote próprio e espaço para proteção; cesto não frágil e cerâmicas frágeis.
 
@@ -612,7 +612,7 @@ Finalistas aprovados em D44: **Entre Rios** e **De Lá do Pará**. Escolha regis
 
 **Recomendação criativa após a pesquisa:** De Lá do Pará, por explicitar a origem e ajudar na compreensão rápida do vídeo. É uma preferência de comunicação, não uma conclusão de disponibilidade jurídica. Entre Rios deixa de ser a recomendação principal diante do uso encontrado.
 
-Próximo passo: desenvolver a proposta visual de De Lá do Pará dentro da direção editorial contemporânea aprovada, com revisão do usuário. Não registrar domínios nem criar contas nesta etapa.
+Proposta visual de De Lá do Pará, shortlist de fotos e storyboard aprovados em C03/D75. Não registrar domínios nem criar contas nesta etapa.
 
 ---
 
@@ -628,24 +628,24 @@ Nome da demonstração: **De Lá do Pará**, escolhido em D45; identidade editor
 
 ## Requisito confirmado
 
-D32: a aplicação deve ser atraente em uma gravação para LinkedIn e compreensível para quem não é desenvolvedor. D43 define a direção editorial contemporânea: fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes, com destaque para produtos e histórias dos produtores. D46 define fundo marfim, texto verde profundo e detalhes em terracota. D47 define títulos com serifa e textos/botões sem serifa; verificar licença, acentos em português e legibilidade no celular ao propor as famílias. D48 define tom acolhedor e direto, com regionalismos pontuais e valorização de origem e produtores; mensagens operacionais claras e objetivas. D49 define vídeo principal vertical de 60–90 segundos, legendado e legível no celular, e demonstração técnica completa separada em formato horizontal. D50 aprova a sequência do principal: produtos e procedência → compra → falha breve → recuperação e confirmação sem repetir a compra, com estados reais; detalhes de Kafka ficam no vídeo técnico. Tons exatos, contraste, famílias de fontes, storyboard e roteiro técnico ainda serão revisados em C03. Nenhum código foi autorizado nesta etapa.
+D32: a aplicação deve ser atraente em uma gravação para LinkedIn e compreensível para quem não é desenvolvedor. D43 define direção editorial contemporânea; D46 fixa marfim `#FAF5EB`, verde `#1C3A2A`, terracota `#C05B2E`; D47 aprova Fraunces e Inter; D48 define tom acolhedor e direto. D49 define vídeo vertical em loop de até 30 segundos sem legendas e demonstração técnica horizontal; D50 aprova produtos/procedência → compra → falha → recuperação sem repetir compra, com estados reais. Protótipo, fotos sugeridas e storyboard atuais foram aprovados em D75. Fotos são ilustrativas e devem manter crédito/licença sem associação a produtores fictícios. Validar responsividade e acessibilidade na implementação.
 
 ## Sequência aprovada e proposta de storyboard
 
-A sequência está aprovada em D50; tempos, cortes e legendas abaixo são propostas para revisão. Vídeo principal vertical de 60–90 segundos, compreensível sem áudio, com legendas curtas e foco em uma jornada real:
+O roteiro técnico e a sequência principal estão em `docs/design/storyboard.md` e foram aprovados em D75. Principal vertical em loop de até 30 segundos, sem legendas. Os tempos de gravação são guia de edição; manter foco em estados reais:
 
-1. **0–10 s — Conhecer a loja:** vitrine com imagens cuidadas de produtos paraenses, tipografia legível e identidade própria.
-2. **10–25 s — Conhecer a origem:** abrir um produto e mostrar a história e a procedência de um produtor fictício, identificado como demonstração.
-3. **25–45 s — Comprar:** adicionar ao carrinho, escolher entrega ou retirada e acompanhar o pedido. Indicar claramente quando pagamento e frete forem simulados ou sandbox.
-4. **45–70 s — Ver o diferencial:** mostrar uma falha controlada no processamento e sua recuperação. A pessoa vê o pedido pendente e depois confirmado, sem precisar repetir a compra; uma breve legenda explica que não houve duplicação. O ensaio técnico precisa comprovar esse resultado.
-5. **70–90 s — Encerrar:** pedido confirmado e resumo curto da autoria e das tecnologias. A duração final depende do roteiro aprovado.
+1. **0–5 s — Conhecer a loja:** vitrine de produtos fictícios e identidade editorial.
+2. **5–10 s — Conhecer a origem:** abrir produto e mostrar procedência editorial fictícia identificada como demonstração.
+3. **10–18 s — Comprar:** adicionar ao carrinho, escolher modalidade e avançar; identificar sandbox/simulação.
+4. **18–25 s — Ver o diferencial:** falha controlada e recuperação, pedido confirmado sem compra repetida; evidência técnica em C96a/C96b.
+5. **25–30 s — Encerrar:** pedido e identificação curta da demonstração.
 
 A falha será induzida pelo roteiro técnico em ambiente local isolado; controles técnicos não serão colocados na jornada do cliente. A interface exibirá estados reais do backend, sem animação que simule confirmação ou recuperação inexistente. O vídeo resumido e a evidência técnica completa serão artefatos distintos, com o mesmo cenário identificável.
 
 ## Critérios visuais e funcionais propostos
 
 - Vitrine, página de produto, carrinho e acompanhamento compõem uma jornada visual consistente, em desktop e celular.
-- D51: fotos gratuitas para produtos e vitrine, com licença de uso verificada, autoria/fonte registradas e seleção visual revisada pelo usuário. Imagens devem corresponder aos produtos fictícios; não apresentar pessoas reais como produtores fictícios.
+- D51/D75: fotos sugeridas aprovadas como ilustrações dos produtos fictícios, com licença/autoria junto à imagem; não atribuir objeto ou pessoa real ao produtor fictício.
 - Hierarquia visual clara, imagens bem recortadas, estados de carregamento/erro/vazio e feedback discreto ao adicionar ao carrinho.
 - Transições curtas, sem bloquear ações, e respeito à preferência por movimento reduzido.
 - Texto e valores legíveis na gravação vista em celular; cortes e legendas não escondem o resultado da operação.
@@ -654,11 +654,11 @@ A falha será induzida pelo roteiro técnico em ambiente local isolado; controle
 
 ## Verificação e validação planejadas
 
-Em C03, revisar referências, storyboard e enquadramento com o usuário. Na spec storefront, ligar cada requisito visual aos estados e jornadas correspondentes. Nos commits de frontend, verificar responsividade, teclado, contraste, movimento reduzido e estados reais, além da aparência.
+Em C03, referências, storyboard e enquadramento foram aprovados em D75. Na spec storefront, ligar cada requisito visual aos estados e jornadas correspondentes. Nos commits de frontend, verificar responsividade, teclado, contraste, movimento reduzido e estados reais, além da aparência.
 
 Em C96a, ensaiar a jornada completa com dados fictícios e produzir evidências da falha e recuperação. Em C96b, gravar e revisar o vídeo no tamanho em que será visto no celular. Uma pessoa não técnica deve conseguir explicar o que a loja vende, de onde vêm os produtos e o que ocorreu com o pedido. Registrar feedback e corrigir problemas antes da entrega.
 
-A entrega inclui arquivo de vídeo e roteiro local. Publicação no LinkedIn não faz parte desta autorização. Formatos aprovados em D49: principal vertical de 60–90 segundos e demonstração técnica horizontal. A duração exata dentro dessa faixa, o storyboard, o roteiro técnico e os detalhes da identidade visual ficam para revisão de design; não há promessa de alcance ou engajamento.
+A entrega inclui arquivo de vídeo e roteiro local. Publicação no LinkedIn não faz parte desta autorização. Formatos aprovados em D49: principal vertical em loop de até 30 segundos, sem legendas, e demonstração técnica horizontal. Storyboard aprovado em D75; ajustar execução aos estados reais. Não há promessa de alcance ou engajamento.
 
 ---
 
@@ -1126,7 +1126,7 @@ O [backlog](#backlog) define commits e checkpoints intermediários a cada poucos
 
 ## 12. Evidências, operação e encerramento
 
-A entrega inclui experiência visual gravável e compreensível para público não técnico, conforme D32. A direção aprovada em D43 é editorial contemporânea, com fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes; a paleta aprovada em D46 usa fundo marfim, texto verde profundo e detalhes em terracota. D47 define títulos com serifa e textos/botões sem serifa. D48 define comunicação acolhedora e direta, valorizando origem e produtores com regionalismos pontuais; mensagens de compra, pagamento e erro serão claras e objetivas. Tons exatos, contraste, famílias de fontes e propostas concretas continuam sujeitos à revisão de design, verificando licença, acentos em português e legibilidade no celular. D51 define fotos gratuitas com licença de uso verificada e autoria/fonte documentadas, compatíveis com os produtos fictícios; a seleção passará pela revisão do usuário, sem apresentar pessoas reais como produtores fictícios. A [proposta de vídeo](#video) será revisada em C03, refletida na spec storefront e validada em C96a/C96b. Conforme D49, o vídeo principal será vertical, de 60–90 segundos, com legendas e enquadramentos legíveis no celular; a demonstração técnica completa será separada, em formato horizontal. D50 aprova a sequência do vídeo principal: produtos e procedência → compra → falha breve → recuperação e pedido confirmado sem repetir a compra, com estados reais. Storyboard e roteiro técnico ainda serão revisados.
+A entrega inclui experiência visual gravável e compreensível para público não técnico, conforme D32. A direção editorial (D43), paleta (D46), Fraunces + Inter (D47) e tom (D48) foram materializados no protótipo C03, aprovado em D75. D51: as fotos sugeridas têm crédito/licença documentados e são ilustrações de produtos fictícios, sem associação a produtores. O storyboard aprovado segue D49 (vertical, loop até 30 s, sem legendas) e D50 (procedência → compra → falha → recuperação, sem compra duplicada); validar estados reais em C96a/C96b.
 
 Pasta futura `docs/evidence/<release>/`: ambiente e versões; matriz requisito/teste; relatórios; IDs sanitizados dos sandboxes; logs sem PII; screenshots/vídeo da jornada; traces; resultados de carga; limitações conhecidas. Dados brutos com credenciais ficam fora do repositório.
 
@@ -1228,9 +1228,9 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C03 — `docs(design): approve brand direction and purchase journeys`
 
-- [ ] **Depende:** C01. **Alvos:** `docs/design/brief.md`, referências autorizadas, fluxos e protótipo; M.
-- **Aceite:** preservar nome e direção visual aprovados em D43–D48; usuário revisa tons, fontes, assets e protótipo concretos; protótipos contemplam catálogo, produto, checkout, acompanhamento e admin; mobile/teclado considerados; revisar DEMO-VIDEO.md, storyboard, formato e duração do vídeo com o usuário; selecionar fotos gratuitas conforme D51 e registrar fonte, autoria, licença e condições de uso para os assets propostos.
-- **Verificar:** revisão visual com o usuário; preservar a escolha De Lá do Pará e os limites da pesquisa em NAMING; não alegar disponibilidade de marca, domínio ou redes não verificados. Não fechar Q01 automaticamente.
+- [x] **Depende:** C01. **Alvos:** `docs/design/brief.md`, referências autorizadas, fluxos e protótipo; M. Proposta atual aprovada em 2026-10-03 (D75).
+- **Aceite:** nome e direção D43–D48 preservados; tons/fontes/assets/protótipo/storyboard revisados; cinco fluxos incluídos; mobile e teclado considerados; fotos com autoria/licença e limites de uso documentados.
+- **Verificar:** usuário aprovou protótipo, fotos sugeridas e storyboard; `assets.md` registra atribuição/licença e caráter ilustrativo; cinco fluxos estão no protótipo estático. Implementação deve validar contraste e responsividade. Não alegar disponibilidade de marca, domínio ou redes não verificados.
 
 ### C04 — `docs(integrations): record sandbox feasibility and retry guarantees`
 
@@ -1453,7 +1453,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C02, C17, C24a. **Alvos:** `specs/SPEC-pricing.md`, exemplos de cálculo; S.
 - **Aceite:** arredondamento e soma de frete/desconto; cupons por percentual/valor com mínimo/validade; política de convidado e reembolso definida.
 - **Verificar:** DOC; resolver Q06; exemplos incluem centavos, limite e desconto que excederia subtotal.
-- **Estado atual:** `SPEC-pricing.md` contém modelo em centavos, ordem proposta de cálculo, exemplos de fronteira, elegibilidade e estados de reembolso. Combinações de cupons e reserva/liberação do contador global continuam propostas para revisão; C29 ainda não está concluída.
+- **Estado atual:** o usuário aprovou em 2026-10-03 um cupom por pedido (D76). `SPEC-pricing.md` contém modelo em centavos, ordem proposta de cálculo, exemplos de fronteira, elegibilidade e estados de reembolso. A reserva/consumo/liberação do contador global continua pendente; C29 ainda não está concluída.
 
 ### C30 — `feat(pricing): calculate canonical purchase totals`
 
@@ -1466,7 +1466,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C29, C30. **Alvos:** cupom/uso, repository/migration e testes; M.
 - **Aceite:** validade/mínimo/limite; reserva/consumo/liberação atômicos; concorrência não excede a política aprovada.
 - **Verificar:** BI(CouponReservation), incluindo V11.
-- **Estado atual:** implementado e verificado localmente (branch `feat/c31-coupon-reservation`, empilhada na PR #82): migration V27 (`coupon`, `coupon_usage`), `CouponReservationService` com reserva idempotente por chave, consumo, liberação e reembolso integral; lock de linha do cupom impede exceder limites sob concorrência. Regra aplicada segue a recomendação ainda não aprovada da SPEC-pricing §5: reembolso integral devolve só a elegibilidade por e-mail; o limite global histórico permanece consumido. Aguarda aprovação dessa regra.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c31-coupon-reservation`, empilhada na PR #82): migration V27 (`coupon`, `coupon_usage`), `CouponReservationService` com reserva idempotente por chave, consumo, liberação e reembolso integral; lock de linha do cupom impede exceder limites sob concorrência. O usuário aprovou em 2026-10-03 (D77) restaurar a elegibilidade por e-mail no reembolso integral confirmado, mantendo consumido o limite global histórico. Ainda depende da decisão do ciclo geral de reserva/consumo/liberação; o teste focado atual passou 7/7 nesta revisão.
 
 ### C32 — `feat(pricing): add administrative coupon management`
 
