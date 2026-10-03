@@ -143,7 +143,8 @@ public class PaymentRepository {
                 rs.getObject("order_id", UUID.class),
                 rs.getLong("amount_cents"),
                 PaymentStatus.valueOf(rs.getString("status")),
-                rs.getInt("status_version"));
+                rs.getInt("status_version"),
+                rs.getTimestamp("created_at").toInstant());
     }
 
     static Operation operation(ResultSet rs, int row) throws SQLException {
@@ -157,7 +158,8 @@ public class PaymentRepository {
                 rs.getString("last_error"));
     }
 
-    public record Intent(UUID id, UUID orderId, long amountCents, PaymentStatus status, int version) {}
+    public record Intent(
+            UUID id, UUID orderId, long amountCents, PaymentStatus status, int version, Instant createdAt) {}
 
     public record Operation(
             UUID id, UUID intentId, OperationKind kind, OperationStatus status, Instant leaseUntil, String lastError) {}
