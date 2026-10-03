@@ -61,4 +61,10 @@ export const routes: Routes = [
         (m) => m.InventoryAdminComponent,
       ),
   },
+  {
+    path: 'admin/coupons',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/coupons/coupon-admin.component').then((m) => m.CouponAdminComponent),
+  },
 ];

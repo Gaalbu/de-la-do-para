@@ -1,0 +1,224 @@
+<section class="admin" aria-labelledby="coupon-admin-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Painel administrativo</p>
+      <h1 id="coupon-admin-title">Cupons</h1>
+      <p>Configure descontos, validade e limites de uso.</p>
+    </div>
+    <nav aria-label="Administração">
+      <a routerLink="/admin">Produtores</a>
+      <a routerLink="/admin/products">Produtos</a>
+      <a routerLink="/admin/inventory">Estoque</a>
+      <a routerLink="/">Voltar à vitrine</a>
+    </nav>
+  </header>
+
+  <aside class="notice">
+    <strong>Como os limites funcionam</strong>
+    <p>
+      A validade inclui data e horário. O mínimo considera o subtotal mais frete antes do desconto.
+      O limite por e-mail exige endereço verificado. Desativar impede novos usos e preserva os
+      pedidos e usos já registrados.
+    </p>
+  </aside>
+
+  <div class="layout">
+    <section class="coupon-list" aria-labelledby="coupon-list-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="coupon-list-title">Regras cadastradas</h2>
+          <p>{{ totalElements() }} {{ totalElements() === 1 ? 'cupom' : 'cupons' }}</p>
+        </div>
+        <button type="button" class="secondary" (click)="startCreate()">Novo cupom</button>
+      </div>
+
+      @if (loading()) {
+        <p role="status">Carregando cupons…</p>
+      } @else if (listError()) {
+        <p role="alert" class="error">{{ listError() }}</p>
+        <button type="button" class="secondary" (click)="loadCoupons()">Tentar novamente</button>
+      } @else if (coupons().length === 0) {
+        <p class="empty">Ainda não há cupons cadastrados.</p>
+      } @else {
+        <ul class="coupon-cards">
+          @for (coupon of coupons(); track coupon.id) {
+            <li>
+              <article class="coupon-card" [class.inactive]="!coupon.active">
+                <div class="card-title">
+                  <h3>{{ coupon.code }}</h3>
+                  <span class="status" [class.status-inactive]="!coupon.active">
+                    {{ coupon.active ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </div>
+                <p class="discount">{{ discountLabel(coupon) }} de desconto</p>
+                <dl>
+                  <div>
+                    <dt>Mínimo</dt>
+                    <dd>{{ minimumLabel(coupon) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Válido de</dt>
+                    <dd>{{ coupon.validFrom | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Até</dt>
+                    <dd>{{ coupon.validUntil | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Limite global</dt>
+                    <dd>{{ usageLabel(coupon) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Por e-mail verificado</dt>
+                    <dd>{{ coupon.perEmailLimit }}</dd>
+                  </div>
+                </dl>
+                <button type="button" class="text-button" (click)="startEdit(coupon)">
+                  Editar regra
+                </button>
+              </article>
+            </li>
+          }
+        </ul>
+        <nav class="pagination" aria-label="Paginação de cupons">
+          <button
+            type="button"
+            class="secondary"
+            (click)="changePage(page() - 1)"
+            [disabled]="page() === 0"
+          >
+            Anterior
+          </button>
+          <span>Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+          <button
+            type="button"
+            class="secondary"
+            (click)="changePage(page() + 1)"
+            [disabled]="page() + 1 >= totalPages()"
+          >
+            Próxima
+          </button>
+        </nav>
+      }
+    </section>
+
+    <section class="editor" aria-labelledby="coupon-form-title">
+      <h2 id="coupon-form-title">{{ editing() ? 'Editar cupom' : 'Novo cupom' }}</h2>
+      <p class="form-intro">
+        {{
+          editing()
+            ? 'O código é imutável para preservar o histórico.'
+            : 'O código será salvo em maiúsculas.'
+        }}
+      </p>
+      <form (ngSubmit)="save()" #couponForm="ngForm" novalidate>
+        <label for="code">Código</label>
+        <input
+          id="code"
+          name="code"
+          [(ngModel)]="form.code"
+          [readonly]="!!editing()"
+          required
+          pattern="\s*[A-Za-z0-9_-]{3,32}\s*"
+          maxlength="32"
+          aria-describedby="code-help"
+        />
+        <small id="code-help">De 3 a 32 letras, números, hífens ou sublinhados.</small>
+
+        <label for="discountType">Tipo de desconto</label>
+        <select id="discountType" name="discountType" [(ngModel)]="form.discountType">
+          <option value="PERCENTAGE">Percentual</option>
+          <option value="FIXED">Valor em reais</option>
+        </select>
+
+        <label for="discountValue">
+          {{ form.discountType === 'PERCENTAGE' ? 'Percentual (1 a 100)' : 'Desconto em reais' }}
+        </label>
+        <input
+          id="discountValue"
+          name="discountValue"
+          [(ngModel)]="form.discountValue"
+          required
+          [attr.inputmode]="form.discountType === 'PERCENTAGE' ? 'numeric' : 'decimal'"
+          [attr.aria-describedby]="form.discountType === 'FIXED' ? 'money-help' : null"
+        />
+        @if (form.discountType === 'FIXED') {
+          <small id="money-help">Use vírgula para centavos, por exemplo 12,50.</small>
+        }
+
+        <label for="minimumAmount">Subtotal mais frete mínimo (R$)</label>
+        <input
+          id="minimumAmount"
+          name="minimumAmount"
+          [(ngModel)]="form.minimumAmount"
+          required
+          inputmode="decimal"
+          aria-describedby="minimum-help"
+        />
+        <small id="minimum-help">O desconto é calculado depois desse valor.</small>
+
+        <label for="validFrom">Início da validade</label>
+        <input
+          id="validFrom"
+          name="validFrom"
+          type="datetime-local"
+          [(ngModel)]="form.validFrom"
+          required
+        />
+        <label for="validUntil">Fim da validade</label>
+        <input
+          id="validUntil"
+          name="validUntil"
+          type="datetime-local"
+          [(ngModel)]="form.validUntil"
+          required
+        />
+
+        <label for="globalLimit">Limite total de usos</label>
+        <input
+          id="globalLimit"
+          name="globalLimit"
+          type="number"
+          min="1"
+          step="1"
+          [(ngModel)]="form.globalLimit"
+          aria-describedby="global-limit-help"
+        />
+        <small id="global-limit-help">Deixe vazio para não definir um limite total.</small>
+
+        <label for="perEmailLimit">Usos por e-mail verificado</label>
+        <input
+          id="perEmailLimit"
+          name="perEmailLimit"
+          type="number"
+          min="1"
+          max="1000"
+          step="1"
+          [(ngModel)]="form.perEmailLimit"
+          required
+        />
+
+        @if (editing()) {
+          <label class="active-control" for="active">
+            <input id="active" name="active" type="checkbox" [(ngModel)]="form.active" />
+            Cupom ativo
+          </label>
+        }
+        @if (saveError()) {
+          <p role="alert" class="error">{{ saveError() }}</p>
+        }
+        @if (notice()) {
+          <p role="status" class="success">{{ notice() }}</p>
+        }
+        <div class="form-actions">
+          <button type="submit" [disabled]="saving() || couponForm.invalid">
+            {{ saving() ? 'Salvando…' : editing() ? 'Salvar alterações' : 'Criar cupom' }}
+          </button>
+          @if (editing()) {
+            <button type="button" class="secondary" (click)="startCreate()">Cancelar edição</button>
+          }
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
