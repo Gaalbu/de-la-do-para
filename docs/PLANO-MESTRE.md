@@ -2,7 +2,7 @@
 
 Documento autossuficiente para um executor de código com contexto limitado. Data de consolidação: 20/09/2026. Contém todas as decisões e os oito documentos de planejamento, com referências internas e complementos de execução/CI/CD.
 
-**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D65.
+**Estado atual:** execução autorizada; consultar `tasks/progress.md` e `docs/traceability.md` para estado local/remoto de cada etapa. Não repetir perguntas já respondidas em D01–D77.
 
 ## Índice de leitura
 
@@ -32,7 +32,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 
 - Este arquivo é suficiente para retomar o projeto: não depender do histórico do chat, de memória do modelo ou da existência da pasta de documentos original.
 - Requisitos adicionais desta consolidação: clone do **novo** repositório em `/home/gaalbu/codigos`, pipeline CI/CD obrigatória, documentação verificada, commits limpos e código enxuto. Eles atualizam trechos anteriores que chamavam CI de opcional.
-- As decisões D01–D70 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
+- As decisões D01–D77 são fatos aprovados. Entradas antigas descrevem a evolução; quando houver sobreposição, a decisão mais recente e específica prevalece. D45 define o nome, D54 os preços/validades, D57 medidas, D58–D60 proteção/caixas, D61 arquitetura, D62 monorepo, D63 documentação/testes, D64 autenticação e D65 procedência/remoção de produtores.
 - A01/A03/A05/A06/A07/A10 são propostas técnicas detalhadas. Validar compatibilidade e registrar em ADR nas etapas indicadas; não apresentá-las como respostas explícitas do usuário. Decisões comerciais ou arquitetônicas ainda ambíguas devem ser perguntadas, uma de cada vez, com opções e recomendação. Não transformar silêncio em aprovação.
 - Dados de preços, produtores, lotes, embalagens e origem da demonstração são fictícios ou referências de teste identificadas. Não alegar proteção física de embalagem, segurança alimentar, operação em produção ou disponibilidade de marca.
 - Não copiar código, identidade, namespace, dados pessoais, credenciais ou histórico Git do LAPES Commerce. Usar apenas os aprendizados funcionais descritos neste documento.
@@ -43,7 +43,7 @@ Construir do zero uma loja única de produtos paraenses chamada **De Lá do Par�
 1. Ler esta seção, o registro de progresso e apenas a spec/módulo/tarefa relevante. Não reler todo o documento a cada pequena mudança.
 2. Conferir `git status --short`, branch, remoto e último SHA antes de editar. Preservar mudanças do usuário. Não usar reset/clean/force-push para resolver dúvidas.
 3. Selecionar o primeiro ID pendente com dependências concluídas. Trabalhar em uma intenção por vez, em branch curta.
-4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D65.
+4. Criar/revisar spec antes de implementação: objetivo; comandos; estrutura; convenções; estratégia de testes; limites; critérios identificados e exemplos de erro. Obter revisão quando a spec introduzir decisões ainda não aprovadas; não pedir novamente pelas decisões D01–D77.
 5. Definir contrato e exemplos. Para comportamento, escrever teste que falha pelo motivo esperado; implementar o mínimo e refatorar com o teste passando.
 6. Atualizar documentação e exemplos no mesmo conjunto da mudança. Cada endpoint deve ter teste HTTP e contrato; cada regra crítica deve ter teste de limite/falha.
 7. Rodar os gates previstos e revisar o diff. Não pular testes para economizar tempo; não alegar aprovação se Docker, navegador, sandbox ou ferramenta não executou.
@@ -314,7 +314,7 @@ Estas decisões não foram resolvidas implicitamente. A tarefa dependente fica b
 
 | ID | Pergunta | Momento e tarefas afetadas |
 |---|---|---|
-| Q01 | Nome definido em D45, direção de cores em D46 e estilo tipográfico em D47; tom definido em D48; revisar tons exatos, contraste, famílias de fontes e referências dentro da direção editorial contemporânea aprovada em D43. Formato dos vídeos definido em D49 e sequência do principal em D50; revisar storyboard e roteiro técnico em DEMO-VIDEO.md e seleção de fotos conforme D51. | Design: C03; antes de namespace, marca e assets finais |
+| Q01 | Respondida em 2026-10-03: usuário aprovou o protótipo, as fotos sugeridas e o storyboard atuais (C03). | Registrada em `docs/decisions.md`; refletir direção nos critérios visuais |
 
 Perguntas resolvidas: Q02 → D17; Q07 → D18; Q03a → D21; Q03b → D22; Q03c → D23; Q03d → D24; Q03e → D25; Q03f → D26; Q04a → D27; Q05a → D29; Q05b → D30; Q05c → D31; Q06a → D33; Q06b → D34; Q10a → D37; Q08a → D38; Q08b → D39; Q08c → D40; Q08d → D41; Q09 → D42; Q04b → D54; Q10b → D55; Q10 → D59/D60. A divisão em pacotes está aprovada; a separação entre alimentos e artesanato e o pacote individual por peça frágil estão aprovados em D35. Tamanhos e capacidades aprovados em D59; proteção simulada dos frágeis em D58. Materiais e preenchimento dos não frágeis aprovados em D60. O despacho parcial segue D30, sem autorização para cancelamento ou reembolso parcial.
 
@@ -1230,7 +1230,7 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 - [ ] **Depende:** C01. **Alvos:** `docs/design/brief.md`, referências autorizadas, fluxos e protótipo; M.
 - **Aceite:** preservar nome e direção visual aprovados em D43–D48; usuário revisa tons, fontes, assets e protótipo concretos; protótipos contemplam catálogo, produto, checkout, acompanhamento e admin; mobile/teclado considerados; revisar DEMO-VIDEO.md, storyboard, formato e duração do vídeo com o usuário; selecionar fotos gratuitas conforme D51 e registrar fonte, autoria, licença e condições de uso para os assets propostos.
-- **Verificar:** revisão visual com o usuário; preservar a escolha De Lá do Pará e os limites da pesquisa em NAMING; não alegar disponibilidade de marca, domínio ou redes não verificados. Não fechar Q01 automaticamente.
+- **Verificar:** revisão visual aprovada pelo usuário em 2026-10-03 para protótipo, fotos sugeridas e storyboard; preservar a escolha De Lá do Pará e os limites da pesquisa em NAMING; não alegar disponibilidade de marca, domínio ou redes não verificados.
 
 ### C04 — `docs(integrations): record sandbox feasibility and retry guarantees`
 
@@ -1453,7 +1453,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C02, C17, C24a. **Alvos:** `specs/SPEC-pricing.md`, exemplos de cálculo; S.
 - **Aceite:** arredondamento e soma de frete/desconto; cupons por percentual/valor com mínimo/validade; política de convidado e reembolso definida.
 - **Verificar:** DOC; resolver Q06; exemplos incluem centavos, limite e desconto que excederia subtotal.
-- **Estado atual:** `SPEC-pricing.md` contém modelo em centavos, ordem proposta de cálculo, exemplos de fronteira, elegibilidade e estados de reembolso. Combinações de cupons e reserva/liberação do contador global continuam propostas para revisão; C29 ainda não está concluída.
+- **Estado atual:** o usuário confirmou em 2026-10-03 um cupom por pedido (registrado em `docs/decisions.md`). `SPEC-pricing.md` contém modelo em centavos, ordem proposta de cálculo, exemplos de fronteira, elegibilidade e estados de reembolso. A reserva/consumo/liberação do contador global continua pendente; C29 ainda não está concluída.
 
 ### C30 — `feat(pricing): calculate canonical purchase totals`
 
@@ -1466,7 +1466,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C29, C30. **Alvos:** cupom/uso, repository/migration e testes; M.
 - **Aceite:** validade/mínimo/limite; reserva/consumo/liberação atômicos; concorrência não excede a política aprovada.
 - **Verificar:** BI(CouponReservation), incluindo V11.
-- **Estado atual:** implementado e verificado localmente (branch `feat/c31-coupon-reservation`, empilhada na PR #82): migration V27 (`coupon`, `coupon_usage`), `CouponReservationService` com reserva idempotente por chave, consumo, liberação e reembolso integral; lock de linha do cupom impede exceder limites sob concorrência. Regra aplicada segue a recomendação ainda não aprovada da SPEC-pricing §5: reembolso integral devolve só a elegibilidade por e-mail; o limite global histórico permanece consumido. Aguarda aprovação dessa regra.
+- **Estado atual:** implementado e verificado localmente (branch `feat/c31-coupon-reservation`, empilhada na PR #82): migration V27 (`coupon`, `coupon_usage`), `CouponReservationService` com reserva idempotente por chave, consumo, liberação e reembolso integral; lock de linha do cupom impede exceder limites sob concorrência. O usuário aprovou em 2026-10-03 (D77) restaurar a elegibilidade por e-mail no reembolso integral confirmado, mantendo consumido o limite global histórico. Ainda depende da decisão de ciclo geral de reserva/consumo/liberação em C29; o teste focado atual passou 7/7 nesta revisão.
 
 ### C32 — `feat(pricing): add administrative coupon management`
 
