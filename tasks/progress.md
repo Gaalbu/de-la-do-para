@@ -1101,3 +1101,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `AsaasPaymentProviderTest` 17/17, contrato do simulador 6/6, `CheckoutOperationRunnerTest` 3/3. `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: 143 unitários ok, 155/156 IT ok, Spotless e Checkstyle limpos; a falha foi `EventingWorkerProcessRestartIT` (espera fixa de 30 s pelo JVM filho), que passou ao rodar isolado em seguida. `docs:check` ok (26 arquivos) |
 | Limite | Respostas HTTP gravadas a partir da doc, não evidência de sandbox. Herança de `externalReference` pela cobrança e host do link precisam do spike C04. C63 segue parcial |
 | Próximo passo | C64 (reconciliação de webhook contra o estado no provedor) |
+
+## Sessão 2026-10-03 — C93: upgrade com dados e restauração isolada
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Provar migrations em banco vazio e com dados de versão anterior, e restauração em banco separado |
+| Mudanças | `DatabaseUpgradeAndRestoreIT` (banco vazio até a última versão; snapshot V30 com cadeia de compra migra sem perder chaves/valores; dump restaurado em banco separado preserva dados e constraints) com seed `db/snapshots/v30-seed.sql`; procedimento em `docs/backup-restore.md` |
+| Verificação | `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS` em 15min44s; 126 unitários e 159 IT sem falhas; Spotless e Checkstyle limpos. Uma execução anterior travou no encerramento do fork do Failsafe e foi interrompida |
+| Limite | Cada cenário usa banco próprio em PostgreSQL de teste; o banco do ambiente local não é tocado. Restauração sobre o banco principal e recuperação após restore antigo ficam para C94 |
+| Próximo passo | C94 após C63–C68 |
