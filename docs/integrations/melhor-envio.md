@@ -38,6 +38,10 @@ restante. Não alegar integração comprovada.
 - Etiquetas/tracking por pacote com estado e correlação; falha parcial
   preserva pacotes concluídos (C70/C71, V15/V22) — endpoints de
   compra/geração de etiqueta e tracking a exercitar no spike.
+- C71 recebe eventos de tracking autenticados por `X-ME-Signature` e HMAC-SHA256,
+  persiste apenas campos permitidos e aplica transições sem regressão. A consulta
+  REST `/api/v2/me/shipment/tracking` continua pendente de validar o formato da
+  resposta e a associação real entre ID de etiqueta e volumes no sandbox.
 
 ## C70 — contrato de criação e compra revalidado (2026-10-03)
 

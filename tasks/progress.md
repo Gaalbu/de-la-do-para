@@ -1141,3 +1141,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | C70 continua parcial: o checkout em `origin/main@ec02daa` não guarda nem expõe manifesto imutável dos pacotes/serviço/cotação; cliente não é invocado por fluxo administrativo. Sem credenciais, remetente/documentos fiscais ou semântica demonstrada por C04; nenhuma chamada real foi feita. C70 não pode ser marcada concluída. |
 | Remoto | Commits `467f10f` (implementação/testes/configuração) e `532b391` (spec/integração/progresso) enviados em `codex/c70-shipping-label-lifecycle`. PR #134 aberta em draft. CI no SHA `532b391`: backend, frontend, contracts, docs, security, commit-policy e quality-gate passaram (7/7). |
 | Próximo passo | Manter C70 aberta e o PR em draft; ligar ao manifesto imutável do seam `orders` quando estiver disponível, implementar orquestração/UI e executar C04 antes da homologação. |
+
+## Continuação 2026-10-05 — C71: ingestão autenticada de eventos
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Worktree isolado `/home/gaalbu/codigos/de-la-do-para-wt/c71-shipment-tracking`, branch `codex/c71-shipment-tracking` empilhada sobre C70 `7647120`. |
+| Tarefa | Persistir andamento de tracking por conjunto estável de sequências associado ao ID de etiqueta, com prevenção de regressão e entrada externa autenticada. |
+| Mudanças | Adicionados domínio `ShipmentTracking`, migration `V36` para eventos deduplicados por hash do corpo e estado mais recente por ID de envio, serviço transacional ligado somente a uma operação `GENERATE/SUCCEEDED`, controller de webhook Melhor Envio com limite de 64 KiB e HMAC-SHA256 de `X-ME-Signature`, permissão pública restrita ao endpoint e exceção CSRF específica. O corpo bruto não é armazenado. Documentada a lacuna de formato da resposta REST e de associação real entre ID e volumes. |
+| Verificação | `ShipmentTrackingTest` passou 4/4; `ShippingLabelOperationTest` passou 6/6; compilação Maven passou; Spotless aplicado; `git diff --check` pendente após revisão final. Ainda faltam testes PostgreSQL para deduplicação/mapeamento e testes HTTP da assinatura, limites e segurança. |
+| Limite | C71 permanece incompleta: endpoint REST `/api/v2/me/shipment/tracking` aceita array de IDs mas os documentos oficiais consultados não especificam a forma da resposta; não foi feita chamada sandbox. O mapeamento de sequências continua condicionado à prova C04; C70 está em draft e não merged. |
+| Próximo passo | Adicionar testes de integração para migration/serviço e webhook, completar documentação de setup do segredo, executar gates pertinentes e só então publicar PR draft empilhada sobre #134. |

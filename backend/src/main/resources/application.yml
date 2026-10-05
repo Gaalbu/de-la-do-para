@@ -54,6 +54,7 @@ shipping:
     enabled: ${SHIPPING_MELHOR_ENVIO_ENABLED:false}
     credential: ${SHIPPING_MELHOR_ENVIO_TOKEN:}
     user-agent: ${SHIPPING_MELHOR_ENVIO_USER_AGENT:}
+    webhook-secret: ${SHIPPING_MELHOR_ENVIO_WEBHOOK_SECRET:}
 
 management:
   endpoints:
