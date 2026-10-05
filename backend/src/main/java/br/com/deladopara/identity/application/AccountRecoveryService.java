@@ -61,14 +61,20 @@ public class AccountRecoveryService {
         if (retryAfter > 0) {
             throw new RecoveryRateLimitException(retryAfter);
         }
-        if (normalized == null) return;
+        if (normalized == null) {
+            return;
+        }
         var account = accounts.findByEmailIgnoreCase(normalized)
                 .filter(Account::isEmailVerified)
                 .filter(value -> value.getRole() == Account.Role.CUSTOMER);
-        if (account.isEmpty()) return;
+        if (account.isEmpty()) {
+            return;
+        }
 
         var current = accounts.findForUpdateById(account.get().getId()).orElse(null);
-        if (current == null || !current.isEmailVerified() || current.getRole() != Account.Role.CUSTOMER) return;
+        if (current == null || !current.isEmailVerified() || current.getRole() != Account.Role.CUSTOMER) {
+            return;
+        }
         var rawToken = newToken();
         var now = clock.instant();
         tokens.markAllUnusedByAccountAndType(current.getId(), VerificationToken.TokenType.RECOVERY, now);
