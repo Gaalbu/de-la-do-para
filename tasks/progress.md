@@ -1092,6 +1092,16 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
 | Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
 
+## Sessão 2026-10-03 — C64: conciliação de notificações contra o provedor
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Garantir que notificação de pagamento só confirme com o recurso correto no provedor, sem perder notificação por consulta inconclusiva |
+| Mudanças | `ProviderEventProcessor`: consulta que falha ou ainda não mostra o pagamento mantém a notificação `RECEIVED` com backoff (sem bloquear as seguintes); após 8 tentativas fica `REVIEW`. Pagamento de outro checkout → `REVIEW`/intent `UNDER_REVIEW`. Migration V35 (tentativas, próxima tentativa, último erro, estado `REVIEW`). `PaymentWorkerConfig` liga o processador ao worker, que não subia com `payments.worker.enabled=true` |
+| Verificação | `PaymentReconciliationIT` 7/7, `PaymentOutcomeIT` 7/7, `PaymentWorkerIT` 4/4, `AsaasWebhookIT` 7/7, `PaymentWorkerConfigTest` 2/2. `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS`, 128 unitários e 163 IT sem falhas; Spotless e Checkstyle limpos |
+| Limite | Provedor simulado/stub; SB depende de C04. V35 pode precisar de renumeração se outra trilha mesclar migration antes |
+| Próximo passo | C65 (conciliação de `UNKNOWN`) |
+
 ## Sessão 2026-10-03 — C63: adapter de checkout hospedado Asaas
 
 | Campo | Conteúdo |

@@ -54,7 +54,8 @@ Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 | PAY-005 transições | `PaymentTransitionsTest` (tabela origem×destino completa) | unitário |
 | PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `PaymentProviderContract.timeoutAfterEffectIsNotARejectionAndTheCheckoutExists` (simulador); `AsaasPaymentProviderTest.readTimeoutIsUnknownNotARejection`, `serverErrorAfterSendingIsUnknownNotARejection` | unitário, HTTP gravado (C63) |
 | PAY-007 retorno de navegação não confirma | `AsaasCheckoutContractIT.callbackDoesNotConfirm` | WireMock (C55) |
-| PAY-008 evento de provedor repetido/fora de ordem | `PaymentResultIT.duplicateAndStaleEventsDoNotRegress` | Testcontainers |
+| PAY-008 evento de provedor repetido/fora de ordem | `PaymentReconciliationIT.lateOrRepeatedNotificationsNeverRegressAConfirmedPayment`; `PaymentOutcomeIT.duplicatedWebhookIsProcessedOnce` | Testcontainers |
+| PAY-008a consulta sem prova não descarta a notificação (C64) | `PaymentReconciliationIT` (pagamento ainda não visível, falha de consulta, esgotamento → `REVIEW`, checkout divergente, fila não bloqueada) | Testcontainers |
 | PAY-009 valor divergente | `PaymentResultIT.amountMismatchGoesToReview` | Testcontainers |
 | PAY-010 reembolso integral único | `RefundIT.secondRefundRequestIsNoOp` | Testcontainers + WireMock |
 
@@ -79,6 +80,7 @@ Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado co
 - R05: 4xx de validação antes de efeito → operação `FAILED` e intent `DECLINED` com motivo `PROVIDER_REJECTED`.
 - R06: retorno do navegador (`callback`) só leva a tela a consultar o backend; confirmação vem de webhook autenticado e validado por consulta ao provedor (C60/C61).
 - R07: valor confirmado diferente de `amount_cents` → intent `UNDER_REVIEW`, sem confirmar o pedido.
+- R07a (C64): notificação de pagamento só confirma se a consulta ao provedor mostrar a cobrança paga **do mesmo checkout**. Consulta que falha ou ainda não mostra o pagamento não prova nada: a notificação continua `RECEIVED` e é reconsultada com backoff (1 s ×2, teto 1 min, atraso entre metade e o passo inteiro), sem bloquear as seguintes. Após 8 tentativas fica `REVIEW` com `last_error` para o operador; a intent não muda. Pagamento pago em outro checkout da mesma intent → notificação `REVIEW` (`CHECKOUT_MISMATCH`) e intent `UNDER_REVIEW`. Notificação atrasada ou repetida nunca tira a intent de um estado já decidido.
 - R08: reembolso é sempre integral (D12), no máximo um por intent (constraint), e só a partir de `CONFIRMED` ou `UNDER_REVIEW` com pagamento recebido.
 
 ### 7.2 Estados da intent
