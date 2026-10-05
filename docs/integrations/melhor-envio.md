@@ -39,6 +39,55 @@ restante. Não alegar integração comprovada.
   preserva pacotes concluídos (C70/C71, V15/V22) — endpoints de
   compra/geração de etiqueta e tracking a exercitar no spike.
 
+## C70 — contrato de criação e compra revalidado (2026-10-03)
+
+- `POST /api/v2/me/cart` cria uma etiqueta por requisição e retorna o ID usado
+  em compra, geração e consultas seguintes. O corpo inclui `service`, remetente,
+  destinatário, `products`, `volumes` e opções; `User-Agent` com nome da
+  aplicação e e-mail de suporte é obrigatório.
+- Embora uma cotação possa retornar vários pacotes, Correios (serviços 1, 2 e
+  17), J&T, Loggi e serviço 27 não aceitam volumes múltiplos numa etiqueta.
+  Preservar a composição da cotação e criar um ID por pacote quando aplicável;
+  não dividir depois do aceite nem assumir que uma unidade local é sempre um
+  pacote. A resposta de uma cotação com vários volumes pode exigir várias
+  chamadas individuais ao carrinho.
+- `POST /api/v2/me/shipment/checkout` e `/generate` aceitam array `orders` de
+  IDs. As referências não descrevem resultado parcial/atomicidade por ID; até
+  homologar, enviar e persistir cada ID individualmente para correlacionar os
+  resultados e não repetir silenciosamente operações já concluídas.
+- Os campos fiscais dependem do tipo de envio: a documentação exige chave da
+  nota e inscrição estadual do remetente para envios comerciais; DC-e usa
+  produtos declarados e, desde 06/04/2026, requer `products` completos no
+  carrinho. A documentação do endpoint informa serviço; política/documentos
+  fiscais locais e credenciais continuam pendentes antes do sandbox.
+
+Referências oficiais: [inserir frete no carrinho](https://docs.melhorenvio.com.br/reference/inserir-fretes-no-carrinho),
+[compra de fretes](https://docs.melhorenvio.com.br/reference/compra-de-fretes-1),
+[geração de etiquetas](https://docs.melhorenvio.com.br/reference/geracao-de-etiquetas),
+[manual de compra e regra multi volume](https://docs.melhorenvio.com.br/docs/compra-de-fretes).
+
+### Cliente HTTP de escrita C70
+
+- `MelhorEnvioLabelClient` usa exclusivamente a base fixa do sandbox e só é
+  registrado quando `SHIPPING_MELHOR_ENVIO_ENABLED=true`. Configure
+  `SHIPPING_MELHOR_ENVIO_TOKEN` e
+  `SHIPPING_MELHOR_ENVIO_USER_AGENT` (nome do app e e-mail de contato técnico).
+  Conexão e leitura têm limites de 3 s e 10 s.
+- Carrinho envia o JSON do snapshot de expedição já aceito e exige HTTP 201
+  mais `id` textual na resposta. Checkout e geração enviam exatamente um ID
+  conhecido em `orders` por requisição e exigem HTTP 200. Os corpos agregados de checkout/geração são
+  devolvidos ao chamador sem interpretação por ID; o serviço de aplicação deve
+  aguardar evidência C04 antes de avançar/persistir esses resultados.
+- HTTP 422 é classificado como rejeição definitiva conforme a resposta de
+  validação documentada. Outros status HTTP, timeout/conexão interrompida,
+  JSON ilegível, status 2xx diferente do documentado ou resposta do carrinho
+  sem ID parseável são `UNKNOWN`. A exceção não contém token, corpo do provedor
+  nem dados pessoais. O cliente não faz retry e não persiste/loga a resposta.
+- Ainda não existe fluxo administrativo que invoque o cliente: snapshot,
+  dados fiscais autorizados, C04 e persistência por etapa/unidade precisam ser
+  ligados antes de habilitar uso. Nenhuma credencial está configurada e nenhuma
+  chamada real foi feita.
+
 ## A provar no spike
 
 1. Aceitação do CEP 66053-000 e cobertura PAC/SEDEX/JadLog para rotas de
