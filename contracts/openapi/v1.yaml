@@ -1316,6 +1316,61 @@ paths:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
 
+  /api/v1/webhooks/melhor-envio:
+    post:
+      operationId: receiveMelhorEnvioTrackingWebhook
+      summary: Receber atualização de tracking do Melhor Envio
+      description: >
+        Endpoint público sem sessão e sem CSRF, autenticado pela assinatura Base64 HMAC-SHA256 do corpo em
+        `X-ME-Signature`, usando o secret do aplicativo Melhor Envio. O corpo é limitado a 64 KiB e não é
+        armazenado; somente eventos associados a uma etiqueta gerada com sucesso são aceitos. Reentrega idêntica
+        é deduplicada por hash do corpo. A consulta REST do tracking permanece fora deste contrato até a resposta
+        do provedor ser confirmada.
+      security: []
+      parameters:
+        - in: header
+          name: X-ME-Signature
+          required: true
+          schema: {type: string, maxLength: 128}
+          description: Assinatura Base64 HMAC-SHA256 do corpo, usando o secret do aplicativo como chave.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event, data]
+              properties:
+                event:
+                  type: string
+                  enum:
+                    - order.created
+                    - order.pending
+                    - order.released
+                    - order.generated
+                    - order.received
+                    - order.posted
+                    - order.delivered
+                    - order.cancelled
+                    - order.undelivered
+                    - order.paused
+                    - order.suspended
+                data:
+                  type: object
+                  required: [id, created_at]
+                  properties:
+                    id: {type: string, maxLength: 160}
+                    status: {type: string}
+                    created_at: {type: string, format: date-time}
+                    posted_at: {type: [string, 'null'], format: date-time}
+                    delivered_at: {type: [string, 'null'], format: date-time}
+                    canceled_at: {type: [string, 'null'], format: date-time}
+      responses:
+        '200': {description: Evento gravado ou reentrega idêntica reconhecida}
+        '400': {description: Evento ou payload não suportado}
+        '401': {description: Assinatura inválida ou secret não configurado}
+        '413': {description: Corpo acima de 64 KiB}
+
   /api/v1/cart/items:
     put:
       operationId: replaceGuestCartItems
