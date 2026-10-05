@@ -163,7 +163,7 @@ Não criar uma nova sequência interminável de perguntas sobre preferências j�
 | URL/owner/nome técnico do repo e namespace | C00a/C00b/C05 | Pedir informação ausente, então criar/clonar na pasta autorizada |
 | Aprovação final das specs e propostas técnicas ainda abertas | C01/C02 e spec do módulo | Mostrar fronteiras, contratos e alternativas em bloco pequeno; aplicar decisões existentes |
 | Tons exatos, fontes, imagens licenciadas e protótipo | C03 | Preparar proposta concreta com contraste/licença; revisar com usuário antes do frontend final |
-| Storyboard com cortes/legendas e roteiro técnico | C03, C96a/C96b | Sequência e formatos já aprovados; revisar somente os detalhes concretos |
+| Storyboard e roteiro técnico | C03, C96a/C96b | Sequência, loop vertical de até 30 s sem legendas e formato técnico horizontal aprovados; roteiro e proposta de tempos registrados em `docs/design/storyboard.md`; revisar os tempos, protótipo e seleção de fotos |
 | Credenciais, dados de remetente aceitos no sandbox, acesso ao túnel | C04 | Pedir ao usuário; CEP e ponto fictício aprovados não fornecem CNPJ/CPF/endereço completo real |
 | Capacidade real das integrações e idempotência de provedores | C04/C53/C65 | Verificar docs oficiais e sandbox, registrar limitação, não inventar garantias |
 | Calendário concreto de feriados, lotes/estoque inicial e regras de datas | Specs inventory/shipping | Propor fixtures reproduzíveis e calendário com fonte; confirmar o que muda a regra comercial |
@@ -260,14 +260,14 @@ Atualizado em 20/09/2026. Este registro distingue respostas do usuário, propost
 | D40 | Meta local: processar 100 eventos acumulados em até 60 segundos após as dependências estarem disponíveis, sem perda de eventos nem efeitos duplicados. Ensaio com PostgreSQL/Kafka reais e provedores simulados; operações externas com resultado desconhecido avaliadas separadamente por conciliação. Meta futura a verificar |
 | D41 | Metas da vitrine mobile: LCP até 2,5 s e CLS até 0,1, em teste de laboratório com aparelho/rede simulados e perfil documentado; revisar também navegação, legibilidade e animações. Metas futuras a verificar, não resultados de usuários reais |
 | D42 | Futuro repositório público desde o início da implementação, permitindo acompanhar código, specs e commits. Decisão de planejamento; nenhum repositório criado ou publicado nesta etapa |
-| D43 | Direção visual editorial contemporânea para loja e vídeo: fotos grandes, fundo claro, tipografia marcante, visual elegante e cores paraenses nos detalhes, destacando produtos e histórias dos produtores. Nome definido em D45 e direção de cores em D46; estilo tipográfico definido em D47; tons exatos, famílias de fontes e propostas visuais concretas ainda serão revisados |
+| D43 | Direção visual editorial contemporânea para loja e vídeo: fotos grandes, fundo claro, tipografia marcante, visual elegante e cores paraenses nos detalhes, destacando produtos e histórias dos produtores. Nome definido em D45, paleta em D46 e famílias tipográficas em D47; a seleção visual de ativos e o protótipo concreto seguem em C03 |
 | D44 | Finalistas para pesquisa e comparação: Entre Rios e De Lá do Pará. Escolha posterior registrada em D45; seleção dos finalistas não confirma disponibilidade de marca |
 | D45 | Nome escolhido para desenvolver a identidade da demonstração: **De Lá do Pará**. A escolha não confirma disponibilidade no INPI, domínio ou redes sociais; pesquisa preliminar e limites em NAMING.md |
-| D46 | Paleta de De Lá do Pará: fundo marfim, texto verde profundo e detalhes em terracota. Direção de cores aprovada; tons exatos e contraste serão validados na proposta visual |
-| D47 | Tipografia: títulos com serifa e textos/botões sem serifa, de leitura simples. Famílias específicas serão apresentadas na proposta visual, verificando licença, acentos em português e legibilidade no celular |
+| D46 | Paleta de De Lá do Pará aprovada: fundo marfim (`#FAF5EB`), texto verde profundo (`#1C3A2A`) e terracota (`#C05B2E`) nos usos de contraste indicados em `docs/design/brief.md` |
+| D47 | Tipografia aprovada: Fraunces nos títulos e Inter nos textos/botões; ambas SIL OFL 1.1. Validar acentos, carregamento e legibilidade no celular no bootstrap C07 |
 | D48 | Tom de voz acolhedor e direto, valorizando origem e produtores, com regionalismos pontuais e naturais. Mensagens de compra, pagamento e erro claras e objetivas. A frase apresentada na pergunta é exemplo de tom, não slogan aprovado |
-| D49 | Vídeo principal vertical de 60–90 segundos, com legendas e enquadramentos legíveis no celular; demonstração técnica completa separada em formato horizontal. Sequência do principal aprovada posteriormente em D50; detalhes dos roteiros continuam sujeitos à revisão |
-| D50 | História do vídeo principal: vitrine e origem dos produtos → compra → falha breve no processamento → recuperação e pedido confirmado, sem repetir a compra. Detalhes de Kafka no vídeo técnico; telas mostram estados reais da aplicação. Cortes, legendas e tempos exatos ainda serão revisados no storyboard |
+| D49 | Vídeo principal vertical em loop de até 30 segundos, sem legendas, com texto único de acompanhamento; demonstração técnica separada em formato horizontal. Revisto pelo usuário em 20/09/2026; antes era 60–90 segundos legendado |
+| D50 | História do vídeo principal: vitrine e origem dos produtos → compra → falha breve no processamento → recuperação e pedido confirmado, sem repetir a compra. Detalhes de Kafka no vídeo técnico; telas mostram estados reais. Sequência principal e roteiro técnico foram revisados em 20/09/2026; distribuição de cenas/tempos é uma proposta registrada em `docs/design/storyboard.md` que ainda aguarda revisão |
 | D51 | Imagens de produtos e vitrine: fotos gratuitas com licença de uso verificada e autoria/fonte registradas, compatíveis com os produtos fictícios escolhidos. Seleção visual sujeita à revisão do usuário; não apresentar pessoas reais como produtores fictícios |
 | D52 | Catálogo inicial com 8 produtos fictícios: 4 alimentos sem refrigeração e 4 peças de artesanato, incluindo frágeis e não frágeis. Composição e dados de cada produto serão apresentados para revisão |
 | D53 | Composição aprovada: farinha de mandioca, castanha-do-pará, chocolate 70%, cacau em pó, cuia decorativa, cesto de fibra, tigela de cerâmica decorativa e vaso de cerâmica. As duas cerâmicas são frágeis; proteção dos demais itens ainda será revisada; chocolate exclusivo para retirada conforme D55. Unidades, preços e margens aprovados posteriormente em D54; medidas aprovadas posteriormente em D57 |
@@ -312,7 +312,7 @@ Estas decisões não foram resolvidas implicitamente. A tarefa dependente fica b
 
 | ID | Pergunta | Momento e tarefas afetadas |
 |---|---|---|
-| Q01 | Nome definido em D45, direção de cores em D46 e estilo tipográfico em D47; tom definido em D48; revisar tons exatos, contraste, famílias de fontes e referências dentro da direção editorial contemporânea aprovada em D43. Formato dos vídeos definido em D49 e sequência do principal em D50; revisar storyboard e roteiro técnico em DEMO-VIDEO.md e seleção de fotos conforme D51. | Design: C03; antes de namespace, marca e assets finais |
+| Q01 | Nome definido em D45; direção editorial e paleta em D43/D46, tipografia Fraunces + Inter e tom em D47/D48 foram aprovados. Formatos definidos em D49 e sequência/roteiro técnico em D50; proposta de tempos, fotos conforme D51 e protótipo em `docs/design/prototype.html` aguardam revisão visual do usuário. | Design: C03; antes de namespace, marca e assets finais |
 
 Perguntas resolvidas: Q02 → D17; Q07 → D18; Q03a → D21; Q03b → D22; Q03c → D23; Q03d → D24; Q03e → D25; Q03f → D26; Q04a → D27; Q05a → D29; Q05b → D30; Q05c → D31; Q06a → D33; Q06b → D34; Q10a → D37; Q08a → D38; Q08b → D39; Q08c → D40; Q08d → D41; Q09 → D42; Q04b → D54; Q10b → D55; Q10 → D59/D60. A divisão em pacotes está aprovada; a separação entre alimentos e artesanato e o pacote individual por peça frágil estão aprovados em D35. Tamanhos e capacidades aprovados em D59; proteção simulada dos frágeis em D58. Materiais e preenchimento dos não frágeis aprovados em D60. O despacho parcial segue D30, sem autorização para cancelamento ou reembolso parcial.
 
@@ -466,7 +466,7 @@ Aprovar responsabilidades, direção das dependências e ordem antes de fechar a
 
 ## Vídeos de portfólio
 
-- D49: apresentação principal vertical de 60–90 segundos, legendada e legível no celular; demonstração técnica completa separada em formato horizontal. D50 aprova produtos e procedência → compra → falha breve → recuperação e confirmação, sem repetir a compra e com estados reais. Storyboard e roteiro técnico ainda sujeitos à revisão.
+- D49: apresentação principal vertical em loop de até 30 segundos, sem legendas, com texto único de acompanhamento; demonstração técnica completa separada em formato horizontal. D50 aprova produtos e procedência → compra → falha breve → recuperação e confirmação, sem repetir a compra e com estados reais. Storyboard e roteiro técnico estão registrados em `docs/design/storyboard.md` e foram revisados em 20/09/2026.
 
 - D56: cuia decorativa frágil, com pacote próprio e espaço para proteção; cesto não frágil e cerâmicas frágeis.
 
@@ -626,17 +626,20 @@ Nome da demonstração: **De Lá do Pará**, escolhido em D45; identidade editor
 
 ## Requisito confirmado
 
-D32: a aplicação deve ser atraente em uma gravação para LinkedIn e compreensível para quem não é desenvolvedor. D43 define a direção editorial contemporânea: fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes, com destaque para produtos e histórias dos produtores. D46 define fundo marfim, texto verde profundo e detalhes em terracota. D47 define títulos com serifa e textos/botões sem serifa; verificar licença, acentos em português e legibilidade no celular ao propor as famílias. D48 define tom acolhedor e direto, com regionalismos pontuais e valorização de origem e produtores; mensagens operacionais claras e objetivas. D49 define vídeo principal vertical de 60–90 segundos, legendado e legível no celular, e demonstração técnica completa separada em formato horizontal. D50 aprova a sequência do principal: produtos e procedência → compra → falha breve → recuperação e confirmação sem repetir a compra, com estados reais; detalhes de Kafka ficam no vídeo técnico. Tons exatos, contraste, famílias de fontes, storyboard e roteiro técnico ainda serão revisados em C03. Nenhum código foi autorizado nesta etapa.
+D32: a aplicação deve ser atraente em uma gravação para LinkedIn e compreensível para quem não é desenvolvedor. D43 define a direção editorial contemporânea: fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes, com destaque para produtos e histórias dos produtores. D46 define fundo marfim, texto verde profundo e detalhes em terracota. D47 define títulos com serifa e textos/botões sem serifa; verificar licença, acentos em português e legibilidade no celular ao propor as famílias. D48 define tom acolhedor e direto, com regionalismos pontuais e valorização de origem e produtores; mensagens operacionais claras e objetivas. D49 define vídeo principal vertical em loop de até 30 segundos, sem legendas, com texto único de acompanhamento, e demonstração técnica completa separada em formato horizontal. D50 aprova a sequência do principal: produtos e procedência → compra → falha breve → recuperação e confirmação sem repetir a compra, com estados reais; detalhes de Kafka ficam no vídeo técnico. Paleta, Fraunces e Inter foram aprovadas; o storyboard e roteiro técnico estão registrados em `docs/design/storyboard.md`. A seleção de fotos e o protótipo concreto aguardam revisão do usuário em C03. Nenhum código foi autorizado nesta etapa.
 
 ## Sequência aprovada e proposta de storyboard
 
-A sequência está aprovada em D50; tempos, cortes e legendas abaixo são propostas para revisão. Vídeo principal vertical de 60–90 segundos, compreensível sem áudio, com legendas curtas e foco em uma jornada real:
+A sequência e o formato estão aprovados em D49–D50. O vídeo principal será
+vertical, em loop de até 30 segundos, sem legendas. Esta divisão de tempo é
+uma proposta de gravação para caber no limite; a tela deve mostrar estados
+reais e pagamento/frete simulados precisam estar identificados:
 
-1. **0–10 s — Conhecer a loja:** vitrine com imagens cuidadas de produtos paraenses, tipografia legível e identidade própria.
-2. **10–25 s — Conhecer a origem:** abrir um produto e mostrar a história e a procedência de um produtor fictício, identificado como demonstração.
-3. **25–45 s — Comprar:** adicionar ao carrinho, escolher entrega ou retirada e acompanhar o pedido. Indicar claramente quando pagamento e frete forem simulados ou sandbox.
-4. **45–70 s — Ver o diferencial:** mostrar uma falha controlada no processamento e sua recuperação. A pessoa vê o pedido pendente e depois confirmado, sem precisar repetir a compra; uma breve legenda explica que não houve duplicação. O ensaio técnico precisa comprovar esse resultado.
-5. **70–90 s — Encerrar:** pedido confirmado e resumo curto da autoria e das tecnologias. A duração final depende do roteiro aprovado.
+1. **0–5 s — Conhecer a loja:** vitrine com os oito itens fictícios e identidade editorial.
+2. **5–10 s — Conhecer o produto:** abrir um produto; mostrar sua descrição e a localidade/texto editorial de demonstração, sem apresentá-los como procedência verificável.
+3. **10–17 s — Comprar:** adicionar ao carrinho e mostrar a escolha de entrega ou retirada; indicar sandbox quando houver pagamento simulado.
+4. **17–25 s — Acompanhar:** exibir a falha controlada como pedido pendente e a recuperação como confirmação real, sem repetir a compra.
+5. **25–30 s — Fechar o loop:** manter o pedido confirmado e retornar à vitrine com corte visual contínuo; o texto único de acompanhamento fica fora do vídeo ou na descrição, nunca como legenda cena a cena.
 
 A falha será induzida pelo roteiro técnico em ambiente local isolado; controles técnicos não serão colocados na jornada do cliente. A interface exibirá estados reais do backend, sem animação que simule confirmação ou recuperação inexistente. O vídeo resumido e a evidência técnica completa serão artefatos distintos, com o mesmo cenário identificável.
 
@@ -646,17 +649,17 @@ A falha será induzida pelo roteiro técnico em ambiente local isolado; controle
 - D51: fotos gratuitas para produtos e vitrine, com licença de uso verificada, autoria/fonte registradas e seleção visual revisada pelo usuário. Imagens devem corresponder aos produtos fictícios; não apresentar pessoas reais como produtores fictícios.
 - Hierarquia visual clara, imagens bem recortadas, estados de carregamento/erro/vazio e feedback discreto ao adicionar ao carrinho.
 - Transições curtas, sem bloquear ações, e respeito à preferência por movimento reduzido.
-- Texto e valores legíveis na gravação vista em celular; cortes e legendas não escondem o resultado da operação.
+- Texto e valores legíveis na gravação vista em celular; o texto único de acompanhamento e o loop não escondem o resultado da operação.
 - Dados fictícios reproduzíveis para o ensaio, sem credenciais ou dados pessoais na gravação.
 - Roteiro de reposição dos dados restrito ao ambiente isolado de demonstração; não sobrescrever dados pessoais ou de homologação.
 
 ## Verificação e validação planejadas
 
-Em C03, revisar referências, storyboard e enquadramento com o usuário. Na spec storefront, ligar cada requisito visual aos estados e jornadas correspondentes. Nos commits de frontend, verificar responsividade, teclado, contraste, movimento reduzido e estados reais, além da aparência.
+Em C03, revisar com o usuário a proposta de tempos do storyboard, as fotos e o protótipo. Na spec storefront, ligar cada requisito visual aos estados e jornadas correspondentes. Nos commits de frontend, verificar responsividade, teclado, contraste, movimento reduzido e estados reais, além da aparência.
 
 Em C96a, ensaiar a jornada completa com dados fictícios e produzir evidências da falha e recuperação. Em C96b, gravar e revisar o vídeo no tamanho em que será visto no celular. Uma pessoa não técnica deve conseguir explicar o que a loja vende, de onde vêm os produtos e o que ocorreu com o pedido. Registrar feedback e corrigir problemas antes da entrega.
 
-A entrega inclui arquivo de vídeo e roteiro local. Publicação no LinkedIn não faz parte desta autorização. Formatos aprovados em D49: principal vertical de 60–90 segundos e demonstração técnica horizontal. A duração exata dentro dessa faixa, o storyboard, o roteiro técnico e os detalhes da identidade visual ficam para revisão de design; não há promessa de alcance ou engajamento.
+A entrega inclui arquivo de vídeo e roteiro local. Publicação no LinkedIn não faz parte desta autorização. Formatos aprovados em D49: principal vertical em loop de até 30 segundos, sem legendas, e demonstração técnica horizontal. Sequência/roteiro técnico estão registrados em `docs/design/storyboard.md`; a proposta de tempos, a seleção de fotos e o protótipo seguem para revisão de design. Não há promessa de alcance ou engajamento.
 
 ---
 
@@ -1124,7 +1127,7 @@ O [backlog](#backlog) define commits e checkpoints intermediários a cada poucos
 
 ## 12. Evidências, operação e encerramento
 
-A entrega inclui experiência visual gravável e compreensível para público não técnico, conforme D32. A direção aprovada em D43 é editorial contemporânea, com fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes; a paleta aprovada em D46 usa fundo marfim, texto verde profundo e detalhes em terracota. D47 define títulos com serifa e textos/botões sem serifa. D48 define comunicação acolhedora e direta, valorizando origem e produtores com regionalismos pontuais; mensagens de compra, pagamento e erro serão claras e objetivas. Tons exatos, contraste, famílias de fontes e propostas concretas continuam sujeitos à revisão de design, verificando licença, acentos em português e legibilidade no celular. D51 define fotos gratuitas com licença de uso verificada e autoria/fonte documentadas, compatíveis com os produtos fictícios; a seleção passará pela revisão do usuário, sem apresentar pessoas reais como produtores fictícios. A [proposta de vídeo](#video) será revisada em C03, refletida na spec storefront e validada em C96a/C96b. Conforme D49, o vídeo principal será vertical, de 60–90 segundos, com legendas e enquadramentos legíveis no celular; a demonstração técnica completa será separada, em formato horizontal. D50 aprova a sequência do vídeo principal: produtos e procedência → compra → falha breve → recuperação e pedido confirmado sem repetir a compra, com estados reais. Storyboard e roteiro técnico ainda serão revisados.
+A entrega inclui experiência visual gravável e compreensível para público não técnico, conforme D32. A direção aprovada em D43 é editorial contemporânea, com fotos grandes, fundo claro, tipografia marcante e cores paraenses nos detalhes; a paleta aprovada em D46 usa fundo marfim, texto verde profundo e detalhes em terracota. D47 define títulos com serifa e textos/botões sem serifa, com Fraunces e Inter propostas e aprovadas pelo usuário em 20/09/2026. D48 define comunicação acolhedora e direta, valorizando origem e produtores com regionalismos pontuais; mensagens de compra, pagamento e erro serão claras e objetivas. D51 define fotos gratuitas com licença de uso verificada e autoria/fonte documentadas, compatíveis com os produtos fictícios; a seleção passará pela revisão do usuário, sem apresentar pessoas reais como produtores fictícios. A shortlist está em `docs/design/assets.md` e aguarda revisão visual. A [proposta de vídeo](#video) está registrada em `docs/design/storyboard.md` e será refletida na spec storefront e validada em C96a/C96b. Conforme D49, o vídeo principal será vertical em loop de até 30 segundos, sem legendas, com texto único de acompanhamento; a demonstração técnica completa será separada, em formato horizontal. D50 aprova a sequência do vídeo principal: produtos e procedência → compra → falha breve → recuperação e pedido confirmado sem repetir a compra, com estados reais. O protótipo concreto e a seleção de fotos ainda aguardam revisão em C03.
 
 Pasta futura `docs/evidence/<release>/`: ambiente e versões; matriz requisito/teste; relatórios; IDs sanitizados dos sandboxes; logs sem PII; screenshots/vídeo da jornada; traces; resultados de carga; limitações conhecidas. Dados brutos com credenciais ficam fora do repositório.
 
@@ -1202,32 +1205,32 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C00a — `docs(bootstrap): record repository and execution prerequisites`
 
-- [ ] **Depende:** nenhuma. **Alvos:** registro inicial de ambiente, remoto/destino e decisões; S.
+- [x] **Depende:** nenhuma. **Alvos:** registro inicial de ambiente, remoto/destino e decisões; S. Revalidado localmente em 2026-09-30; sem mudança remota.
 - **Aceite:** implementação solicitada, owner/URL/nome técnico confirmados e pré-requisitos identificados; não copiar LAPES.
 - **Verificar:** ler status de pastas existentes e registrar Git/Docker/JDK/Node, sem apagar dados. É uma etapa pré-clone; seus registros entram no primeiro commit documental, sem commit vazio.
 
 ### C00b — `docs(setup): preserve the master plan in the new clone`
 
-- [ ] **Depende:** C00a. **Alvos:** novo clone em `/home/gaalbu/codigos`, `docs/PLANO-MESTRE.md`, `tasks/progress.md`; S.
+- [x] **Depende:** C00a. **Alvos:** novo clone em `/home/gaalbu/codigos`, `docs/PLANO-MESTRE.md`, `tasks/progress.md`; S. Revalidado em 2026-09-30: checkout no caminho `/home/gaalbu/codigos/de-la-do-para`, remoto público `Gaalbu/de-la-do-para`, cópia do plano versionada; blob local de `origin/main` coincide com o blob atual no GitHub. O registro inicial documenta clone/hash e ausência de histórico/código LAPES.
 - **Aceite:** remoto público correto clonado na pasta do usuário; plano autossuficiente versionado; nenhuma cópia de histórico/código LAPES.
 - **Verificar:** `git remote -v`, `git status --short`, caminho e hash do documento copiado; verificar público no remoto, não inferir pelo nome.
 
 ### C01 — `docs(scope): record approved scope and capability map`
 
-- [ ] **Depende:** C00b. **Alvos:** mapa e registro de decisões; S.
+- [x] **Depende:** C00b. **Alvos:** mapa e registro de decisões; S. Mapa existente auditado contra D01–D64 e matriz de capacidades; divergência herdada de D49 corrigida em 2026-09-26.
 - **Aceite:** respostas do usuário transcritas sem inferência; módulos/dependências revisados; perguntas pendentes do registro de decisões encaminhadas no momento definido; repositório público desde o início da implementação conforme D42, sem criação nesta etapa de planejamento.
-- **Verificar:** DOC; usuário revisa o mapa antes das specs de módulos.
+- **Verificar:** DOC; mapa e decisões rastreiam capacidades e limites; specs já implementadas foram precedidas de C01 no histórico da main.
 
 ### C02 — `docs(sdd): define specification and evidence conventions`
 
-- [ ] **Depende:** C01. **Alvos:** `docs/contributing.md`, template de spec, template de ADR, matriz de rastreio; M.
+- [x] **Depende:** C01. **Alvos:** `docs/contributing.md`, template de spec, template de ADR, matriz de rastreio; M. Artefatos conferidos localmente em 2026-09-30; PR #2 já integrado.
 - **Aceite:** seis áreas da spec, formato de critérios e política de commits definidos; separação entre verificação e validação documentada.
 - **Verificar:** DOC; uma spec de exemplo documental demonstra como referenciar teste/evidência, sem implementar aplicação.
 
 ### C03 — `docs(design): approve brand direction and purchase journeys`
 
-- [ ] **Depende:** C01. **Alvos:** `docs/design/brief.md`, referências autorizadas, fluxos e protótipo; M.
-- **Aceite:** preservar nome e direção visual aprovados em D43–D48; usuário revisa tons, fontes, assets e protótipo concretos; protótipos contemplam catálogo, produto, checkout, acompanhamento e admin; mobile/teclado considerados; revisar DEMO-VIDEO.md, storyboard, formato e duração do vídeo com o usuário; selecionar fotos gratuitas conforme D51 e registrar fonte, autoria, licença e condições de uso para os assets propostos.
+- [ ] **Depende:** C01. **Alvos:** `docs/design/brief.md`, referências autorizadas, fluxos e protótipo (`docs/design/prototype.html`); M.
+- **Aceite:** preservar nome e direção visual aprovados em D43–D48; paleta e famílias de fonte já aprovadas em D46/D47; usuário revisa assets, tempos propostos e protótipo concreto; cinco fluxos (catálogo, produto, checkout, acompanhamento e admin) contemplados; layout responsivo, foco de teclado e contraste considerados; revisar DEMO-VIDEO.md e refletir D49/D50 no storyboard; selecionar fotos gratuitas conforme D51 e registrar fonte, autoria, licença e condições de uso para os assets propostos.
 - **Verificar:** revisão visual com o usuário; preservar a escolha De Lá do Pará e os limites da pesquisa em NAMING; não alegar disponibilidade de marca, domínio ou redes não verificados. Não fechar Q01 automaticamente.
 
 ### C04 — `docs(integrations): record sandbox feasibility and retry guarantees`
@@ -1238,9 +1241,10 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C05 — `docs(architecture): record runtime and consistency decisions`
 
-- [ ] **Depende:** C02, C04. **Alvos:** ADRs de monólito, transações/eventos, autenticação, renderização e recursos; M.
+- [x] **Depende:** C02, C04. **Alvos:** ADRs de monólito, transações/eventos, autenticação, renderização e recursos; M. PR #5 integrado em `298f4d9`; auditoria documental local em 2026-09-30.
 - **Aceite:** decisões técnicas do plano revisadas; modos local/sandbox identificados; limites do provedor influenciam a máquina de estados.
 - **Verificar:** DOC; dependências sem ciclos e nenhuma decisão comercial desconhecida promovida a fato.
+- **Estado atual (2026-09-30):** ADRs 0001–0005 cobrem monólito modular/transações, outbox/idempotência, sessão/CSRF, SSR público/privado e perfis/túnel. ADRs 0004/0005 preservam explicitamente as decisões ainda propostas ou pendentes; ADR-0005 agora registra perfil local implementado e sandbox não homologado. ADR-0002 mantém os limites Asaas (referência sem unicidade provada, expiração finita, `UNKNOWN` sem reenvio cego) como requisitos para máquina de estados. Sem ciclos entre decisões e capacidades; nenhum fato comercial pendente foi promovido a decisão.
 
 **G0:** escopo/mapa revisados; C03 e perguntas comerciais têm responsável/momento; viabilidade externa conhecida. C04 não pode ser marcado como concluído por resultado de mock.
 
@@ -1248,79 +1252,79 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C06 — `chore(backend): bootstrap the Spring Boot application`
 
-- [ ] **Depende:** C05. **Alvos:** Maven Wrapper, `pom.xml`, entrada da aplicação e configurações mínimas; bootstrap gerado.
+- [x] **Depende:** C05. **Alvos:** Maven Wrapper, `pom.xml`, entrada da aplicação e configurações mínimas; bootstrap gerado. Implementado/verificado e PR #6 merged (`b7354fe`); teste contextLoads/build e boot mínimo registrados em `tasks/progress.md`.
 - **Aceite:** Java/Boot/BOM fixados e compatíveis; build limpo; namespace corresponde à decisão de C03 ou ao rótulo explicitamente autorizado.
 - **Verificar:** build Maven e inicialização mínima; guardar matriz de versões, sem serviços de negócio fictícios.
 
 ### C07 — `chore(frontend): bootstrap standalone Angular with SSR`
 
-- [ ] **Depende:** C03, C05. **Alvos:** workspace Angular, lockfile e rotas mínimas; bootstrap gerado.
+- [x] **Depende:** C03, C05. **Alvos:** workspace Angular, lockfile e rotas mínimas; bootstrap gerado. Implementado/verificado e PR #7 merged (`13664fc`); standalone, strict, zoneless e SSR/prerender conferidos. Curadoria final de C03 continua aberta separadamente.
 - **Aceite:** versão Angular/Node/TypeScript compatível e fixada; standalone/zoneless e strict ativos; renderização pública/privada configurável.
 - **Verificar:** teste padrão suportado pelo CLI e build SSR; conferir HTML inicial de uma rota pública mínima.
 
 ### C08 — `chore(dev): add isolated local infrastructure`
 
-- [ ] **Depende:** C06, C07. **Alvos:** Compose, configuração de proxy, `.env.example` e guia local; M.
+- [x] **Depende:** C06, C07. **Alvos:** Compose, configuração de proxy, `.env.example` e guia local; M. Implementado/verificado e PR #8 merged (`150630a`); Compose inclui PostgreSQL, Kafka KRaft, Mailpit e WireMock com portas/volumes próprios e health checks; subida/health, persistência após `down` e recuperação após `up` registradas.
 - **Aceite:** PostgreSQL, Kafka KRaft, Mailpit e simuladores sobem com health checks; portas/volumes próprios; entrada local e rota do túnel delimitadas.
 - **Verificar:** `docker compose config`, subida/encerramento preservando volumes e acesso apenas às superfícies previstas. Nenhum segredo real em exemplos.
 
 ### C09 — `build(backend): enforce formatting and integration test gates`
 
-- [ ] **Depende:** C06, C08. **Alvos:** `pom.xml`, configuração de testes e `T/architecture`; M.
+- [x] **Depende:** C06, C08. **Alvos:** `pom.xml`, configuração de testes e `T/architecture`; M. Implementado/verificado e PR #9 merged (`ff5097c`); Surefire/Failsafe, Spotless, Checkstyle, Testcontainers e prova de falha arquitetural registrados.
 - **Aceite:** Surefire/Failsafe, formatter, análise Java e Testcontainers configurados; teste de arquitetura denuncia uma dependência inválida inserida temporariamente.
 - **Verificar:** B e prova de que o gate falha por violação real; remover somente a violação experimental.
 
 ### C10 — `build(frontend): enforce typed tests and lint checks`
 
-- [ ] **Depende:** C07. **Alvos:** scripts npm, ESLint/formatter, configuração do runner e Playwright; M.
+- [x] **Depende:** C07. **Alvos:** scripts npm, ESLint/formatter, configuração do runner e Playwright; M. Implementado/verificado e PR #10 merged (`707a26b`); lint, formatter, Vitest zoneless, build SSR e smoke Playwright registrados.
 - **Aceite:** comandos F/E disponíveis; teste observa comportamento zoneless; nenhum `any` de escape para fazer build passar.
 - **Verificar:** F; E mínimo sobre a aplicação real, com build/runtime iniciado pelo comando documentado.
 
 ### C11 — `build(contracts): validate API schemas and generated clients`
 
-- [ ] **Depende:** C02, C09, C10. **Alvos:** ferramentas de contrato, `contracts/`, scripts de geração e validação; M.
+- [x] **Depende:** C02, C09, C10. **Alvos:** ferramentas de contrato, `contracts/`, scripts de geração e validação; M. Implementado/verificado e PR #11 merged (`d7b1afd`); fixtures inválidas falharam, geração do cliente e compilação TS passaram.
 - **Aceite:** especificação inválida falha no gate; cliente derivado reprodutível; arquivo gerado não é editado manualmente.
 - **Verificar:** C e compilação do cliente mínimo; fixar versões das ferramentas.
 
 ### C11a — `docs(api): establish interactive reference and executable examples`
 
-- [ ] **Depende:** C11. **Alvos:** referência OpenAPI local, guia e exemplos HTTP; M.
+- [x] **Depende:** C11. **Alvos:** referência OpenAPI local, guia e exemplos HTTP; M. Implementado/verificado e PR #12 merged (`0cac71d`); Redoc local e exemplos executáveis conferidos, exemplos futuros marcados como não funcionais.
 - **Aceite:** documentação acessível localmente e derivada do contrato canônico; exemplos executáveis com dados fictícios e variáveis, sem segredos; critérios API-E-TESTES.md incorporados aos templates de spec.
 - **Verificar:** abrir referência e executar exemplos já implementados contra o ambiente local; cenários futuros não aparecem como funcionais antes da implementação.
 
 ### C11b — `test(contracts): detect undocumented routes and schema drift`
 
-- [ ] **Depende:** C11a. **Alvos:** harness de contrato, inventário de rotas e fixtures de validação; M.
+- [x] **Depende:** C11a. **Alvos:** harness de contrato, inventário de rotas e fixtures de validação; M. Implementado/verificado e PR #13 merged (`37f86ec`); fixtures de rota sem contrato e schema inválido reprovaram como esperado.
 - **Aceite:** rota implementada sem contrato e resposta incompatível são detectadas; exemplos inválidos falham; ferramentas fixadas e exceções técnicas explícitas para endpoints de infraestrutura.
 - **Verificar:** fixtures deliberadamente divergentes comprovam que o gate falha; caso conforme passa; ampliar cobertura junto de cada endpoint implementado.
 
 ### C12 — `feat(observability): correlate HTTP requests and structured logs`
 
-- [ ] **Depende:** C06, C08, C09. **Alvos:** filtro/contexto de correlação, logs, health e teste de redaction; M.
+- [x] **Depende:** C06, C08, C09. **Alvos:** filtro/contexto de correlação, logs, health e teste de redaction; M. Implementado/verificado no PR #14 (`a631ef8`); testes HTTP/health/redaction, JAR real e medição local inicial registrados.
 - **Aceite:** requisição tem correlação verificável; logs não contêm segredos/PII; orçamento inicial de memória medido e documentado.
 - **Verificar:** teste de redaction, health/readiness e observação do consumo local sob inicialização normal.
 
 ### C13 — `ci: assemble reproducible local quality and build checks`
 
-- [ ] **Depende:** C09, C10, C11, C11a, C11b, C12. **Alvos:** entrada local de checks, workflow obrigatório e documentação; M.
+- [x] **Depende:** C09, C10, C11, C11a, C11b, C12. **Alvos:** entrada local de checks, workflow obrigatório e documentação; M. Pipeline inicial implementado e PR #14 merged (`a631ef8`); execução local e CI 4/4 registradas. A expansão e proteção obrigatória são rastreadas em C13a–C13c.
 - **Aceite:** mesmos comandos de qualidade rodáveis localmente e em CI; cache não mascara lockfile; credenciais externas ausentes dos jobs comuns.
 - **Verificar:** B/F/C/E local; verificar configuração do workflow sem afirmar que houve execução remota.
 
 ### C13a — `ci(docs): enforce documentation and API example checks`
 
-- [ ] **Depende:** C13, C11a, C11b. **Alvos:** job docs/contracts e scripts de validação; M.
+- [x] **Depende:** C13, C11a, C11b. **Alvos:** job docs/contracts e scripts de validação; M. Implementado/verificado e PR #15 merged (`d2fb069`); fixture quebrada falhou, gate docs/contracts e CI 5/5 passaram.
 - **Aceite:** links internos, exemplos e contrato acompanhados por gate; erro intencional é detectado; cada endpoint futuro herda a verificação.
 - **Verificar:** executar fixtures inválidas e conformes; cliente gerado sem diff e exemplos contra a aplicação disponível.
 
 ### C13b — `ci(security): enforce scoped permissions and dependency checks`
 
-- [ ] **Depende:** C13a. **Alvos:** permissões, pinagem, scans e configuração de atualizações; M.
+- [x] **Depende:** C13a. **Alvos:** permissões, pinagem, scans e configuração de atualizações; M. Implementado/verificado e PR #16 merged (`d0ce796`); actions pinadas, permissões mínimas, scan de segredos/dependências e triagem registrados.
 - **Aceite:** actions por SHA, dependências fixadas, scans de segredos/dependências com triagem; PR externo sem acesso a segredos; política de atualização documentada.
 - **Verificar:** inspecionar permissões efetivas e simular achado controlado em fixture sem segredo real; gate não esconde erro da ferramenta.
 
 ### C13c — `ci(quality): require healthy pull requests and scheduled checks`
 
-- [ ] **Depende:** C13b. **Alvos:** agregador, checks de commits, agenda, proteção de main e documentação; M.
+- [x] **Depende:** C13b. **Alvos:** agregador, checks de commits, agenda, proteção de main e documentação; M. PR #25 (`2db8139`) passou CI 7/7 e proteção `strict:true` foi verificada. PR #15 comprovou fluxo docs-only (CI `35547722865`, 5/5); PR #25 comprovou checks obrigatórios em PR real (CI `35548287393`, 7/7). Runs remotos de falha do backend (`36483482837`) e cancelamento (`36483450484`) terminaram ambos com `quality-gate` em falha, sem falso verde. C13c concluída; G1 externo continua condicionado a C04.
 - **Aceite:** gates exigidos corretamente por tipo de alteração; main com checks verificados no remoto; periodicidade e retenção compatíveis com orçamento zero.
 - **Verificar:** observar PR real e seus checks, cenário de docs-only, teste falho e run cancelado; nenhum falso verde. Configuração indisponível exige registrar limitação e alternativa, sem alegar proteção ativa.
 
@@ -1332,19 +1336,19 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C14 — `docs(identity): specify sessions and optional customer accounts`
 
-- [ ] **Depende:** C01, C02, C05. **Alvos:** `specs/SPEC-identity.md`, contrato de acesso; S.
+- [x] **Depende:** C01, C02, C05. **Alvos:** `specs/SPEC-identity.md`, contrato de acesso; S. Spec revisada e PR #26 merged (`2edd714`); regras, papéis, sessões, CSRF e limitações documentados em `tasks/progress.md`.
 - **Aceite:** admin/cliente/convidado, verificação de e-mail, recuperação e prova de posse definidos; limites de sessão e acesso ao histórico explícitos.
 - **Verificar:** DOC e revisão da spec pelo usuário antes das implementações C15/C76–C81.
 
 ### C15 — `feat(identity): authenticate administrators with protected sessions`
 
-- [ ] **Depende:** C09, C14. **Alvos:** `B/identity`, migration de contas/sessões, `T/identity`; M, dividir persistência/API se o diff exceder uma intenção.
+- [x] **Depende:** C09, C14. **Alvos:** `B/identity`, migration de contas/sessões, `T/identity`; M, dividir persistência/API se o diff exceder uma intenção. PR #27 merged; histórico em `tasks/progress.md`.
 - **Aceite:** login/logout/consulta de sessão; CSRF e papel verificados no backend; criação local inicial do admin sem senha publicada.
 - **Verificar:** BI(SessionSecurity); tentativa sem sessão, senha incorreta, sessão encerrada e cliente sem papel admin negados.
 
 ### C16 — `feat(identity-ui): add accessible login and admin navigation`
 
-- [ ] **Depende:** C10, C15. **Alvos:** `F/identity`, rotas/admin shell e teste; M.
+- [x] **Depende:** C10, C15. **Alvos:** `F/identity`, rotas/admin shell e teste; M. PR #28 merged; histórico em `tasks/progress.md`.
 - **Aceite:** entrar/sair e tratar sessão expirada; erro preserva formulário; guarda de rota complementa a autorização backend.
 - **Verificar:** F/E; navegar como visitante e como admin pelo browser.
 
@@ -1589,9 +1593,11 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - **Verificar:** DOC/C; enumerar pontos de queda antes/depois de cada commit/ACK.
 - **Estado atual:** `SPEC-eventing.md` foi preparada em revisão sobre o envelope
   JSON Schema existente e o ADR-0002. Os pontos de queda, deduplicação,
-  quarentena e limites de entrega estão explicitados; lease, backoff, número
-  de tentativas e retenção continuam propostas. C45 só será concluída após
-  revisão humana e validação do contrato; C04 ainda não tem homologação real.
+  quarentena e limites de entrega estão explicitados. Os parâmetros operacionais
+  foram aprovados pelo usuário em 2026-09-24 e registrados na spec e no ADR-0002.
+  A revisão desta fatia confirma o aceite documental, mas C45 permanece pendente
+  enquanto C04, dependência explícita, não tiver evidência de sandbox real; a spec
+  não representa homologação nem implementação de retry/quarentena/limpeza.
 
 ### C46 — `feat(eventing): persist outbound events in the business transaction`
 
@@ -1721,15 +1727,17 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C61 — `feat(checkout): apply confirmed payment outcomes transactionally`
 
-- [ ] **Depende:** C48, C51, C57, C58a, C59, C60. **Alvos:** handler/coordenador de confirmação e testes; M.
+- [x] **Depende:** C48, C51, C57, C58a, C59, C60. **Alvos:** handler/coordenador de confirmação e testes; M. Revalidado no worktree em 2026-09-30; sem PR/merge.
 - **Aceite:** evento confirmado valida referência/valor/estado; pedido/estoque/cupom avançam juntos; evento velho não regride o pedido.
 - **Verificar:** BI(PaymentOutcome), V06/V08/V09/V11 com simulador do provedor.
+- **Estado atual (2026-09-26):** implementado e verificado localmente na base `origin/main@3745f6a`. `ProviderEventProcessor` consulta o provedor fora da transação e só gera fato `CONFIRMED` para o checkout vinculado, estado `PAID` e valor correspondente. `PaymentOutcomeHandler` trava pedido/intenção e aplica `PAID` + reserva `COMMITTED` + cupom `CONSUMED` atomicamente; confirmação tardia põe o pedido pendente em análise, libera reserva/cupom e solicita reembolso. Intenção ligada a outro pedido ou evento repetido não altera pedido/estoque. Testes focados passaram; sem PR/merge nesta cópia de trabalho.
 
 ### C62 — `feat(checkout-ui): follow asynchronous payment and order progress`
 
-- [ ] **Depende:** C44, C52, C58a, C61. **Alvos:** confirmação/retorno/status do checkout Angular e testes; M.
-- **Aceite:** manter chave por intenção; apresentar pendência, link hospedado, erro e sucesso reais; reload retoma estado do pedido.
+- [x] **Depende:** C44, C52, C58a, C61. **Alvos:** confirmação/retorno/status do checkout Angular e testes; M. Revalidado no worktree em 2026-09-30; sem PR/merge.
+- **Aceite:** manter chave por intenção; apresentar pendência, erro e sucesso reais; reload retoma estado do pedido. O link hospedado depende da resposta/consulta de pagamento integrada na C63.
 - **Verificar:** F/E; redirecionamento de sucesso isolado não mostra pedido pago.
+- **Estado atual (2026-09-26):** jornada local aceita entrega e retirada: resumo calculado no servidor, chave idempotente mantida por snapshot, token de convidado preservado em `sessionStorage`, e `/orders/:id` consulta o pedido na API ao abrir/recarregar e atualiza o estado a cada 10s ou por ação. Entrega envia endereço normalizado e retirada envia sua modalidade; E2E confirma a seleção da modalidade e prova que o cliente só mostra `PAID` depois que a API devolve esse estado. Link hospedado depende do adapter/consulta de pagamento C63. Sem PR/merge para esta fatia.
 
 **G4:** primeira compra completa em ambiente determinístico, com eventos duráveis e falhas selecionadas. B/F/C/E e demonstração de V01/V04/V05/V08. Este marco não encerra as integrações externas.
 
@@ -1795,9 +1803,10 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C72 — `feat(shipping): prepare and confirm local pickup`
 
-- [ ] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
+- [x] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M. Implementado e verificado localmente em 2026-09-30; sem PR/merge.
 - **Aceite:** ponto/prazo informados; código e papel autorizados; entrega/retirada confirmada uma vez.
 - **Verificar:** BI(PickupLifecycle), código inválido/repetido e pedido não pago.
+- **Estado atual (2026-09-30):** `PickupService` coordena emissão, leitura e consumo do código com as transições por porta pública de `orders`; o ciphertext é cifrado em repouso e apagado após o uso. `PickupController` limita a leitura ao dono autenticado ou token do pedido com `private, no-store`, e as ações de prontidão/confirmação são administrativas. D71 e `SPEC-shipping` definem a regra do código. `PickupLifecycleIT` com PostgreSQL real cobre dono/conta alheia, acesso admin, código incorreto/repetido, prontidão repetida, pedido de entrega/não pago e corrida entre cancelamento e confirmação; endpoint OpenAPI presente. Sem CI remoto ou PR/merge.
 
 ### C73 — `feat(shipping-ui): operate dispatch and pickup from the admin area`
 
@@ -1815,27 +1824,31 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C74 — `docs(notifications): specify delivery and message privacy`
 
-- [ ] **Depende:** C14, C45, C50, C53, C41. **Alvos:** `specs/SPEC-notifications.md`, matriz evento→mensagem; S.
+- [x] **Depende:** C14, C45, C50, C53, C41. **Alvos:** `specs/SPEC-notifications.md`, matriz evento→mensagem; S.
 - **Aceite:** notificações realmente necessárias; destinatário e conteúdo mínimo; política de retry/duplicata e limite da entrega SMTP explícitos.
 - **Verificar:** DOC; nunca afirmar exatamente uma entrega de e-mail sem garantia do provedor.
+- **Estado atual (2026-09-26):** spec define destinatário pelo snapshot imutável, conteúdo mínimo por fatos de `orders`, estados de pagamento que não devem gerar mensagens contraditórias, deduplicação/retry e a fronteira de aceitação SMTP. Códigos de retirada e avisos de logística ficam para C70–C73; link convidado bloqueado até resolver transporte seguro de CHK-Q02/ORD-Q02. Mailpit comprova somente o ambiente local.
 
 ### C75 — `feat(notifications): deliver purchase notifications through Mailpit`
 
-- [ ] **Depende:** C08, C48, C61, C71, C72, C74. **Alvos:** consumer, templates, adapter de e-mail e testes; M.
+- [ ] **Depende:** C08, C48, C61, C71, C72, C74. **Alvos:** consumer, templates, adapter de e-mail e testes; M. Parcialmente implementado e verificado localmente; sem PR/merge.
 - **Aceite:** confirmação, andamento e links necessários chegam ao Mailpit; pedido pago não depende de e-mail disponível; tentativas são rastreáveis.
 - **Verificar:** BI(OrderNotifications), indisponibilidade SMTP e inspeção manual de conteúdo/links.
+- **Estado atual (2026-09-30):** worker de produção local validado com eventos versionados via outbox/Kafka até `ACCEPTED` no Mailpit; retries, UNKNOWN/falha permanente, conteúdo MIME e indisponibilidade SMTP têm prova local. `READY_FOR_PICKUP` informa ponto/janela do snapshot e mantém o código fora do e-mail; avisos de despacho/tracking seguem parciais até C70/C71/C73. Link de acesso convidado continua bloqueado pela decisão pendente sobre transporte do token e ORD-Q02 (SPEC-notifications §6). Gate completo local do backend passou com `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify` (122 testes unitários, 183 integrações, 4 regras de arquitetura; Spotless e Checkstyle sem violações). Não homologado fora do ambiente local; sem CI remoto ou PR/merge.
 
 ### C76 — `feat(identity): register and verify optional customer accounts`
 
-- [ ] **Depende:** C08, C14, C15. **Alvos:** cadastro, token de verificação, adapter SMTP de identidade e testes; M.
+- [x] **Depende:** C08, C14, C15. **Alvos:** cadastro, token de verificação, adapter SMTP de identidade e testes; M. Revalidado localmente em 2026-09-30; sem PR/merge.
 - **Aceite:** cadastro opcional com e-mail verificado; token de uso único e expiração; login não concede papel admin.
 - **Verificar:** BI(CustomerRegistration), token vencido/repetido e e-mail duplicado sem exposição indevida.
+- **Revalidação local (2026-09-30):** `IdentityMailIT` 9/9 e `AccountRegistrationIT` 1/1 passaram com PostgreSQL 18.6; live browser confirmou cadastro/verificação pelo Mailpit e login como CUSTOMER. Sem CI remoto.
 
 ### C77 — `feat(identity): recover customer access securely`
 
-- [ ] **Depende:** C76. **Alvos:** solicitação/consumo de recuperação e testes; M.
+- [x] **Depende:** C76. **Alvos:** solicitação/consumo de recuperação e testes; M. Verificado localmente em 2026-09-30; sem PR/merge.
 - **Aceite:** resposta evita enumerar contas; token de uso único; troca de senha trata sessões anteriores conforme spec.
 - **Verificar:** BI(AccountRecovery), rate limit, token inválido e tentativa concorrente.
+- **Revalidação local (2026-09-30):** `IdentityMailIT` 9/9 passou; live browser + API + Mailpit completaram recuperação, redefinição e rejeição de token reutilizado (410). E2E interceptado mantém verificação de resposta uniforme. Sem CI remoto.
 
 ### C78 — `feat(identity): link guest purchases after proof of ownership`
 
@@ -1857,21 +1870,24 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C80 — `feat(cart): merge guest items into authenticated carts`
 
-- [ ] **Depende:** C38, C39, C76. **Alvos:** regra de combinação/versionamento e testes; M.
+- [x] **Depende:** C38, C39, C76. **Alvos:** regra de combinação/versionamento e testes; M. Revalidado localmente em 2026-09-30; sem PR/merge.
 - **Aceite:** regra aprovada combina itens sem perda silenciosa; indisponibilidade é apresentada; login repetido não repete quantidades.
 - **Verificar:** BI(CartMerge) com duas abas e item desativado após adição.
+- **Revalidação local (2026-09-30):** `CartMergeApiIT` 6/6 com PostgreSQL 18.6; Playwright `cart-merge.spec.ts` passou com duas abas e API interceptada. Não equivale a CI remoto.
 
 ### C81 — `feat(account-ui): register and verify optional customer accounts`
 
-- [ ] **Depende:** C16, C76, C80. **Alvos:** cadastro/verificação em `F/account` e testes; M.
+- [x] **Depende:** C16, C76, C80. **Alvos:** cadastro/verificação em `F/account` e testes; M. Verificado localmente em 2026-09-30; sem PR/merge.
 - **Aceite:** convite à conta é opcional; registro/verificação funcionam; carrinho combinado segue a regra aprovada.
 - **Verificar:** F/E/A; registrar, abrir e-mail no Mailpit e confirmar a conta.
+- **Revalidação local (2026-09-30):** `AccountRegistrationIT` e `IdentityMailIT` passaram (10 IT no total, PostgreSQL 18.6 + Mailpit 1.31.2); E2E de cadastro simulado passou; E2E live registrou conta na API real, leu o link no Mailpit, verificou o e-mail e autenticou como CUSTOMER. Sem CI remoto.
 
 ### C81a — `feat(account-ui): recover access through expiring links`
 
-- [ ] **Depende:** C16, C77, C81. **Alvos:** solicitação/redefinição de acesso e testes; M.
+- [x] **Depende:** C16, C77, C81. **Alvos:** solicitação/redefinição de acesso e testes; M. Verificado localmente em 2026-09-30; sem PR/merge.
 - **Aceite:** recuperação preserva privacidade; erro de token orienta novo pedido; sessão antiga respeita a política definida.
 - **Verificar:** F/E/A; token válido, vencido e reutilizado.
+- **Revalidação local (2026-09-30):** segundo E2E live passou pela API real e Mailpit, redefiniu senha e recebeu 410 ao reutilizar o mesmo token; E2Es interceptados cobrem resposta anti-enumeração, token expirado e sucesso. Sem CI remoto.
 
 ### C81b — `feat(account-ui): inspect owned orders and claim guest purchases`
 
@@ -1909,7 +1925,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C84 — `feat(pricing-ui): manage coupon rules and availability`
 
-- [ ] **Depende:** C16, C32. **Alvos:** `F/admin/coupons`, formulário e testes; M.
+- [ ] **Depende:** C16, C32. **Alvos:** `F/admin/coupons`, formulário e testes; M. A interface e evidências locais estão presentes, mas C32 segue aberto aguardando aprovação da política de reserva/reembolso de cupons; manter C84 aberto até cumprir a dependência.
 - **Aceite:** criar/editar/desativar cupom; explicar validade/mínimo/limites; mudança não reescreve pedidos antigos.
 - **Verificar:** F/E; aplicar no checkout um cupom válido e tentar um expirado.
 
@@ -2007,8 +2023,8 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C96b — `docs(portfolio): deliver the reviewed presentation video`
 
-- [ ] **Depende:** C96a. **Alvos:** vídeo local, legendas, storyboard final e registro de revisão; M.
-- **Aceite:** vídeo compreensível sem áudio para público não técnico, visual aprovado pelo usuário, ambiente de demonstração identificado e resultados reais; publicação externa não incluída. Binário de vídeo tem local de entrega documentado, sem obrigação de incorporá-lo ao Git.
+- [ ] **Depende:** C96a. **Alvos:** vídeo local, texto de acompanhamento separado, storyboard final e registro de revisão; M.
+- **Aceite:** vídeo vertical em loop de até 30 segundos, sem legendas, compreensível sem áudio para público não técnico; texto único de acompanhamento entregue separadamente, visual aprovado pelo usuário, ambiente de demonstração identificado e resultados reais; publicação externa não incluída. Binário de vídeo tem local de entrega documentado, sem obrigação de incorporá-lo ao Git.
 - **Verificar:** reprodução em tamanho de celular, revisão humana do entendimento da jornada e conferência contra as evidências técnicas; registrar feedback e ajustes.
 
 ### C97 — `chore(quality): record the final verified release checklist`

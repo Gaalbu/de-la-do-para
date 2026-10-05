@@ -1035,3 +1035,274 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `AsaasWebhookIT` 8/8, `RouteContractCoverageTest`, `ArchitectureRulesTest`; `contracts:check`; `check-secrets.sh`. |
 | Limite | Nenhum evento real do sandbox recebido (C04 depende de conta do usuário). |
 | Próximo passo | C61 (aplicar confirmação de pagamento). |
+
+## Sessão 2026-09-26 — C61: confirmação transacional de pagamento (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch local `work/c61-payment-outcomes`, criada sobre `origin/main@3745f6a` após integração dos PRs #92–#99; checkout anterior preservado sem alterações |
+| Tarefa | Validar fato financeiro do provedor e aplicar confirmação junto com pedido, reserva de estoque, cupom e recibo de consumo |
+| Mudanças | `ProviderEventProcessor` consulta o simulador fora da transação, processa inbox vinculada ao checkout e emite estado financeiro somente após conferir estado/checkout/valor; `PaymentOutcomeHandler` bloqueia pedido e intenção e coordena confirmação atual ou pagamento tardio sob a transação do consumidor. Worker processa eventos recebidos por lote |
+| Verificação | RED: testes C61 falharam inicialmente porque o processador não existia. GREEN: `PaymentOutcomeIT` 7/7 e `PaymentWorkerIT` 4/4 com PostgreSQL 18.6/Testcontainers e `-Xint`; `./mvnw -q -DargLine=-Xint verify` passou com Temurin 25.0.4 (274 testes em 75 relatórios, zero falhas/erros/skips; Failsafe 148); `RouteContractCoverageTest` 1/1 e `ArchitectureRulesTest` 3/3 passaram usando Temurin 25.0.4; `git diff --check`, `docs:check` e `contracts:check` passaram (8 warnings Redocly preexistentes); `aislop scan --changes --json` 100/100 sem achados |
+| Limite | Não houve PR/push/merge. GraalVM SIGSEGV no gate combinado de arquitetura/contrato; os mesmos testes passaram separadamente com Temurin. Simulador não comprova comportamento Asaas; C63 segue dependente de conta, credenciais e consulta segura de resultado incerto no sandbox (C04) |
+| Próximo passo | C62 concluída localmente para retirada. C63 depende de acesso e evidência do sandbox Asaas |
+
+## Sessão 2026-09-26 — C62: aceite e acompanhamento do pedido (verificado localmente)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `work/c61-payment-outcomes`, após C61 `26357cc`, base `origin/main@3745f6a`; checkout original preservado |
+| Tarefa | Aceitar compra com idempotência e exibir estado real do pedido depois do aceite e na recarga |
+| Mudanças | Entrega e retirada consultam resumo do servidor e aceitam o pedido com `Idempotency-Key` estável por snapshot; a entrega inclui endereço, e o token de convidado e referência de pedido persistem na sessão do navegador. `/orders/:id` consulta API, mostra total, itens e histórico, permite atualizar e consulta automaticamente a cada 10 segundos. Checkout/pedido usam renderização cliente para acessar a credencial somente no navegador. |
+| Verificação | 28 testes frontend; 2 E2E de checkout (workers=1 por storage de sessão isolado), incluindo seleção exclusiva de modalidade; build Angular; lint; Prettier; `contracts:check` (8 avisos preexistentes); `docs:check`; E2E provou reload e estado `PAID` vindo da API |
+| Limite | API controlada no E2E; sem Asaas real. Link hospedado depende de C63; sem PR/push/merge |
+| Próximo passo | C63 aguarda sandbox; C65 depende C63/C64; C66 fica após C65; C72 já tem prova transacional parcial; próximo slice C73/C72 é a ação administrativa e apresentação do código depois de regra definida |
+
+## Sessão 2026-09-26 — C01: auditoria do mapa de escopo
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Reconciliar `docs/scope.md` com as decisões explícitas e o storyboard aprovado |
+| Mudanças | Corrigido D49 no resumo do escopo: vídeo principal vertical em loop de até 30 s, sem legendas, conforme `docs/decisions.md` e `docs/design/storyboard.md`. C01 registrado como auditado nesta cópia de trabalho. |
+| Verificação | Revisão cruzada dos resumos e IDs de decisão; `docs:check`; `git diff --check` |
+| Limite | C01 não confirma marca, domínio, sandbox ou disponibilidade de ativos; nenhuma decisão nova inferida |
+| Próximo passo | Continuar fatias dependentes locais; C63 requer sandbox e C65/C66 aguardam dependências financeiras |
+
+## Sessão 2026-09-26 — C72: ciclo transacional de retirada (slice local)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch local `work/c61-payment-outcomes`, após C62 `c896654`; checkout original preservado |
+| Tarefa | Garantir que retirada só avance em pedido pago, de modalidade PICKUP, e seja confirmada uma vez |
+| Mudanças | Sem alterar a regra já existente: teste integrado novo prova `PAID → PREPARING → READY_FOR_PICKUP → PICKED_UP`, persistência da história e eventos de outbox contíguos, no-op em repetição e rejeição para pedido não pago/entrega |
+| Verificação | `./mvnw -q spotless:apply`; `./mvnw -q -DargLine=-Xint -Dit.test=PickupLifecycleTest verify`; relatório Failsafe 2 testes, 0 falhas/erros/skips; `git diff --check` |
+| Limite | Slice de prova/persistência, não fecha C72: falta endpoint de ação administrativa; C73 cobre operação; regra de emissão, exposição e validação de código de retirada não está definida e exige decisão antes de expor um código. Sem PR/push/merge |
+| Próximo passo | C72/C73: fechar contrato e autorização da ação administrativa e decisão do código; C63 continua aguardando conta/credenciais/evidência do sandbox |
+
+## Sessão 2026-09-26 — C74: especificação de notificações comerciais
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Definir matriz de eventos e mensagens úteis, privacidade, retry, deduplicação e limite do SMTP |
+| Mudanças | `specs/SPEC-notifications.md`: separa `order.status_changed` de estados intermediários de pagamento; define destinatário pelo pedido, conteúdo mínimo, chave local de dedupe e tentativas fora da transação Kafka; link convidado e mensagens logísticas ficam condicionados às regras de segurança/modalidade |
+| Verificação | `npm run docs:check` (26 Markdown); `git diff --check`; revisão contra `SPEC-orders`, `SPEC-payments`, `SPEC-eventing`, `SPEC-shipping` e C08 Mailpit |
+| Limite | Spec não declara entrega SMTP final nem comportamento de provedor externo; ponto/código de retirada depende de C72/C73; token de pedido exige resolução de CHK-Q02/ORD-Q02; C04 não homologado |
+| Próximo passo | C75 pode começar por avisos sem segredo ligados a eventos de pedido; C63 aguarda sandbox e o link hospedado/token de convidado continua condicionado |
+
+## Sessão 2026-09-30 — C75: prova local de notificações e configuração SMTP
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Retomar o worker de notificações a partir do estado local presente, sem declarar a capacidade completa |
+| Mudanças | `application.yml` usa variáveis explícitas para host/porta/credenciais/auth/STARTTLS SMTP; `.env.example` documenta Mailpit e parâmetros do worker, ambos desligados por padrão |
+| Verificação | `./mvnw -q -DargLine=-Xint -Dit.test=OrderNotificationIT verify` passou (exit 0); o IT inclui retry/UNKNOWN/falha permanente, MIME texto+HTML, privacidade e envio pelo sender configurado ao Mailpit. API Mailpit respondeu v1.31.2 com 2 mensagens aceitas (`SMTPAccepted: 2`); `spotless:apply` e `git diff --check` passaram |
+| Limite | Naquela etapa ainda não havia sido exercitado o worker contra eventos persistidos; a evidência complementar logo abaixo comprovou depois o worker real e o percurso outbox/consumer. Links de convidado/código seguem excluídos conforme spec até resolver as dependências de segurança/logística. Sem PR/push/merge |
+| Próximo passo | C75 permanece parcial para notificações logísticas e link convidado; C71 depende de C70 e da homologação C04 |
+
+### Evidência complementar 2026-09-30
+
+- `.env` local carregado no processo sem imprimir valores; API iniciou em `18080`, aplicou V35/V36 e `/actuator/health` respondeu `{"groups":["liveness","readiness"],"status":"UP"}` com `ORDER_NOTIFICATIONS_MAIL_WORKER_ENABLED=true` e SMTP apontando a Mailpit.
+- A execução acima só tinha perfil `local`; a sondagem mostrou que a fila seguia `PENDING`. Reinício com perfis `local,worker` e propriedades exigidas pelo publisher Kafka ativou o worker real de notificações. Um pedido sintético rastreável (`255858ef-32cf-4fd4-ae82-7071378adefd`) e duas linhas de fila foram inseridos no banco local; `order.created` e `order.status_changed` progrediram a `ACCEPTED`, `attempt_count=1` cada. Mailpit v1.31.2 mostrou ambas as mensagens, incluindo a atualização `PAID`, multipart texto/HTML, sem token, código ou links. Processo encerrado graciosamente.
+- Com consumer ligado no mesmo profile e tópico local isolado `dlp-events`, dois eventos versionados foram inseridos no outbox do mesmo pedido de demonstração. O publisher marcou ambos `PUBLISHED`; `event_consumption` marcou versões 0/1 como `APPLIED`; cursor `order-notifications` chegou a 1; cada evento criou uma notificação separada em versão correspondente e as duas ficaram `ACCEPTED` com uma tentativa. Mailpit terminou com 6 mensagens aceitas no total, incluindo as quatro da demonstração de C75.
+- `OrderNotificationIT` prova também que `payment.status_changed` em `AWAITING_PAYMENT` e `UNKNOWN` é consumido pelo handler financeiro sem criar notificação comercial; após erro SMTP de conexão, o pedido permanece `PAID`. Corrigida a métrica da janela de retry para contar do início do envio (o intervalo anterior partia da criação da fila e ficava contaminado pelo tempo decorrido antes do poll). Gate focalizado `./mvnw -q -DargLine=-Xint -Dit.test=OrderNotificationIT test-compile failsafe:integration-test failsafe:verify`: Failsafe 8/8, zero falhas/erros/skips; `spotless:check` passou.
+- Acrescentada cobertura de mensagens para `UNDER_REVIEW`, `CANCELLED` e `EXPIRED` em transições persistidas reais. O IT inspeciona texto e HTML, confirma os estados e a orientação de consulta, e rejeita linguagem de reembolso concluído ou links não aprovados. Failsafe focalizado: 9/9, zero falhas/erros/skips; `spotless:check`, `docs:check`, `git diff --check` e `aislop scan --changes` (271 arquivos, score 100, sem findings) passaram.
+- As linhas sintéticas permanecem no banco local como histórico de demonstração; não foram apagadas porque pedidos têm proteção de imutabilidade. Isso não afeta ambiente remoto.
+
+## Sessão 2026-09-30 — C76: cadastro e verificação de cliente
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Verificar cadastro opcional, verificação de e-mail e limite entre papel cliente e admin |
+| Mudanças | Mailpit Testcontainers isolado em `IdentityMailIT` e `OrderNotificationIT`; teste SMTP de identidade inspeciona MIME e link de fragmento, confirma limpeza do ciphertext após aceite; duplicidade verifica resposta sem e-mail, senha ou `accountId`; subprocesso do teste de restart de worker recebe chave de cifra sintética necessária para inicializar |
+| Verificação | `scripts/verify.sh backend` com Temurin 25.0.4: BUILD SUCCESS, Failsafe 177/177 sem falhas/erros/skips, Spotless limpo e Checkstyle 0 violações; gates `docs:check`, `contracts:check` e `git diff --check` também passaram nesta sessão |
+| Limite | Mailpit é caixa de teste isolada; não comprova entrega externa nem CI remoto. Sem PR/commit/push/merge. O gate em modo normal do Temurin passou; uma execução anterior com `-Xint` gerou crash nativo G1 preservado em `backend/hs_err_pid222330.log` |
+| Próximo passo | C77 — comparar resposta de recuperação para conta existente e inexistente, provar expiração/invalidade/consumo concorrente do token e envio SMTP da mensagem de recuperação |
+
+## Sessão 2026-09-30 — C77: recuperação segura de acesso
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Completar as provas de não enumeração, limitação, single-use e expiração da recuperação de conta |
+| Mudanças | `SessionSecurityIT` compara status/corpo para conta verificada existente e e-mail inexistente, e confirma a criação da fila apenas para a conta existente; `IdentityMailIT` prova token vencido e inválido sem trocar senha, corrida de dois resets com exatamente um vencedor, mudança de senha válida e envio MIME do link de redefinição pelo Mailpit |
+| Verificação | Focado `SessionSecurityIT,IdentityMailIT`: 24/24; `scripts/verify.sh backend` no Temurin 25.0.4: unitários 122/122 e Failsafe 181/181 sem falhas/erros/skips, Spotless limpo e Checkstyle 0 violações; `docs:check` 25 arquivos sem links quebrados; `contracts:check` passou com 8 avisos Redocly já existentes; `git diff --check`; `aislop scan --changes` 100/100, 271 arquivos, zero findings |
+| Limite | Mailpit é efêmero e isolado; nenhuma entrega externa, execução remota de CI ou merge alegados. Sem commit/PR/push/merge. C78 depende de C75 incompleto e de prova de posse/segurança de link convidado; não é o próximo slice elegível sem resolver esses bloqueios de produto |
+| Próximo passo | Auditar a próxima fatia elegível sem atravessar a dependência C75 nem inferir política para link de convidado |
+
+## Sessão 2026-09-30 — C80: escolha de combinação de carrinhos
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Auditar e verificar a escolha explícita no login entre manter, substituir ou combinar carrinho convidado e carrinho da conta |
+| Mudanças | A implementação local cobre coordenação de login via interface entre módulos, sessão rotacionada, pendência ligada à sessão autenticada no servidor, merge transacional e SKUs inativos preservados para revalidação; a UI apresenta a decisão e sinaliza itens inativos. Os cenários já presentes em `CartMergeApiIT` e `cart-merge.spec.ts` foram exercitados pelos gates abaixo |
+| Verificação | `scripts/verify.sh backend`: Failsafe 181/181 inclui `CartMergeApiIT`; `GOMAXPROCS=1 scripts/verify.sh frontend`: contratos, lint, Prettier, unitários 30/30, build SSR e Playwright 13/13, incluindo duas abas e combinação explícita |
+| Limite | Playwright usa API simulada para o cenário visual; persistência e concorrência são cobertas separadamente pelo IT PostgreSQL. Sem PR/commit/push/merge |
+| Próximo passo | C81 — cadastro/verificação na interface; validar fluxo browser com API/SMTP de teste em vez de contar apenas o E2E mockado |
+
+## Sessão 2026-09-30 — C81: cadastro e verificação pela interface
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Verificar o convite opcional à conta, cadastro, mensagem de verificação, confirmação do token e autenticação cliente no navegador |
+| Mudanças | Adicionado o script `e2e:c81:live`, uma config Playwright isolada e `identity-registration.live.spec.ts`: encaminha `/api/v1` do browser à API real, encontra e lê no Mailpit a mensagem endereçada à conta gerada, extrai o token do fragmento, confirma e-mail e valida resposta de login `CUSTOMER`, verificado e sem merge pendente |
+| Verificação | Execução live dedicada 1/1 passou com API em perfil `local,worker`, Mailpit SMTP/HTTP local e PostgreSQL efêmero; `GOMAXPROCS=1 scripts/verify.sh frontend` passou: geração OpenAPI, lint, Prettier, unitários 30/30, build SSR e E2E padrão 13/13; `git diff --check` |
+| Limite | A integração live exige API e Mailpit configurados por `C81_API_BASE_URL`/`C81_MAILPIT_API_URL`; o teste fica fora do E2E padrão para não reportar skip em CI sem esses serviços. O banco PostgreSQL temporário e a API foram encerrados após a prova; Mailpit compartilhado não foi limpo. Sem commit/PR/push/merge |
+| Próximo passo | C81a — completar e verificar pela UI o fluxo de recuperação já coberto no backend; C78/C79 seguem dependentes de C75 e suas decisões de posse/link |
+
+## Sessão 2026-09-30 — C81a: recuperação de acesso pela interface
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Completar recuperação pela UI com resposta privada, recebimento da mensagem, reset via token e orientação após reutilização |
+| Mudanças | O teste live registrado em `identity-registration.live.spec.ts` cria e verifica um cliente, solicita recuperação na UI, confirma resposta 202 genérica, lê o link no Mailpit, redefine a senha, confirma URL sem token, tenta reutilizar o token e recebe 410 com orientação para solicitar outro link; autentica depois com a nova senha e confere `CUSTOMER`/e-mail verificado |
+| Verificação | `e2e:c81:live`: 2/2 (cadastro/verificação e recuperação/reset) contra API real, worker, Mailpit e PostgreSQL efêmero; `GOMAXPROCS=1 scripts/verify.sh frontend`: unitários 30/30, build SSR e E2E padrão 13/13, lint e Prettier passaram; backend C77: unitários 122/122 e Failsafe 181/181; `docs:check` e `git diff --check` |
+| Limite | Cenário live usa PostgreSQL efêmero e Mailpit local; caixa Mailpit compartilhada preservada. Invalidar sessões antigas foi provado no IT backend C77, não por uma segunda sessão de browser neste teste. Sem commit/PR/push/merge |
+| Próximo passo | C84 concluído; seguir C82/C82a somente após C79 e C79a, ou revisar outro item sem bloqueio C75 |
+
+## Sessão 2026-09-30 — C84: administração de cupons
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Verificar criação, edição, desativação, limites e preservação do desconto de pedidos já aceitos |
+| Mudanças | A interface administrativa e seus cenários Playwright cobrem cadastro, edição, código imutável, validade, mínimo, limites, uso e desativação. Adicionado `OrderLifecycleIT.changingCouponRulesDoesNotRewriteAnAcceptedOrderSnapshot`, que grava um pedido com cupom, altera posteriormente tipo/valor/estado ativo da regra e confirma que código e valores históricos permanecem iguais |
+| Verificação | `GOMAXPROCS=1 ./backend/mvnw -f backend/pom.xml -Dit.test=OrderLifecycleIT#changingCouponRulesDoesNotRewriteAnAcceptedOrderSnapshot -DargLine=-Xint verify`: unitários 122/122 e IT focado 1/1 passaram; o comando parou no Spotless por uma quebra de linha, corrigida em seguida. `spotless:check`, `docs:check` (25 Markdown), `git diff --check` e `aislop scan --changes` (100/100, 272 arquivos, zero findings) passaram depois do ajuste. Frontend `scripts/verify.sh frontend` anterior: unitários 30/30, build SSR e Playwright padrão 13/13; `CouponAdminApiIT` incluído no gate backend anterior 181/181 |
+| Limite | Verificação visual usa E2E mockado; regras e persistência exercitadas pelos ITs PostgreSQL. Não alego CI remoto nem merge. Sem commit/PR/push/merge |
+| Próximo passo | C82 depende de C79/C79a, ainda bloqueados em cadeia por C75; escolher a próxima fatia que não atravesse essa dependência |
+
+## Sessão 2026-09-30 — auditoria de dependências do plano mestre
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Reconciliar estados históricos de C00a/C02 e verificar a elegibilidade real das próximas fatias |
+| Mudanças | Revalidado C00a no checkout atual: origin `https://github.com/Gaalbu/de-la-do-para.git` (repo PUBLIC), caminho autorizado, branch e versões Git 2.43.0, Docker Compose 5.5.1, JDK 25.0.4, Node 22.23.2 e npm 12.0.2. Conferidos guia, templates, exemplo e matriz de C02; seis áreas de spec, critérios rastreáveis, política atômica e separação entre verificação/validação estão documentados. C00a/C02 marcados concluídos conforme evidência local e merges registrados. C84 voltou a pendente porque a dependência C32 continua sem checkbox de conclusão e registra política de uso/reembolso aguardando aprovação. Para C03, oito candidatos do Commons têm autoria/licença conferidas e limites de representação registrados em `docs/design/assets.md`; plano, registro de Q01 e C96b foram alinhados à decisão D49 (loop vertical até 30 s, sem legendas). A proposta de distribuição de cenas/tempos está registrada, mas aguarda revisão. Fotos e protótipo concreto também aguardam revisão visual |
+| Verificação | `gh repo view Gaalbu/de-la-do-para` confirmou owner/URL/visibilidade pública; `docs:check` validou 25 Markdown na sessão anterior. Busca de dependências abertas identificou C03 como trabalho elegível que ainda requer revisão visual; C04 exige sandbox real, sem credenciais atuais; itens posteriores dependem de políticas/tarefas pendentes |
+| Limite | C03 permanece sujeito à curadoria de assets e revisão do usuário; C04 não é tratado como homologado por evidência documental. Nenhum arquivo de mídia foi adicionado ao app. Sem commit/PR/push/merge |
+| Próximo passo | Revisar visualmente a shortlist e os limites de uso de `docs/design/assets.md` e o protótipo concreto; C03 e Q01 permanecem abertos até aprovação. C84 só poderá ser fechado após C32 |
+
+## Sessão 2026-09-30 — C03: protótipo visual para revisão
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Preparar uma prévia visual concreta das jornadas C03 e expor os candidatos licenciados para decisão informada |
+| Mudanças | Criado `docs/design/prototype.html` com catálogo, produto, checkout, acompanhamento, administração e galeria das oito imagens Commons. Fotos carregam das páginas públicas apenas nesta prévia, com créditos/licenças junto às imagens; não foram copiadas para o projeto/app. Valores e estados são demonstrativos, e não há cotação, persistência ou envio de formulário. `brief.md` e C03 apontam para o artefato. Corrigidos em D43/D46/D47/C03/Q01 os estados desatualizados: direção/paleta/Fraunces+Inter aprovadas, enquanto ativos, tempos de cena e protótipo aguardam revisão. Contraste pequeno de terracota foi removido dos rótulos; foco de teclado e salto ao conteúdo foram incluídos. |
+| Verificação | Prévia servida localmente somente em `127.0.0.1:4173`; inspeção visual no navegador em catálogo, checkout, galeria de artesanato e admin. As oito imagens carregaram na galeria; a navegação por teclado expôs o link de salto. `prettier --write` e `--check docs/design/prototype.html`, `docs:check` (25 Markdown), `git diff --check` e `aislop scan --changes --json` (100/100, zero achados) passaram. |
+| Limite | Solicitação de emulação mobile por CDP foi recusada pela política do navegador neste localhost; não tentei alternativa. Responsividade consta no CSS (breakpoints 800/560 px), mas não há captura visual mobile. C03/Q01 continuam abertos até o usuário revisar candidatos, distribuição de tempos e telas. Sem commit/PR/push/merge. |
+| Próximo passo | Revisar `docs/design/prototype.html` e escolher manter as oito fotos ilustrativas ou usar somente fotos de alimentos com cartões tipográficos no artesanato; registrar ajustes de layout/tempos. Validar visualmente mobile quando autorizado. |
+
+## Sessão 2026-09-30 — C04: revalidação documental
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Atualizar limites de recuperação Asaas e elegibilidade de frete/etiqueta Melhor Envio com documentação oficial |
+| Mudanças | Asaas: listagem de cobranças por referência/sessão é reconciliação pontual, pois a referência desaconselha polling contínuo; confirmação sandbox recebe ID de cobrança/pagamento, não `checkout.id`; ausência de busca/idempotência de checkout e tratamento `UNKNOWN` permanecem explícitos. Melhor Envio: especificados modos de seguro por produto/volume, campos ajustados a persistir, e limite Azul Cargo entre cotação e etiqueta comercial com NF-e. Roteiro atualizado sem executar operação de sandbox |
+| Verificação | Fontes oficiais Asaas e Melhor Envio revisadas em 30/09/2026; `npm --prefix frontend run docs:check`, `git diff --check` e `aislop scan --changes --json` executados após edição |
+| Limite | C04 continua parcial: sem contas/credenciais, webhook via túnel, cobrança, reembolso, cotação ou etiqueta reais. Nenhuma homologação alegada. Sem commit/PR/push/merge |
+| Próximo passo | Obter contas sandbox para executar o roteiro opt-in; paralelamente, aguardar revisão visual de C03 já solicitada |
+
+## Sessão 2026-09-30 — C05: reconciliação do registro de arquitetura
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Conferir critérios e estado dos ADRs de arquitetura contra o plano mestre |
+| Mudanças | Confirmado que o PR #5 (`docs(architecture): record runtime and consistency decisions`) foi integrado em `298f4d9`. ADRs 0001–0005 cobrem módulos/transações, outbox, sessões/CSRF, SSR e perfis/túnel; estados propostos continuam identificados. ADR-0005 foi alinhado à evidência: perfil local implementado em C08, sandbox permanece opt-in e não homologado. C05 marcado concluído no plano sem encerrar perguntas comerciais ou técnicas pendentes |
+| Verificação | `gh pr view 5 --repo Gaalbu/de-la-do-para` confirmou estado MERGED e commit `298f4d929574033d183fc00a574044f88fd15cf6`; conteúdo dos ADRs conferido contra critérios C05 e decisões D61/D62/D64/A03/A05/A07; sem dependência circular indicada |
+| Limite | O aceite documental de C05 não aprova as propostas mantidas nos ADRs 0004/0005 nem homologa integrações externas de C04. Sem commit/PR/push/merge nesta sessão |
+| Próximo passo | C03 aguarda revisão visual do usuário; C04 aguarda contas para o spike opt-in. Continuar por uma tarefa sem essas dependências após reavaliar o plano |
+
+## Sessão 2026-09-30 — C72: ciclo local de retirada
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Implementar e verificar emissão, exibição segura e consumo único do código de retirada conforme D71 |
+| Mudanças | `PickupService`, `PickupController`, `PickupCodeVault`, persistência V35 e rotas OpenAPI no worktree implementam prontidão/retirada; código aleatório fica cifrado, é visível apenas ao dono autenticado ou token do pedido enquanto pronto, e é removido após confirmação. Ações são administrativas e conciliadas com transições/histórico via porta pública de `orders` |
+| Verificação | `GOMAXPROCS=1 ./backend/mvnw -f backend/pom.xml -Dit.test=PickupLifecycleIT -DargLine=-Xint verify`: BUILD SUCCESS; 122 testes unitários e 7/7 IT de retirada passaram em PostgreSQL 18.6/Testcontainers; Spotless e Checkstyle sem violações. O IT cobre proprietário/conta alheia, autorização admin, código incorreto/repetido, pedido não pago/de entrega, reemissão e corrida cancelamento/retirada |
+| Limite | Verificação local neste worktree; sem CI remoto ou PR/merge. Calendário não calcula data final e permanece configurável conforme C25; não foi alegada operação física real |
+| Próximo passo | C70/C71 exigem conta e evidência sandbox C04; C73 depende da expedição/tracking. C03 continua aguardando revisão visual do usuário |
+
+## Sessão 2026-09-30 — C75: instruções seguras para retirada pronta
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Completar a mensagem `READY_FOR_PICKUP` com instruções aprovadas sem transmitir o código de retirada |
+| Mudanças | `OrderNotificationRepository` lê somente `label` e `window` do snapshot imutável para eventos `READY_FOR_PICKUP` de pedidos `PICKUP`. As versões texto/HTML informam ponto e horário e orientam consultar o código apenas na tela segura; HTML escapa os valores. Sem token, código, URL ou endereço de entrega. `SPEC-notifications` agora distingue C72/D71 de despacho/tracking ainda pendentes |
+| Verificação | RED: o novo cenário falhou porque os campos logísticos não eram enviados. GREEN: `GOMAXPROCS=1 ./backend/mvnw -f backend/pom.xml -DargLine=-Xint -Dit.test=OrderNotificationIT test-compile failsafe:integration-test failsafe:verify`: 10/10 IT passaram com PostgreSQL 18.6 e Mailpit 1.31.2 isolados |
+| Limite | Link convidado continua bloqueado por decisão de transporte seguro do token/ORD-Q02; avisos de despacho e tracking dependem de C70/C71/C73. A caixa de teste não comprova entrega externa. Sem CI remoto, PR ou merge |
+| Próximo passo | Gate backend completo foi repetido com sucesso; manter C75 parcial pelas dependências de link convidado e avisos de despacho/tracking, então selecionar a próxima tarefa pendente elegível |
+
+## Sessão 2026-09-30 — C75: gate completo do backend concluído
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Repetir o gate completo do backend após reproduzir isoladamente `EventingWorkerConfigIT` |
+| Verificação | `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS` em 6min34s; 122 testes unitários (0 falhas/erros), 183 integrações Failsafe (0 falhas/erros), 4 regras de arquitetura, Spotless limpo e Checkstyle com 0 violações. O teste isolado `-Dit.test=EventingWorkerConfigIT verify` também passou (5/5 IT). `git diff --check` limpo. |
+| Diagnóstico | No suite completo o contexto worker mantido entre classes continuou tentando reconectar a um broker já encerrado pelo lifecycle do Testcontainers, gerando logs repetidos; apesar disso, os relatórios Failsafe fecharam sem falhas. O teste isolado confirmou que o broker Kafka 4.3.1 e o contexto worker passam quando usados juntos. Não foi alterado código de teste, pois o gate completo terminou verde. |
+| Limite | Evidência é local e deste worktree; nenhuma afirmação de CI remoto, PR, merge ou homologação externa. C75 segue parcial: link de acesso convidado depende da decisão CHK-Q02/ORD-Q02 sobre transporte do token; notificações de despacho/tracking dependem de C70/C71/C73. |
+| Próximo passo | Preparar revisão da proposta A13 e resposta a ORD-Q02 para desbloquear C75/C78; C73 também aguarda C70/C71. |
+
+## Sessão 2026-09-30 — proposta de transporte seguro para acesso convidado
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Investigar CHK-Q02/ORD-Q02 e preparar uma alternativa segura para o link de pedido convidado que bloqueia C75/C78 |
+| Mudanças | Registrada proposta A13 em `docs/decisions.md`, `SPEC-identity` e `SPEC-notifications`: código de troca aleatório de uso único por POST same-origin, troca por autorização temporária restrita a um pedido, sem criar sessão/associar conta e sem segredo em URL/redirect/log/telemetria. Incluídos requisitos de hash, outbox cifrada, consumo atômico, resposta uniforme e rate limit. A11 documentada como tendo exposição residual em histórico/telemetria do browser. |
+| Verificação | `npm --prefix frontend run docs:check`: 25 Markdown OK, nenhum link quebrado; `git diff --check` limpo. |
+| Limite | A13 é proposta técnica pendente, não decisão nem implementação. Ainda requer aprovação e parâmetros de validade/rate limit; ORD-Q02 continua aberta e C75/C78 continuam bloqueadas para acesso convidado. Não foi enviada mensagem nem feita ação externa. |
+| Próximo passo | Solicitar decisão sobre A13 e ORD-Q02 antes de implementar transporte/link convidado; outras trilhas só avançam quando dependências estiverem fechadas. |
+
+## Sessão 2026-09-30 — C75: gates de documentação e revisão do backend
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Continuar a verificação completa do backend para as instruções seguras de retirada pronta |
+| Verificação | `npm --prefix frontend run docs:check` passou (25 Markdown); `git diff --check` sem erros; `npx --yes aislop@latest scan --changes --json` reportou score 100/100 e zero achados. O backend em modo interpretado passou por 122 unitários, 4 regras de arquitetura e os relatórios de integração concluídos, incluindo `OrderNotificationIT` (10/10), `PickupLifecycleIT` (7/7) e outros relatórios sem falhas. |
+| Limite | `./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify` não completou: após mais de cinco minutos sem avançar do `EventingWorkerConfigIT`, o broker Kafka do Testcontainers seguia indisponível e o processo repetia reconexões; execução interrompida. Gate completo de backend, portanto, permanece sem resultado conclusivo. Uma tentativa anterior do launcher também sofreu SIGSEGV na varredura Plexus/ZipFile; o log/core gerado foi preservado. |
+| Próximo passo | Investigar por que o broker do `EventingWorkerConfigIT` não permaneceu acessível neste ambiente e repetir o gate completo; C75 segue parcial enquanto link convidado e mensagens de entrega/tracking dependerem das decisões e tarefas registradas acima. Sem commit/PR/push/merge. |
+
+## Sessão 2026-09-30 — revalidação local de identidade e merge de carrinho
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Revalidar C76/C77/C80/C81/C81a com os critérios de cadastro, Mailpit, recuperação e combinação em duas abas |
+| Verificação backend | `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint -Dit.test=AccountRegistrationIT,IdentityMailIT,CartMergeApiIT test-compile failsafe:integration-test failsafe:verify`: BUILD SUCCESS; 16/16 integrações passaram com PostgreSQL 18.6 e Mailpit 1.31.2. `failsafe-summary.xml`: 16 concluídas, 0 erros/falhas. |
+| Verificação frontend | `GOMAXPROCS=1 npm run build` passou (SSR + uma rota prerenderizada); build sem limite de paralelismo abortou no binário esbuild com SIGBUS. Seis Playwright E2E simulados passaram (cadastro/verificação, recuperação/reset, merge entre abas). `e2e:local` live com API real, PostgreSQL local, worker e Mailpit passou 2/2: cadastro→e-mail→verificação→login CUSTOMER e recuperação→reset→410 ao reutilizar token. `npm run lint`, `npm run format:check`, `npm run test:ci` (30/30), `npm run contracts:check` (OpenAPI válida com 8 avisos já existentes, schemas de eventos aprovados e geração de cliente executada), `tsc --noEmit` e `npm run docs:check` (25 arquivos) passaram; `git diff --check` limpo. `aislop scan --changes --json`: score 100, zero achados em 272 arquivos suportados. |
+| Limites | A prova live foi estritamente local; processos temporários de API/worker foram encerrados, containers Compose compartilhados foram preservados. Nenhum sandbox real, CI remoto, PR ou merge. C75 continua parcial para link convidado e eventos de despacho/tracking; C78/C81b dependem do modelo/prova de acesso convidado e das tarefas logísticas ainda abertas. A proposta A13 continua proposta pendente, não decisão aprovada. |
+| Proposta preparada | A13 agora tem valores revisáveis: código de 8 caracteres Crockford Base32, 15 min após ACK SMTP, limite de solicitação conforme D73 (3/h/IP+e-mail), 5 tentativas inválidas e autorização de 15 min mantida em memória e limitada ao pedido. ORD-Q02 recomenda token principal enquanto o pedido estiver aberto + 90 dias após conclusão. Esses valores não foram aplicados ao sistema. |
+| Próximo passo | Solicitar aprovação/alteração de A13 e resposta a ORD-Q02 antes de implementar C75/C78; seguir C70/C71/C73 somente após a evidência opt-in de C04 ou autorização para o spike com as contas sandbox. |
+
+## Sessão 2026-09-30 — C03: revisão visual responsiva do protótipo
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Corrigir achados visuais verificáveis no protótipo C03 e validar a composição desktop/mobile |
+| Mudanças | `docs/design/prototype.html` aplica `overflow-x: clip` em `html` e `body`, remove rótulos numerados repetidos dos cabeçalhos e encurta as duas ações demonstrativas para caberem em uma linha; títulos, categorias e avisos de conteúdo demonstrativo foram preservados. |
+| Verificação | Chromium headless renderizou o arquivo local em 320, 375, 390, 414, 768 e 1440 px; `scrollWidth` de `html`/`body` igual à viewport nos seis tamanhos. Ambas as ações mantêm uma linha. Nas renderizações a 1440 e 390 px, as nove imagens carregaram e não houve erros de JavaScript. |
+| Limite | Evidência visual é local; fotos, storyboard e direção final ainda aguardam revisão do usuário. C03/Q01 permanecem abertas; nenhuma imagem foi copiada ao app. Sem PR/merge. |
+| Próximo passo | Solicitar/receber revisão visual da shortlist, do protótipo e dos tempos do storyboard; retomar outras fatias quando suas decisões/dependências estiverem disponíveis. |
+
+## Sessão 2026-09-30 — preparação documental de C88
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Conferir as referências V01–V22 contra os arquivos de teste atuais e deixar explícitas as lacunas de evidência |
+| Mudanças | `docs/traceability.md` ganhou uma pré-auditoria V01–V22 que distingue teste localizado, cobertura parcial e lacuna. `SPEC-checkout.md` e `SPEC-payments.md` tiveram referências inexistentes/desatualizadas corrigidas, inclusive comando Maven com classes presentes; cobertura parcial e lacunas para falha/replay Kafka, evento fora de ordem, cancelamento concorrente, retorno hospedado e reembolso agora estão explícitas. |
+| Verificação | Inspeção estática das matrizes/specs e dos métodos fonte em `backend/src/test`; confirmados, entre outros, `StockReservationIT`, `PurchaseAcceptanceIT`, `EventingWorkerConfigIT`, `PaymentOutcomeIT`, `OrderAccessIT`, `PackageComposerTest`, `PaymentIntentIT` e `PaymentProviderContract`; confirmada ausência de `OrderCancellationIT`, adapter Asaas e testes de recuperação/reembolso para V15/V22/PAY-010. Nenhum teste foi executado nesta sessão. |
+| Limite | C88 permanece aberta: cobertura parcial ou fonte de teste presente não substitui execução dos gatilhos e asserções requeridos. Dependências C68, C70, C79a, C82/C82a/C82b e C87 seguem incompletas; V20 pertence a C94. Sem PR/merge. |
+| Próximo passo | Implementar e provar as dependências operacionais/logísticas pendentes e fechar os gaps V15/V16/V22; depois executar o gate C88 completo. |
+
+## Sessão 2026-09-30 — reconciliação de status do plano (C00b, C06–C14)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Revalidar caixas abertas de clone/bootstrap/gates contra checkout, evidência histórica e estado remoto atual |
+| Mudanças | `docs/PLANO-MESTRE.md` agora marca C00b, C06–C12, C13, C13a–C13c e C14 como concluídas, com PRs/SHAs e escopo da prova. |
+| Verificação | `gh repo view` confirmou `Gaalbu/de-la-do-para` PUBLIC e branch padrão `main`; checkout está em `/home/gaalbu/codigos/de-la-do-para`, origin aponta ao repo correto, e o blob local `origin/main:docs/PLANO-MESTRE.md` coincide com o SHA do arquivo servido pelo GitHub. Consulta GraphQL confirmou PRs #1–#16 e #25 merged; `gh pr view 26` confirmou C14 merged (`2edd714`). CI do PR #15 comprova docs-only (5/5); PR #25 CI comprova 7/7. `gh run view 36483482837` mostra falha real do backend e `quality-gate` falho; `gh run view 36483450484` mostra job backend cancelado e `quality-gate` falho. O histórico de C00b registra hash inicial copiado e ausência de conteúdo/histórico LAPES. `compose.yml` atual mantém os quatro serviços e checks de saúde documentados em C08. |
+| Limite | As consultas não alteraram estado remoto nem puxaram/mesclaram commits. Nenhum teste local foi executado nesta sessão; foram inspecionados resultados remotos já concluídos. C03 aguarda revisão visual e C04 aguarda sandbox; G0/G1 externo não foram declarados fechados. |
+| Próximo passo | Continuar pelas dependências C03/C04 e pelas pendências logísticas/financeiras; não confundir os gates locais/remotos concluídos com homologação externa. |
+## Sessão 2026-10-03 — auditoria de C45 e dependência C04
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Revalidar o estado documental de C45 contra a aprovação operacional e a dependência C04 |
+| Mudanças | Corrigido em `docs/PLANO-MESTRE.md` o estado desatualizado que dizia que lease, backoff, tentativas e retenção ainda eram propostas. A aprovação de 2026-09-24 consta em `specs/SPEC-eventing.md` e `docs/adr/0002-outbox-idempotencia.md`; a spec cobre envelope/schema, pontos de queda, commit/ACK, ordenação, deduplicação, replay/quarentena e limites sem exactly-once global. C45 segue aberto, pois o próprio plano exige C04 e a homologação sandbox real continua pendente. |
+| Verificação | `npm --prefix frontend run docs:check` passou (25 Markdown, sem links quebrados); `npm --prefix frontend run contracts:check` passou (schema/exemplos, geração de cliente e TypeScript; 8 avisos Redocly conhecidos); diff do contrato/spec/ADR limpo. `.env` existe, mas não contém as credenciais reconhecidas para o spike Asaas/Melhor Envio. |
+| Limite | Nenhuma chamada aos provedores foi feita. Aprovação de requisitos C45 não comprova integração externa nem fecha a dependência C04. Sem commit/PR/push/merge. |
+| Próximo passo | Retomar uma tarefa independente das áreas do worktree principal; C04 requer credenciais de sandbox configuradas e execução do roteiro opt-in antes de C45 poder ser fechado. |
