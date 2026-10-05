@@ -42,7 +42,7 @@
                 <strong>Sem frete</strong>
                 <button
                   type="button"
-                  (click)="selectPickup(option)"
+                  (click)="reviewPickup(option)"
                   [disabled]="checkout.selectedPickupOption()?.id === option.id"
                 >
                   {{
@@ -72,7 +72,7 @@
                 <strong>{{ formatPrice(option.priceCents) }}</strong>
                 <button
                   type="button"
-                  (click)="select(option)"
+                  (click)="reviewDelivery(option)"
                   [disabled]="checkout.selectedOption()?.id === option.id"
                 >
                   {{ checkout.selectedOption()?.id === option.id ? 'Selecionada' : 'Selecionar' }}
@@ -89,3 +89,72 @@
     }
   }
 </main>
+@if (purchaseSelection(); as selection) {
+  <section class="purchase" aria-labelledby="purchase-title">
+    <h2 id="purchase-title">Revise e confirme</h2>
+    <label for="contact-email">E-mail para acompanhar o pedido</label>
+    <input id="contact-email" name="contactEmail" type="email" [(ngModel)]="email" required />
+    @if (selection.mode === 'DELIVERY') {
+      <div class="address-fields">
+        <label for="recipient">Nome de quem recebe</label>
+        <input id="recipient" name="recipient" [(ngModel)]="recipientName" required />
+        <label for="street">Rua</label>
+        <input id="street" name="street" [(ngModel)]="street" required />
+        <label for="number">Número</label>
+        <input id="number" name="number" [(ngModel)]="number" required />
+        <label for="complement">Complemento</label>
+        <input id="complement" name="complement" [(ngModel)]="complement" />
+        <label for="district">Bairro</label>
+        <input id="district" name="district" [(ngModel)]="district" required />
+        <label for="city">Cidade</label>
+        <input id="city" name="city" [(ngModel)]="city" required />
+        <label for="state">UF</label>
+        <input id="state" name="state" maxlength="2" [(ngModel)]="state" required />
+      </div>
+    }
+    <label for="coupon-code">Cupom (opcional)</label>
+    <div class="coupon-line">
+      <input id="coupon-code" name="couponCode" [(ngModel)]="couponCode" />
+      <button type="button" (click)="refreshSummary()" [disabled]="summaryLoading()">
+        Atualizar resumo
+      </button>
+    </div>
+    @if (summaryLoading()) {
+      <p role="status">Atualizando valores…</p>
+    } @else if (checkout.purchaseError()) {
+      <p role="alert">{{ checkout.purchaseError() }}</p>
+    }
+    @if (checkout.summary(); as summary) {
+      <dl class="summary">
+        @for (line of summary.lines; track line.skuId) {
+          <div>
+            <dt>{{ line.quantity }} × {{ line.productName }}</dt>
+            <dd>{{ formatPrice(line.lineTotalCents) }}</dd>
+          </div>
+        }
+        <div>
+          <dt>{{ summary.fulfillment.label }}</dt>
+          <dd>{{ formatPrice(summary.shippingCents) }}</dd>
+        </div>
+        @if (summary.discountCents > 0) {
+          <div>
+            <dt>Desconto</dt>
+            <dd>−{{ formatPrice(summary.discountCents) }}</dd>
+          </div>
+        }
+        <div class="total">
+          <dt>Total</dt>
+          <dd>{{ formatPrice(summary.totalCents) }}</dd>
+        </div>
+      </dl>
+      <button
+        type="button"
+        class="accept"
+        (click)="accept()"
+        [disabled]="checkout.accepting() || !canAccept()"
+      >
+        {{ checkout.accepting() ? 'Registrando compra…' : 'Aceitar compra' }}
+      </button>
+    }
+  </section>
+}

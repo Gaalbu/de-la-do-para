@@ -157,4 +157,84 @@ describe('CheckoutService', () => {
     expect(service.selectedPickupOption()).toEqual(option);
     expect(service.selectedOption()).toBeNull();
   });
+
+  it('loads the server price summary for the chosen pickup before purchase', async () => {
+    service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    const selection = service.loadSummary({ mode: 'PICKUP', pickupOptionId: 'PONTO-DEMO-BELEM' });
+    const request = http.expectOne((candidate) => candidate.urlWithParams.includes('/summary'));
+    expect(request.request.params.get('mode')).toBe('PICKUP');
+    expect(request.request.params.get('pickupOptionId')).toBe('PONTO-DEMO-BELEM');
+    request.flush({
+      snapshotId: 'snapshot-1',
+      snapshotVersion: 3,
+      lines: [],
+      fulfillment: {
+        mode: 'PICKUP',
+        optionId: 'PONTO-DEMO-BELEM',
+        label: 'Ponto de demonstração — Belém',
+        shippingCents: 0,
+        preparationDays: 1,
+        deliveryDays: null,
+      },
+      couponCode: null,
+      subtotalCents: 2000,
+      shippingCents: 0,
+      discountCents: 0,
+      totalCents: 2000,
+      summaryVersion: 'summary-hash',
+    });
+
+    expect(await selection).toBe(true);
+    expect(service.summary()?.totalCents).toBe(2000);
+  });
+
+  it('keeps the idempotency key when an acceptance request can be retried', async () => {
+    service.snapshot.set({ snapshotId: 'snapshot-1', snapshotVersion: 3 });
+    service.summary.set({
+      snapshotId: 'snapshot-1',
+      snapshotVersion: 3,
+      lines: [],
+      fulfillment: {
+        mode: 'PICKUP',
+        optionId: 'PONTO-DEMO-BELEM',
+        label: 'Ponto de demonstração — Belém',
+        shippingCents: 0,
+        preparationDays: 1,
+        deliveryDays: null,
+      },
+      couponCode: null,
+      subtotalCents: 2000,
+      shippingCents: 0,
+      discountCents: 0,
+      totalCents: 2000,
+      summaryVersion: 'summary-hash',
+    });
+    const intent = {
+      mode: 'PICKUP' as const,
+      pickupOptionId: 'PONTO-DEMO-BELEM',
+      email: 'ana@example.com',
+    };
+
+    const first = service.acceptPurchase(intent);
+    const firstRequest = http.expectOne('/api/v1/checkout/snapshot-1/purchase');
+    const key = firstRequest.request.headers.get('Idempotency-Key');
+    expect(key?.length).toBeGreaterThanOrEqual(16);
+    firstRequest.flush({ codigo: 'CHECKOUT_010' }, { status: 409, statusText: 'Conflict' });
+    expect(await first).toBeNull();
+
+    const retry = service.acceptPurchase(intent);
+    const retryRequest = http.expectOne('/api/v1/checkout/snapshot-1/purchase');
+    expect(retryRequest.request.headers.get('Idempotency-Key')).toBe(key);
+    retryRequest.flush({
+      orderId: 'order-1',
+      status: 'PENDING_PAYMENT',
+      totalCents: 2000,
+      reservationExpiresAt: null,
+      accessToken: 'guest-order-token',
+      replayed: false,
+    });
+
+    expect((await retry)?.orderId).toBe('order-1');
+    expect(window.sessionStorage.getItem('dlp.order-token.order-1')).toBe('guest-order-token');
+  });
 });
