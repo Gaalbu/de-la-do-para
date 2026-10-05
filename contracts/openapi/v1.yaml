@@ -97,6 +97,85 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/accounts/verify:
+    post:
+      operationId: verifyAccountEmail
+      summary: Confirmar e-mail com token single-use
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/VerifyEmailRequest'}
+      responses:
+        '200':
+          description: E-mail verificado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VerifyEmailResponse'}
+        '400':
+          description: Token ausente ou inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '410':
+          description: Token expirado ou já utilizado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/accounts/recovery:
+    post:
+      operationId: requestAccountRecovery
+      summary: Solicitar recuperação de acesso sem enumerar contas
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RecoveryRequest'}
+      responses:
+        '202':
+          description: Solicitação aceita, independentemente da existência da conta
+        '400':
+          description: E-mail inválido
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '429':
+          description: Limite de recuperação excedido
+          headers:
+            Retry-After:
+              schema: {type: integer}
+              description: Segundos até nova solicitação permitida
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/accounts/reset:
+    post:
+      operationId: resetAccountPassword
+      summary: Redefinir senha com token single-use
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ResetPasswordRequest'}
+      responses:
+        '200':
+          description: Senha redefinida e sessões anteriores invalidadas
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResetPasswordResponse'}
+        '400':
+          description: Token ou nova senha inválidos
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '410':
+          description: Token expirado ou já utilizado
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/sessions:
     post:
       operationId: login
@@ -1374,6 +1453,40 @@ components:
         role:
           type: string
           enum: [CUSTOMER, ADMIN]
+        cartMergeRequired:
+          type: boolean
+          description: Indica que o login encontrou dois carrinhos e exige escolha explícita.
+    VerifyEmailRequest:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: {type: string, minLength: 1, maxLength: 128}
+    VerifyEmailResponse:
+      type: object
+      additionalProperties: false
+      required: [emailVerified]
+      properties:
+        emailVerified: {type: boolean}
+    RecoveryRequest:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email: {type: string, format: email, maxLength: 254}
+    ResetPasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [token, newPassword]
+      properties:
+        token: {type: string, minLength: 1, maxLength: 128}
+        newPassword: {type: string, minLength: 8, maxLength: 72}
+    ResetPasswordResponse:
+      type: object
+      additionalProperties: false
+      required: [passwordChanged]
+      properties:
+        passwordChanged: {type: boolean}
     CsrfResponse:
       type: object
       required: [token]

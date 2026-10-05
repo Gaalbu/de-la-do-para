@@ -1,5 +1,8 @@
 package br.com.deladopara.identity.config;
 
+import br.com.deladopara.identity.application.SecretCipher;
+import java.security.SecureRandom;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +14,16 @@ import org.springframework.session.web.http.DefaultCookieSerializer;
 @Configuration
 @EnableConfigurationProperties(IdentityProperties.class)
 public class IdentityConfig {
+
+    @Bean
+    SecureRandom secureRandom() {
+        return new SecureRandom();
+    }
+
+    @Bean
+    SecretCipher secretCipher(@Value("${app.data-encryption-key}") String key, SecureRandom random) {
+        return new SecretCipher(key, random);
+    }
 
     @Bean
     PasswordEncoder passwordEncoder(IdentityProperties props) {

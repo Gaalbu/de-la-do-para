@@ -1,0 +1,15 @@
+spring:
+  mail:
+    host: localhost
+    port: 11025
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+app:
+  data-encryption-key: dGVzdC1vbmx5LWtleS0zMi1ieXRlcy1leGFjdGx5ISE=
+  identity:
+    bcrypt-strength: 10

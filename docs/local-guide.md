@@ -24,6 +24,12 @@ docker compose --profile local ps          # todos healthy
 docker compose --profile local down        # preserva volumes e dados
 ```
 
+Antes de iniciar a API, preencha `APP_DATA_ENCRYPTION_KEY` no `.env` com uma
+chave Base64 de 32 bytes (gere uma com `openssl rand -base64 32`). A chave não
+tem valor padrão e deve permanecer estável enquanto houver mensagens cifradas
+na fila de identidade; trocar a chave antes de o worker enviar as mensagens
+pendentes impede a leitura delas.
+
 `down` **não** apaga dados. Reset total (destrutivo, explícito):
 
 ```bash
@@ -38,6 +44,15 @@ parâmetros `APP_EVENTING_BOOTSTRAP_SERVERS`, `APP_EVENTING_TOPIC`,
 `APP_EVENTING_LEASE`, `APP_EVENTING_BATCH_SIZE` e `APP_EVENTING_POLL_DELAY`.
 Eles não têm valores padrão enquanto a C45 não aprovar lease e polling; o
 worker falha cedo se a configuração estiver incompleta.
+
+O mesmo profile executa o worker de verificação e recuperação quando
+`IDENTITY_MAIL_WORKER_ENABLED=true`. Ele usa `APP_DATA_ENCRYPTION_KEY`, envia
+para o SMTP Mailpit (`localhost:11025` localmente), tenta novamente após falha e
+remove o ciphertext da fila quando o relay aceita. Esse aceite não prova a
+entrega na caixa postal; uma queda depois do aceite pode gerar uma duplicata.
+Configure `APP_FRONTEND_BASE_URL` para a origem frontend que atende os links de
+verificação e recuperação. Os tokens expiram em 30 e 15 minutos,
+respectivamente, e esses prazos são configuráveis.
 
 O perfil `worker` expõe no Actuator, sem labels de evento ou payload, as
 métricas `dlp.eventing.outbox.pending.count`,

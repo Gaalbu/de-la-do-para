@@ -36,17 +36,25 @@ spring:
       path: /
       max-age: 43200
   mail:
-    host: localhost
-    port: 11025
+    host: ${NOTIFICATIONS_MAIL_HOST:localhost}
+    port: ${NOTIFICATIONS_MAIL_PORT:11025}
+    username: ${NOTIFICATIONS_MAIL_USERNAME:}
+    password: ${NOTIFICATIONS_MAIL_PASSWORD:}
     properties:
-      mail.smtp.auth: false
-      mail.smtp.starttls.enable: false
+      mail.smtp.auth: ${NOTIFICATIONS_MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${NOTIFICATIONS_MAIL_SMTP_STARTTLS:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 app:
+  data-encryption-key: ${APP_DATA_ENCRYPTION_KEY}
   media:
     directory: ${APP_MEDIA_DIRECTORY:./data/media}
   identity:
     bcrypt-strength: 12
+    verification-ttl: ${IDENTITY_VERIFICATION_TTL:PT30M}
+    recovery-ttl: ${IDENTITY_RECOVERY_TTL:PT15M}
 
 management:
   endpoints:
@@ -94,6 +102,25 @@ payments:
     enabled: ${PAYMENTS_WORKER_ENABLED:false}
     batch-size: ${PAYMENTS_WORKER_BATCH_SIZE:10}
     poll-delay: ${PAYMENTS_WORKER_POLL_DELAY:PT1S}
+
+identity:
+  mail:
+    worker:
+      enabled: ${IDENTITY_MAIL_WORKER_ENABLED:false}
+      batch-size: ${IDENTITY_MAIL_WORKER_BATCH_SIZE:10}
+      poll-delay: ${IDENTITY_MAIL_WORKER_POLL_DELAY:PT2S}
+      retry-delay: ${IDENTITY_MAIL_WORKER_RETRY_DELAY:PT30S}
+      lease: ${IDENTITY_MAIL_WORKER_LEASE:PT2M}
+    from: ${IDENTITY_MAIL_FROM:no-reply@deladopara.local}
+    frontend-base-url: ${APP_FRONTEND_BASE_URL:http://localhost:4200}
+
+notifications:
+  mail:
+    worker:
+      enabled: ${ORDER_NOTIFICATIONS_MAIL_WORKER_ENABLED:false}
+      batch-size: ${ORDER_NOTIFICATIONS_MAIL_WORKER_BATCH_SIZE:10}
+      poll-delay: ${ORDER_NOTIFICATIONS_MAIL_WORKER_POLL_DELAY:PT2S}
+      lease: ${ORDER_NOTIFICATIONS_MAIL_WORKER_LEASE:PT2M}
 
 management:
   endpoints:

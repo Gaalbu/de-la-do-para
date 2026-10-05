@@ -107,7 +107,7 @@ Cada critério em §9 aponta para teste nomeado. Relógio controlado (`Clock.fix
 | IDN-007 CSRF ausente → 403 | `SessionSecurityTest.csrfMissing` | sessão válida sem header XSRF | POST /api/v1/accounts (ou DELETE session) | 403 | slice (SecurityMockMvc) |
 | IDN-008 papel admin | `SessionSecurityTest.adminGuard` | sessão cliente | POST /api/v1/admin/accounts (quando existir) / GET admin-only | 403 IDENTITY_008 | slice |
 | IDN-009 logout invalida | `SessionSecurityTest.logoutInvalidates` | sessão válida | DELETE /api/v1/sessions/current → GET /current | 204 + cookie expirado; GET subsequente 401 | IT (session JDBC) |
-| IDN-010 recuperação single-use | `IdentityPersistenceIT.passwordReset` | conta verificada | POST /request-recovery → POST /reset com token → reuse | 202 (sempre), depois 200 primeira vez, 410 reuse | IT |
+| IDN-010 recuperação single-use | `IdentityMailIT.passwordReset` | conta verificada e token da fila de identidade | POST /api/v1/accounts/recovery → POST /api/v1/accounts/reset com token → reuse | 202 (sempre), depois 200 primeira vez, 410 reuse | IT (PostgreSQL real) |
 | IDN-011 convidado isolado | `SessionSecurityTest.guestIsolation` | pedido convidado com token | GET /api/v1/orders/:id sem sessão e sem token → com token → com sessão de outro e-mail | 401/403 sem, 200 com token correto, 403 com sessão de e-mail diferente mas igual ao do pedido | IT (integração com orders em C76) |
 | IDN-012 rate limit login | `SessionSecurityTest.loginRateLimit` | 5 falhas em 15m no mesmo IP/e-mail | 6ª tentativa | 429 IDENTITY_012 com Retry-After | unit (Bucket4j/Caffeine local, sem infra externa) |
 
@@ -119,9 +119,9 @@ O que esta spec não decide — pendência bloqueia só a regra dependente, com 
 
 - OAuth/OIDC/2FA/passkeys — fora de v1; não inferir. Se pedido, nova decisão D__ e ADR.
 - Cadastro de admin: criação local inicial por comando/seed com senha gerada e impressa no log local (C15), sem senha publicada em repo. Política de convite/admin adicional fica para C76.
-- Rate limit exato (valores acima são proposta operacional): 5 tentativas/15m por IP+e-mail para login e 3/h para recovery; confirmar em C15 com teste de limite documentado; sem fechar automaticamente.
+- Rate limit de login permanece proposta: 5 tentativas/15m por IP+e-mail, pendente de decisão. Recuperação foi aprovada em D73: 3 solicitações/h por IP+e-mail.
 - Tamanho mínimo de senha além de 8 e política de complexidade extra pendente de decisão — não escolher silenciosamente.
-- Duração de sessão: idle 30m, absoluto 12h (proposta A04) — confirmar em C15; expiração de token verificação 30m, recuperação 15m (mesma regra).
+- Duração de sessão: idle 30m e absoluto 12h (proposta A04), pendente. D75 aprova TTL de verificação 30m e recuperação 15m; ambos configuráveis.
 - E-mail de remetente/no-reply e template visual — pendente de C04/brand; usar placeholder `no-reply@deladopara.local` + Mailpit em dev, sem alegar envio real.
 - Acesso do admin ao histórico de outros clientes: apenas via papel ADMIN em rotas admin dedicadas; cliente nunca lista pedidos de outro (isolamento por `accountId`).
 - Paginação/filtragem de listagens admin — fora desta spec; quando houver, seguir convenção de `contracts/openapi/v1.yaml`.
@@ -143,13 +143,13 @@ Isolamento: igualdade de e-mail entre `GUEST` e `CUSTOMER` nunca vincula pedidos
 - `accounts.email` único case-insensitive; `CHECK length(email) ≤ 254`; `password_hash` NOT NULL.
 - `verification_tokens.token_hash` único; `expires_at` NOT NULL; `used_at` nullable; `type` ∈ {VERIFY, RECOVERY}.
 - Sessões em `SPRING_SESSION` (JDBC): `creation_time`, `last_access_time`, `max_inactive_interval` coerentes; expiração server-side prevalece sobre cookie.
-- Token em repouso sempre hash SHA-256 (hex) + `BCrypt` não aplicável a token; token em trânsito só via HTTPS; e-mail de verificação contém link com token opaco (não JWT).
+- Hash do token de verificação em `verification_tokens` é SHA-256 (hex); a fila durável armazena apenas o token cifrado com AES-GCM usando chave configurada (`APP_DATA_ENCRYPTION_KEY`) e finalidade própria. Token em trânsito só via HTTPS; link aponta para o frontend com o segredo no fragmento (`#token=...`), que não é enviado em requisição HTTP.
 
 ### 7.3 Transições
 
 | Origem → Destino | Ator | Precondição | Operação atômica | Evento |
 |---|---|---|---|---|
-| — → `UNVERIFIED` | GUEST | e-mail/senha válidos, e-mail não existe | INSERT accounts + INSERT verify token + send mail | `AccountCreated` |
+| — → `UNVERIFIED` | GUEST | e-mail/senha válidos, e-mail não existe | INSERT accounts + INSERT verify token + INSERT encrypted mail outbox atomically | `AccountCreated` |
 | `UNVERIFIED` → `VERIFIED` | GUEST/CUSTOMER | token hash existe, não usado, não expirado | UPDATE accounts.email_verified=true + UPDATE token.used_at | `EmailVerified` |
 | `UNVERIFIED` → `LOCKED` | sistema | 5 falhas de login em 15m | UPDATE accounts.locked_until | — |
 | `VERIFIED` → `RECOVERY_REQUESTED` | CUSTOMER/GUEST | e-mail existe (resposta 202 sempre, para não enumerar) | UPSERT recovery token + send mail se e-mail existe | — |
@@ -167,6 +167,31 @@ Sessão: `ANONYMOUS` → `AUTHENTICATED` no `POST /api/v1/sessions` (rotação d
 - R06: cookie `Secure` exige HTTPS local (C08 já expõe via proxy seguro).
 - R07: isolamento de histórico — `GET /api/v1/orders` sem `ROLE_ADMIN` filtra por `accountId` da sessão; sem sessão → 401; com token de pedido (C76) autoriza só aquele pedido.
 - R08: rate limit local (sem Redis) — 5 login/15m e 3 recovery/h por IP+e-mail; excedido → 429 com `Retry-After`.
+- R09: worker adquire lease em transação curta, envia SMTP fora da transação e marca aceito após resposta positiva do relay; falha/reinício mantém a mensagem durável para retry. Pode haver duplicata se o SMTP aceitar e o processo cair antes de persistir SENT.
+- R10: segredos de verificação e recuperação não aparecem em texto puro no banco, logs, eventos ou métricas. Após aceite SMTP, apagar payload cifrado da fila; token permanece somente como hash para consumo. Verificação expira em 30 minutos e recuperação em 15 minutos (D75); worker estende a expiração no claim para contemplar atraso da fila.
+- R11: a chave mestra Base64 deve decodificar para 32 bytes e é injetada como `APP_DATA_ENCRYPTION_KEY`; nunca fornecer valor padrão em runtime. Derivar chave AES separada por finalidade via HMAC-SHA-256 e autenticar finalidade no AAD.
+- R12: recuperação limita 3 solicitações/h por combinação de IP+e-mail (D73); resposta 202 independe de conta existente. IP considera `remoteAddr` do servidor; `X-Forwarded-For` só deve ser confiado com proxy explícito confiável.
+- R13: após trocar a senha com token válido, consumir tokens de recuperação concorrentes e invalidar todas as sessões da conta (D74) na mesma transação.
+
+### Proposta pendente para acesso a pedido convidado (A13)
+
+- O código de troca não autentica uma conta e não prova posse de uma conta; ele
+  concede somente acesso temporário ao pedido associado. Nunca associa pedido
+  por igualdade de e-mail (R07).
+- O segredo vai no corpo de um POST same-origin, nunca em path/query/fragmento,
+  redirect, log ou telemetria. A resposta emite autorização curta para o
+  cabeçalho `X-Order-Token`; não cria sessão nem altera papel/conta.
+- Recomendação concreta: código de 8 caracteres Crockford Base32 (40 bits),
+  expira em 15 minutos a partir do ACK SMTP, consumo single-use atômico e hash
+  persistido; segredo na outbox cifrado até o ACK. Solicitação segue o teto D73
+  (3 por hora/IP+e-mail); troca aceita até 5 tentativas inválidas por código,
+  depois o revoga. Erro inválido/expirado/usado tem resposta uniforme.
+- A autorização resultante contém 256 bits aleatórios, vale 15 minutos, fica
+  apenas em memória no browser e é revogada ao encerrar o pedido. Ela concede
+  acesso somente ao pedido e não estende a validade do token permanente.
+- Estes parâmetros são recomendação para revisão, não contrato implementado.
+  C78 depende de aprovação da proposta e ORD-Q02 (token permanente válido
+  enquanto o pedido estiver aberto e por 90 dias após conclusão).
 
 ## 8. Contratos
 
@@ -177,18 +202,18 @@ Prefixo: `/api/v1`. Auth: `cookie DLSESSION + X-XSRF-TOKEN` quando indicado. Tod
 | # | Método | Caminho | Permissão | Request | Sucesso | Erros |
 |---|---|---|---|---|---|---|
 | I-01 | POST | `/api/v1/accounts` | público + CSRF se sessão existe | `{email, password}` | 201 Created + `Location: /api/v1/accounts/{id}` + `{id,email,emailVerified:false}` | 400 (validação), 409 IDENTITY_002 duplicado (case-insensitive), 403 CSRF, 429 |
-| I-02 | POST | `/api/v1/accounts/verify` | público | `{token}` ou `GET /verify?token` com redirect 303 para frontend | 200 `{emailVerified:true}` | 400 token ausente, 410 expirado/usado |
+| I-02 | POST | `/api/v1/accounts/verify` | público | `{token}` submetido pelo frontend após ler e remover `#token=...` da URL | 200 `{emailVerified:true}` | 400 token ausente, 410 expirado/usado |
 | I-03 | POST | `/api/v1/sessions` | público (login) | `{email,password}` + CSRF se já há sessão | 200 `{id,email,role,emailVerified}` + `Set-Cookie: DLSESSION=…` + `X-XSRF-TOKEN` | 400 validação, 401 IDENTITY_005 credenciais, 423 locked, 403 CSRF, 429 |
 | I-04 | GET | `/api/v1/sessions/current` | autenticado | — | 200 `{id,email,role,emailVerified}` | 401 |
 | I-05 | DELETE | `/api/v1/sessions/current` | autenticado + CSRF | — | 204 + `Set-Cookie: DLSESSION=; Max-Age=0` | 401, 403 CSRF |
-| I-06 | POST | `/api/v1/accounts/recovery` | público | `{email}` | 202 (sempre) | 400 validação, 403 CSRF (se sessão), 429 |
-| I-07 | POST | `/api/v1/accounts/reset` | público | `{token,newPassword}` | 200 | 400 validação, 410 token, 403 CSRF, 429 |
+| I-06 | POST | `/api/v1/accounts/recovery` | público | `{email}` | 202 (sempre, inclusive se não houver conta verificada) | 400 validação, 403 CSRF se sessão, 429 + `Retry-After` |
+| I-07 | POST | `/api/v1/accounts/reset` | público | `{token,newPassword}` | 200 `{passwordChanged:true}` e invalida sessões | 400 validação, 410 token, 403 CSRF se sessão |
 | I-08 | GET | `/api/v1/csrf` | público | — | 200 `{token}` + `Set-Cookie: XSRF-TOKEN=…` (se usar CookieCsrfTokenRepository) | — |
 
 Notas:
 
 - I-01 e I-03 validam e-mail com `jakarta.validation` e normalizam antes de persistir; senha 8–72, sem log.
-- I-02 aceita POST JSON (API) e GET com query (link do e-mail) — ambos com mesma lógica; GET não muta sem token válido? Muta, mas é idempotente single-use e exige token imprevisível (128-bit).
+- I-02 somente POST consome o token; o link de e-mail usa fragmento para evitar consumo por scanners de links e não expor o segredo em access logs/referer.
 - I-03 rota de login não exige CSRF quando ainda não há sessão; mas se houver sessão, exige (evita login CSRF).
 - Paginação não aplicável; `Idempotency-Key` não exigido aqui (aplicável a checkout/payments).
 - Eventos: `AccountCreated` (após I-01), `EmailVerified` (I-02), `PasswordReset` (I-07) publicados via `eventing` Outbox quando o módulo for integrado em C15 — fora desta spec o contrato de evento é só referência; não afirmar entrega Kafka nesta etapa.

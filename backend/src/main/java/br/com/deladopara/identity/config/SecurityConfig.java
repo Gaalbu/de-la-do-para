@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -21,6 +22,10 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         var handler = new CsrfTokenRequestAttributeHandler();
         handler.setCsrfRequestAttributeName(null);
+        RequestMatcher anonymousRecoveryMutation =
+                request -> (request.getRequestURI().equals("/api/v1/accounts/recovery")
+                                || request.getRequestURI().equals("/api/v1/accounts/reset"))
+                        && request.getSession(false) == null;
 
         http.authorizeHttpRequests(auth -> auth.requestMatchers(
                                 "/error",
@@ -45,6 +50,8 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/*")
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*/pickup")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/product-images/**")
@@ -56,7 +63,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(handler)
                         .ignoringRequestMatchers(
-                                "/api/v1/sessions", "/api/v1/accounts/verify", "/api/v1/webhooks/asaas"))
+                                "/api/v1/sessions", "/api/v1/accounts/verify", "/api/v1/webhooks/asaas")
+                        .ignoringRequestMatchers(anonymousRecoveryMutation))
                 .sessionManagement(session -> session.sessionFixation(fix -> fix.changeSessionId()))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, exc) ->
                                 writeProblem(res, 401, "IDENTITY_006", "Não autenticado", "Sessão ausente ou expirada"))

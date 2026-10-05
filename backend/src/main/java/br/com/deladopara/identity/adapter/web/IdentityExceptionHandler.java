@@ -23,6 +23,20 @@ public class IdentityExceptionHandler {
         return problem(HttpStatus.BAD_REQUEST, ex.getCodigo(), ex.getMessage());
     }
 
+    @ExceptionHandler(AccountService.InvalidVerificationTokenException.class)
+    ResponseEntity<Problem> invalidVerification() {
+        return problem(HttpStatus.GONE, "IDENTITY_004", "token expirado, inválido ou já utilizado");
+    }
+
+    @ExceptionHandler(IdentityRecoveryRateLimiter.RateLimitExceededException.class)
+    ResponseEntity<Problem> recoveryRateLimit(IdentityRecoveryRateLimiter.RateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", Long.toString(ex.getRetryAfterSeconds()))
+                .contentType(MediaType.parseMediaType("application/problem+json"))
+                .body(new Problem(
+                        "Erro", 429, "limite de solicitações excedido", "IDENTITY_012", MDC.get("correlationId")));
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<Problem> badCredentials() {
         return problem(HttpStatus.UNAUTHORIZED, "IDENTITY_005", "credenciais inválidas");

@@ -80,6 +80,10 @@ public class VerificationToken {
         this.usedAt = now;
     }
 
+    public void extendExpiration(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
     public boolean isExpired(Instant now) {
         return now.isAfter(expiresAt);
     }
