@@ -1,4 +1,4 @@
-# Melhor Envio Sandbox — contrato e garantias (C04, revalidado em 20/09/2026)
+# Melhor Envio Sandbox — contrato e garantias (C04, revalidado em 30/09/2026)
 
 Status: **não homologado** — sem conta/credenciais; nenhuma cotação real foi
 executada. Fatos revalidados na documentação oficial; spike precisa provar o
@@ -26,6 +26,14 @@ restante. Não alegar integração comprovada.
 - Resposta traz `packages[]` com preço, dimensões, peso e produtos por
   pacote — base para verificar nossa composição multi-pacote (C41a/V21).
   Erro de validação: 422 com `errors` por campo.
+- O guia confirma os dois formatos e os campos de seguro: `insurance_value`
+  por produto/quantidade ou `insurance` por volume; `custom_price` e
+  `custom_delivery_time` são os valores ajustados a persistir no checkout
+  ([guia de cotação](https://docs.melhorenvio.com.br/docs/cotacao-de-fretes)).
+- Cotação não garante compra de etiqueta para a transportadora. Azul Cargo pode
+  aparecer na cotação, mas a API não vende etiqueta comercial com NF-e para
+  Azul Cargo (a opção DEC é não comercial); validar elegibilidade de compra de
+  cada serviço antes de oferecê-lo como entregável pelo fluxo.
 
 ## Mapeamento para os módulos
 
@@ -41,8 +49,10 @@ restante. Não alegar integração comprovada.
 
 ## A provar no spike
 
-1. Aceitação do CEP 66053-000 e cobertura PAC/SEDEX/JadLog para rotas de
-   teste com nossas caixas P/M/G (externas na cotação).
+1. Aceitação do CEP 66053-000, serviços retornados e elegibilidade de compra
+   de etiqueta comercial para cada serviço em rotas de teste com nossas caixas
+   P/M/G (dimensões externas na cotação); confirmar especificamente a limitação
+   de Azul Cargo.
 2. Como o sandbox representa múltiplos volumes, etiquetas e rastreios
    (1 etiqueta por pacote? rastreio por pacote?); latências reais de
    postado/entregue para o roteiro.

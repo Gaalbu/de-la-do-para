@@ -1,7 +1,8 @@
 # ADR-0005: perfis de ambiente e túnel de webhooks
 
 - Data: 20/09/2026
-- Status: túnel aceito pelo usuário; perfis propostos (implementa em C08)
+- Status: túnel aprovado pelo usuário; perfil local implementado em C08;
+  sandbox externo permanece opt-in e não homologado (C04)
 - Decisores: usuário (túnel) + executor (perfis)
 
 ## Problema
