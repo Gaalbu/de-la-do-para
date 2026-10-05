@@ -1843,7 +1843,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - **Aceite:** resposta evita enumerar contas; token de uso único; troca de senha trata sessões anteriores conforme spec.
 - **Verificar:** BI(AccountRecovery), rate limit, token inválido/expirado e tentativa concorrente; duas redefinições com tokens ativos da mesma conta devem produzir exatamente um `200` e um `410`, sem deadlock.
 - **Políticas confirmadas (2026-10-05):** no máximo 3 solicitações/hora por IP+e-mail; token com validade de 15 minutos; redefinição revoga todas as sessões existentes.
-- **Estado local (2026-10-05):** implementação e cobertura focada passam em Temurin 25.0.4; aguardando publicação/CI do PR desta fatia antes de marcar concluída.
+- **Estado atual (2026-10-05):** PR #138 draft, branch `codex/c77-account-recovery`, empilhada sobre C76/PR #136. Testes focados C77 passaram em Temurin 25.0.4; docs, contratos, segurança, Spotless, Checkstyle e aislop passaram localmente. O gate backend completo local segue inconclusivo por `SIGSEGV` da JVM; CI remota reexecuta os gates no SHA `ce4b5b0`. Manter aberta até os gates remotos passarem.
 
 ### C78 — `feat(identity): link guest purchases after proof of ownership`
 
