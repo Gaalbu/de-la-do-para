@@ -39,3 +39,8 @@ Thumbs.db
 # Evidências com dados sensíveis (sanitizar antes de versionar)
 docs/evidence/**/raw/
 *.har
+
+# JVM crash diagnostics and root Angular cache
+hs_err_pid*.log
+replay_pid*.log
+/.angular/
