@@ -67,6 +67,14 @@ combina silenciosamente. A resposta deve informar a escolha disponível:
 - substituir o carrinho da conta pelo convidado;
 - combinar itens, somando quantidades por SKU.
 
+O login rotaciona o identificador da sessão antes de associar dados. Quando só
+há carrinho convidado, ele passa para a conta sem prompt. Quando há dois
+carrinhos, a chave do convidado fica somente na sessão autenticada do servidor
+até a escolha; não é enviada ao navegador. A tela identifica SKUs desativados
+sem removê-los, e deixa claro que serão revalidados no checkout. A escolha
+explícita remove o carrinho convidado somente na mesma transação que atualiza o
+carrinho da conta; versões divergentes preservam ambos para nova consulta.
+
 A combinação é transacional, limitada pelas quantidades máximas definidas pelo
 contrato de inventário e incrementa a versão. Se houver conflito ou item
 inválido, nenhuma das duas cestas é parcialmente alterada. A sessão convidada

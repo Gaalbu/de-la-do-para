@@ -13,7 +13,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -96,9 +98,26 @@ public class CartEntity {
     }
 
     public void replaceItems(List<CartItemEntity> replacement, Instant now) {
+        Map<UUID, CartItemEntity> existing = new HashMap<>();
+        items.forEach(item -> existing.put(item.getSkuId(), item));
+        List<CartItemEntity> next = new ArrayList<>(replacement.size());
+        for (var candidate : replacement) {
+            var current = existing.remove(candidate.getSkuId());
+            if (current == null) {
+                next.add(candidate);
+            } else {
+                current.updateQuantity(candidate.getQuantity(), now);
+                next.add(current);
+            }
+        }
         items.clear();
-        items.addAll(replacement);
+        items.addAll(next);
         updatedAt = now;
+    }
+
+    public void transferToAccount(UUID ownerAccountId) {
+        guestSessionKey = null;
+        accountId = ownerAccountId;
     }
 
     public enum Status {

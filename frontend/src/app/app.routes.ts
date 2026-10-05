@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './features/admin/admin.guard';
+import { authenticatedGuard } from './features/identity/authenticated.guard';
 
 export const routes: Routes = [
   {
@@ -15,6 +16,12 @@ export const routes: Routes = [
   {
     path: 'cart',
     loadComponent: () => import('./features/cart/cart.component').then((m) => m.CartComponent),
+  },
+  {
+    path: 'cart/merge',
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./features/cart/cart-merge.component').then((m) => m.CartMergeComponent),
   },
   {
     path: 'checkout',

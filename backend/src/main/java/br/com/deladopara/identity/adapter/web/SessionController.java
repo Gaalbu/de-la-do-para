@@ -4,6 +4,7 @@ import br.com.deladopara.identity.adapter.persistence.AccountRepository;
 import br.com.deladopara.identity.adapter.web.dto.AccountResponse;
 import br.com.deladopara.identity.adapter.web.dto.LoginRequest;
 import br.com.deladopara.identity.application.AccountService;
+import br.com.deladopara.identity.application.CartLoginCoordinator;
 import br.com.deladopara.identity.domain.Account;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -29,10 +30,13 @@ public class SessionController {
 
     private final AuthenticationManager authenticationManager;
     private final AccountRepository accounts;
+    private final CartLoginCoordinator cartLogin;
 
-    public SessionController(AuthenticationManager authenticationManager, AccountRepository accounts) {
+    public SessionController(
+            AuthenticationManager authenticationManager, AccountRepository accounts, CartLoginCoordinator cartLogin) {
         this.authenticationManager = authenticationManager;
         this.accounts = accounts;
+        this.cartLogin = cartLogin;
     }
 
     @PostMapping
@@ -40,15 +44,19 @@ public class SessionController {
         var email = AccountService.normalize(req.email());
         Authentication auth =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, req.password()));
+        var existingSession = httpRequest.getSession(false);
+        var previousSessionId = existingSession == null ? null : existingSession.getId();
+        var account = accounts.findByEmailIgnoreCase(email).orElseThrow(() -> new BadCredentialsException("not found"));
+        if (existingSession != null) {
+            httpRequest.changeSessionId();
+        }
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(auth);
-        httpRequest
-                .getSession(true)
-                .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-        return accounts.findByEmailIgnoreCase(email)
-                .map(SessionController::toResponse)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new BadCredentialsException("not found"));
+        var session = httpRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        var mergeRequired = cartLogin.prepare(account.getId(), previousSessionId, session);
+        SecurityContextHolder.setContext(context);
+        return ResponseEntity.ok(toResponse(account, mergeRequired));
     }
 
     @GetMapping("/current")
@@ -61,7 +69,7 @@ public class SessionController {
         if (account == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(toResponse(account));
+        return ResponseEntity.ok(toResponse(account, false));
     }
 
     @DeleteMapping("/current")
@@ -74,8 +82,8 @@ public class SessionController {
         return ResponseEntity.noContent().build();
     }
 
-    private static AccountResponse toResponse(Account a) {
+    private static AccountResponse toResponse(Account a, boolean mergeRequired) {
         return new AccountResponse(
-                a.getId(), a.getEmail(), a.isEmailVerified(), a.getRole().name());
+                a.getId(), a.getEmail(), a.isEmailVerified(), a.getRole().name(), mergeRequired);
     }
 }

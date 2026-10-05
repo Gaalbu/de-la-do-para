@@ -7,6 +7,7 @@ export interface Account {
   email: string;
   emailVerified: boolean;
   role: string;
+  cartMergeRequired?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

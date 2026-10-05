@@ -1135,6 +1135,38 @@ paths:
           content:
             application/problem+json: {schema: {$ref: '#/components/schemas/ProblemDetail'}}
 
+  /api/v1/cart/merge:
+    get:
+      operationId: getPendingCartMerge
+      summary: Consultar carrinhos para uma escolha autenticada
+      description: Requer sessão autenticada com uma combinação pendente associada pelo servidor após o login.
+      responses:
+        '200':
+          description: Carrinho da conta e carrinho convidado pendente
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/CartMergeView'}}
+        '401': {$ref: '#/components/responses/Problem401'}
+        '404': {$ref: '#/components/responses/Problem404'}
+    post:
+      operationId: resolvePendingCartMerge
+      summary: Manter, substituir ou combinar as cestas
+      description: Transação integral; exige CSRF e versões lidas na consulta.
+      parameters:
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            {schema: {$ref: '#/components/schemas/CartMergeRequest'}}
+      responses:
+        '200':
+          description: Carrinho da conta após aplicar a escolha
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Cart'}}
+        '401': {$ref: '#/components/responses/Problem401'}
+        '404': {$ref: '#/components/responses/Problem404'}
+        '409': {$ref: '#/components/responses/Problem409'}
+
   /api/v1/checkout/snapshots:
     post:
       operationId: startCheckoutSnapshot
@@ -1555,7 +1587,7 @@ components:
           type: string
     AccountResponse:
       type: object
-      required: [id, email, emailVerified, role]
+      required: [id, email, emailVerified, role, cartMergeRequired]
       properties:
         id:
           type: string
@@ -1568,6 +1600,9 @@ components:
         role:
           type: string
           enum: [CUSTOMER, ADMIN]
+        cartMergeRequired:
+          type: boolean
+          description: Indica que o login encontrou dois carrinhos e exige escolha explícita.
     CsrfResponse:
       type: object
       required: [token]
@@ -1926,6 +1961,25 @@ components:
             properties:
               skuId: {type: string, format: uuid}
               quantity: {type: integer, minimum: 1}
+    CartMergeView:
+      type: object
+      additionalProperties: false
+      required: [accountCart, guestCart, inactiveSkuIds]
+      properties:
+        accountCart: {$ref: '#/components/schemas/Cart'}
+        guestCart: {$ref: '#/components/schemas/Cart'}
+        inactiveSkuIds:
+          type: array
+          description: SKUs preservados nos carrinhos que foram desativados no catálogo.
+          items: {type: string, format: uuid}
+    CartMergeRequest:
+      type: object
+      additionalProperties: false
+      required: [choice, expectedAccountVersion, expectedGuestVersion]
+      properties:
+        choice: {type: string, enum: [KEEP_ACCOUNT, REPLACE_WITH_GUEST, COMBINE]}
+        expectedAccountVersion: {type: integer, format: int64, minimum: 0}
+        expectedGuestVersion: {type: integer, format: int64, minimum: 0}
     CheckoutSnapshot:
       type: object
       additionalProperties: false
