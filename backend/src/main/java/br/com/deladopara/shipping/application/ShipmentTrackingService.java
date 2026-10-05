@@ -68,6 +68,12 @@ public class ShipmentTrackingService {
         return true;
     }
 
+    @Transactional
+    public boolean recordProviderStatus(String providerShipmentId, String status, Instant observedAt, byte[] snapshot) {
+        var tracking = ShipmentTracking.fromProviderStatus(status, observedAt);
+        return record(providerShipmentId, tracking.eventType(), observedAt, snapshot);
+    }
+
     private void createTracking(String providerShipmentId, ShipmentTracking event, Instant occurredAt) {
         var mapping = jdbc.query(
                 """

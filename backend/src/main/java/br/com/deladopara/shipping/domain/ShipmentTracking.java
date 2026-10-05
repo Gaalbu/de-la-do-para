@@ -42,6 +42,25 @@ public record ShipmentTracking(String eventType, Progress progress, boolean exce
         };
     }
 
+    public static ShipmentTracking fromProviderStatus(String status, Instant observedAt) {
+        var event =
+                switch (status) {
+                    case "created" -> "order.created";
+                    case "pending" -> "order.pending";
+                    case "released" -> "order.released";
+                    case "generated" -> "order.generated";
+                    case "received" -> "order.received";
+                    case "posted" -> "order.posted";
+                    case "delivered" -> "order.delivered";
+                    case "cancelled", "canceled" -> "order.cancelled";
+                    case "undelivered" -> "order.undelivered";
+                    case "paused" -> "order.paused";
+                    case "suspended" -> "order.suspended";
+                    default -> throw new IllegalArgumentException("unsupported shipment tracking status");
+                };
+        return from(event, observedAt);
+    }
+
     private static Instant max(Instant left, Instant right) {
         return left.isAfter(right) ? left : right;
     }

@@ -40,8 +40,17 @@ restante. Não alegar integração comprovada.
   compra/geração de etiqueta e tracking a exercitar no spike.
 - C71 recebe eventos de tracking autenticados por `X-ME-Signature` e HMAC-SHA256,
   persiste apenas campos permitidos e aplica transições sem regressão. A consulta
-  REST `/api/v2/me/shipment/tracking` continua pendente de validar o formato da
-  resposta e a associação real entre ID de etiqueta e volumes no sandbox.
+  REST `/api/v2/me/shipment/tracking` é feita por ID; sua resposta é um objeto
+  indexado pelo ID solicitado e repete esse ID em `id`. O adapter valida ambos
+  antes de aceitar `status`; datas do exemplo não trazem fuso horário e não são
+  convertidas em instantes. A sincronização usa a hora local da observação.
+  Continua pendente provar a associação entre ID de etiqueta e volumes no sandbox.
+- Configure `SHIPPING_MELHOR_ENVIO_WEBHOOK_SECRET` com o secret do mesmo
+  aplicativo usado para gerar as etiquetas; cadastre a rota pública
+  `/api/v1/webhooks/melhor-envio` nesse app. A documentação do provedor afirma que
+  webhooks só incluem etiquetas geradas pelo aplicativo dono do webhook.
+  Consulta REST usa o token sandbox já configurado, um único ID e aplica
+  somente o status retornado que corresponda ao ID solicitado.
 
 ## C70 — contrato de criação e compra revalidado (2026-10-03)
 
@@ -76,6 +85,8 @@ Referências oficiais: [inserir frete no carrinho](https://docs.melhorenvio.com.
   registrado quando `SHIPPING_MELHOR_ENVIO_ENABLED=true`. Configure
   `SHIPPING_MELHOR_ENVIO_TOKEN` e
   `SHIPPING_MELHOR_ENVIO_USER_AGENT` (nome do app e e-mail de contato técnico).
+  Para atualizações assinadas de tracking, configure também
+  `SHIPPING_MELHOR_ENVIO_WEBHOOK_SECRET` como descrito acima.
   Conexão e leitura têm limites de 3 s e 10 s.
 - Carrinho envia o JSON do snapshot de expedição já aceito e exige HTTP 201
   mais `id` textual na resposta. Checkout e geração enviam exatamente um ID

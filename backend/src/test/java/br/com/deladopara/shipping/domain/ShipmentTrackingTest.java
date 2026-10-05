@@ -39,4 +39,14 @@ class ShipmentTrackingTest {
         assertThatThrownBy(() -> ShipmentTracking.from("order.unknown", NOW))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void mapsProviderQueryStatusesToTheSameMonotonicLifecycle() {
+        assertThat(ShipmentTracking.fromProviderStatus("posted", NOW).progress())
+                .isEqualTo(ShipmentTracking.Progress.IN_TRANSIT);
+        assertThat(ShipmentTracking.fromProviderStatus("delivered", NOW).progress())
+                .isEqualTo(ShipmentTracking.Progress.DELIVERED);
+        assertThat(ShipmentTracking.fromProviderStatus("undelivered", NOW).exception())
+                .isTrue();
+    }
 }

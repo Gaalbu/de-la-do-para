@@ -95,6 +95,21 @@ class ShipmentTrackingServiceIT {
     }
 
     @Test
+    @Transactional
+    void recordsQueriedProviderStatusAtTheLocalObservationTime() {
+        var label = generatedLabel();
+        var observedAt = CREATED_AT.plusSeconds(90);
+
+        tracking.recordProviderStatus(label.providerId, "delivered", observedAt, body("query-snapshot"));
+
+        var row = jdbc.queryForMap(
+                "SELECT progress, occurred_at FROM shipping_package_tracking WHERE provider_shipment_id = ?",
+                label.providerId);
+        assertThat(row.get("progress")).isEqualTo("DELIVERED");
+        assertThat(((Timestamp) row.get("occurred_at")).toInstant()).isEqualTo(observedAt);
+    }
+
+    @Test
     void rejectsUnknownShipmentIdsAndRollsBackTheEventLedgerInsert() {
         assertThatThrownBy(() -> tracking.record("unmapped-id", "order.posted", CREATED_AT, body("unknown")))
                 .isInstanceOf(IllegalArgumentException.class)

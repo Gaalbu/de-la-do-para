@@ -116,6 +116,17 @@ ou reembolso parcial automático.
   uma etapa sem ID recuperável fica em análise para a operação administrativa
   futura C82b. Erro determinístico de validação pode ficar `FAILED` sem apagar
   evidência anterior.
+- C71 sincroniza o ciclo de vida por ID conhecido de etiqueta. A resposta de
+  tracking é um objeto indexado pelo ID consultado; aceitar somente a entrada
+  cuja chave e campo `id` correspondam ao pedido. Guardar apenas status/evento,
+  timestamp local de observação, IDs e sequências vinculadas; nunca guardar o
+  corpo integral do provedor nem tracking code no ledger. Usar eventos assinados
+  HMAC-SHA256 (`X-ME-Signature`) quando disponíveis e suportar consulta sandbox
+  com uma etiqueta por requisição. Status fora de ordem não regride o maior
+  estágio persistido. Exceções do transporte são registradas sem apagar estágio
+  já alcançado. Só agregar estado do pedido após todos os pacotes do manifesto
+  imutável estarem entregues; a relação real ID↔volume e tempos do sandbox ficam
+  sujeitos à prova C04.
 - Uma falha em uma unidade de expedição não reverte nem compra novamente
   etiquetas concluídas nas outras unidades. O resultado da ordem mostra o
   vínculo unidade↔pacotes, etapa, IDs do provedor quando conhecidos, correlação
