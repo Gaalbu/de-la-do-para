@@ -77,6 +77,27 @@ ou reembolso parcial automático.
 - Pedido pronto fica guardado por três dias úteis; depois abre análise, sem
   cancelar, descartar ou reembolsar automaticamente, mantendo o estoque.
 
+### Confirmação de retirada (C72, D71)
+
+- Ao passar um pedido `PICKUP` para `READY_FOR_PICKUP`, gerar um código aleatório
+  de uso único e manter o material necessário para validação e reapresentação
+  ao cliente sem persistir o código em texto claro.
+- Mostrar o código apenas em `GET /api/v1/orders/{id}/pickup`, depois de
+  autorizar a sessão dona ou `X-Order-Token` daquele pedido. A resposta é
+  `private, no-store`; código não aparece na listagem/admin, em outbox, logs,
+  métricas ou URL.
+- A tela também mostra o ponto congelado no pedido, a janela de retirada e a
+  regra de guarda de três dias úteis após ficar pronto. Não calcular uma data
+  final até existir calendário operacional aprovado e configurado (C25).
+- Somente admin pode marcar como pronto e confirmar retirada. A confirmação
+  exige o código atual; pedido/modo/estado são validados sob o lock do pedido.
+  Confirmação e cancelamento competem pelo mesmo lock, então só uma transição
+  pode vencer. Depois de `PICKED_UP`, o código deixa de ser exibido e não pode
+  ser reapresentado.
+- Persistir estado de preparação/retirada no módulo `shipping`; usar portas de
+  aplicação de `orders` para as transições/histórico. Não importar repositories
+  de `orders`.
+
 ## Erros e invariantes
 
 `400` para destino/modalidade/payload inválido; `404` para snapshot/opção
