@@ -1112,6 +1112,6 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Tarefa | Integrar o carrinho convidado ao login sem perda silenciosa quando a conta já tem carrinho. |
 | Mudanças | Rotação de sessão no login; transferência automática do carrinho convidado quando não existe carrinho da conta; escolha autenticada e transacional entre manter/substituir/combinar quando ambos existem; versões otimistas, bloqueios de linha e tratamento de SKU desativado. Interface acessível de escolha, contrato OpenAPI e cenários Playwright/API adicionados. |
 | Verificação | `CartMergeApiIT`: 6/6 em PostgreSQL 18.6/Testcontainers; `GOMAXPROCS=1 scripts/verify.sh frontend`: 29 unitários, build SSR e Playwright 7/7; `contracts:check`, lint, Prettier e `git diff --check` passaram. O gate backend completo continua em execução, sem resultado final ainda. |
-| Remoto | C80 preparado em branch própria sobre a PR #136; a publicação da PR e o estado de CI serão registrados após o push. |
+| Remoto | Commit `ca0fb51` publicado em `codex/c80-cart-merge`; PR [#137](https://github.com/Gaalbu/de-la-do-para/pull/137) OPEN, base `codex/c76-account-verification` (PR #136). CI GitHub Actions iniciada; backend, frontend, contracts, docs, security e commit-policy aguardando execução. |
 | Limite | A implementação usa o contrato de C76 que está aberto; merge final depende da integração da PR #136. Testes locais e mocks não representam sessão ou execução em ambiente externo. |
-| Próximo passo | Publicar a branch como PR encadeada, acompanhar CI e só então integrar C80 após sua base C76. |
+| Próximo passo | Acompanhar CI e integrar C80 somente após sua base C76. |
