@@ -1761,6 +1761,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C04, C53, C59, C62. **Alvos:** adapter Asaas, config e testes de contrato; M.
 - **Aceite:** Pix/cartão hospedado; total externo coincide com o snapshot, inclusive frete/desconto; expiração e host de redirecionamento validados.
 - **Verificar:** testes HTTP determinísticos + SB para ambos os meios. Link recebido após prazo insuficiente não prolonga reserva silenciosamente.
+- **Estado atual (2026-10-03):** **parcial.** Adapter `AsaasPaymentProvider`, config opt-in (`PAYMENTS_PROVIDER=asaas`) e `AsaasPaymentProviderTest` (17 cenários HTTP gravados: total exato, Pix+cartão, host/HTTPS do link, recusa × UNKNOWN, link encurtado até o fim da reserva e recusa sem chamada quando o prazo restante é insuficiente) entregues em `claude/c63-asaas-hosted-checkout`. Falta a evidência SB dos dois meios, que depende de C04 (conta sandbox); manter aberta até lá.
 
 ### C64 — `feat(payments): reconcile webhook facts against provider state`
 

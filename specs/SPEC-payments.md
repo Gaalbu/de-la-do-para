@@ -25,7 +25,8 @@ C56) e homologação real no sandbox (C04, dependente de conta do usuário).
 Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 
 - `./backend/mvnw -f backend/pom.xml -Dtest='PaymentTransitionsTest' test`
-- `./backend/mvnw -f backend/pom.xml -Dit.test='PaymentIntentIT,AsaasCheckoutContractIT' verify`
+- `./backend/mvnw -f backend/pom.xml -Dtest='AsaasPaymentProviderTest' test`
+- `./backend/mvnw -f backend/pom.xml -Dit.test='PaymentIntentIT' verify`
 - `npm --prefix frontend run contracts:check`
 
 ## 3. Estrutura ◆
@@ -51,7 +52,7 @@ Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 | PAY-003 operação registrada antes do HTTP | `PaymentIntentIT.operationIsDurableBeforeProviderCall` (provedor falso que lê o banco na chamada) | Testcontainers |
 | PAY-004 nada de HTTP dentro de transação | `PaymentIntentIT.providerCallRunsWithoutActiveTransaction` | Testcontainers |
 | PAY-005 transições | `PaymentTransitionsTest` (tabela origem×destino completa) | unitário |
-| PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `AsaasCheckoutContractIT.timeoutAfterEffectKeepsUnknown` | WireMock (C55) |
+| PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `PaymentProviderContract.timeoutAfterEffectIsNotARejectionAndTheCheckoutExists` (simulador); `AsaasPaymentProviderTest.readTimeoutIsUnknownNotARejection`, `serverErrorAfterSendingIsUnknownNotARejection` | unitário, HTTP gravado (C63) |
 | PAY-007 retorno de navegação não confirma | `AsaasCheckoutContractIT.callbackDoesNotConfirm` | WireMock (C55) |
 | PAY-008 evento de provedor repetido/fora de ordem | `PaymentResultIT.duplicateAndStaleEventsDoNotRegress` | Testcontainers |
 | PAY-009 valor divergente | `PaymentResultIT.amountMismatchGoesToReview` | Testcontainers |
