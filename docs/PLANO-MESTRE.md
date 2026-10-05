@@ -1835,6 +1835,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C08, C14, C15. **Alvos:** cadastro, token de verificação, adapter SMTP de identidade e testes; M.
 - **Aceite:** cadastro opcional com e-mail verificado; token de uso único e expiração; login não concede papel admin.
 - **Verificar:** BI(CustomerRegistration), token vencido/repetido e e-mail duplicado sem exposição indevida.
+- **Estado atual (2026-10-05):** implementação backend em branch `codex/c76-account-verification`; gate backend local passa em Temurin 25.0.4 (128 unitários + 160 integrações, Spotless e Checkstyle), `contracts:check` passa com 8 avisos Redocly existentes e `docs:check` passa. Revisão `aislop` 100/100 sem achados. Aguardar CI/PR e completar testes de concorrência de token/e-mail antes de marcar o marco.
 
 ### C77 — `feat(identity): recover customer access securely`
 
