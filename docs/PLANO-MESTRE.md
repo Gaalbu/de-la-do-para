@@ -1181,6 +1181,25 @@ Status: tarefas propostas, todas pendentes. Nenhum comando abaixo foi executado 
 - Após cada grupo de até três commits de implementação: executar o gate pertinente, verificar a fatia de usuário disponível e registrar evidência. Os marcos G0–G9 são revisões maiores.
 - Não manter a branch principal deliberadamente quebrada. Teste vermelho é evidência de reprodução no trabalho local; o commit final inclui o comportamento que o faz passar.
 
+## Divisão de trabalho entre agentes (a partir de 2026-10-03)
+
+Claude e Codex trabalham em paralelo. A divisão segue fronteiras de módulo para evitar conflito; dentro de cada trilha, a ordem respeita as dependências do backlog. As caixas `[ ]`/`[x]` do backlog podem estar defasadas: o estado real é o PR mesclado em `main`.
+
+| Trilha | Responsável | Tarefas, em ordem | Áreas que só essa trilha edita |
+|---|---|---|---|
+| Release, banco e pagamentos | Claude | C93 (em andamento) → C63 → C64 → C65 → C66 → C67 → C68 → C69 → C79 → C79a → C82 → C82a → C94 | `B/payments`, `B/checkout`, `B/eventing`, observabilidade, `F/checkout` e acompanhamento de cancelamento/reembolso, testes de banco/restore |
+| Identidade, cupons, design e expedição | Codex | PRs abertos #123/#124/#125/#127/#128 → C76 → C77 → C80 → C81 → C81a (trabalho local já existente no checkout principal) → C70 → C71 → C73 → C73a → C82b | `B/identity`, `B/cart`, `B/pricing`, `B/shipping`, `F/account`, `F/identity`, `F/cart`, `F/admin/coupons`, admin de expedição, `docs/design` |
+| Bloqueadas por decisão do usuário | — | C75 (parte convidado), C78, C81b dependem de A13 e ORD-Q02 | Não iniciar sem decisão registrada |
+| Transversais finais | A combinar | C83, C85–C91, C92a, C95–C98 | Atualizar esta tabela antes de iniciar |
+
+Regras de convivência:
+
+- Cada agente usa worktree e branch próprias (`claude/<id>-...` ou `codex/<id>-...`). Claude não edita o checkout principal `/home/gaalbu/codigos/de-la-do-para`, que contém trabalho local da trilha Codex.
+- Migrations Flyway: usar o próximo número livre em `main` no momento do rebase final. Como `outOfOrder` não está habilitado, quem mesclar depois renumera a própria migration para ficar acima da maior versão já mesclada.
+- Arquivos compartilhados (`docs/PLANO-MESTRE.md`, `tasks/progress.md`, `docs/traceability.md`, `contracts/openapi.yaml`, `application.yml`) recebem apenas acréscimos pequenos no próprio PR; rebase em `main` antes de pedir merge.
+- Se uma tarefa exigir editar área da outra trilha, registrar a necessidade no PR e combinar via usuário antes de editar.
+- Para trocar ou pegar tarefa de outra trilha, atualizar esta tabela em PR próprio.
+
 ## Gates e comandos planejados
 
 Estes comandos serão configurados nos primeiros commits; não são scripts existentes. Classes de teste citadas nas tarefas são nomes de trabalho a fixar na spec.
@@ -1742,12 +1761,14 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C04, C53, C59, C62. **Alvos:** adapter Asaas, config e testes de contrato; M.
 - **Aceite:** Pix/cartão hospedado; total externo coincide com o snapshot, inclusive frete/desconto; expiração e host de redirecionamento validados.
 - **Verificar:** testes HTTP determinísticos + SB para ambos os meios. Link recebido após prazo insuficiente não prolonga reserva silenciosamente.
+- **Estado atual (2026-10-03):** **parcial.** Adapter `AsaasPaymentProvider`, config opt-in (`PAYMENTS_PROVIDER=asaas`) e `AsaasPaymentProviderTest` (17 cenários HTTP gravados: total exato, Pix+cartão, host/HTTPS do link, recusa × UNKNOWN, link encurtado até o fim da reserva e recusa sem chamada quando o prazo restante é insuficiente) entregues em `claude/c63-asaas-hosted-checkout`. Falta a evidência SB dos dois meios, que depende de C04 (conta sandbox); manter aberta até lá.
 
 ### C64 — `feat(payments): reconcile webhook facts against provider state`
 
 - [ ] **Depende:** C60, C63. **Alvos:** consulta/correlação de pagamento, normalização e testes; M.
 - **Aceite:** confirmação financeira consulta/valida o recurso correto; referencia checkout↔pagamento; webhook fora de ordem não regrede estado.
 - **Verificar:** BI(PaymentReconciliation), SB e V08/V09.
+- **Estado atual (2026-10-03):** **parcial.** `PaymentReconciliationIT` cobre a parte BI e V08/V09 na branch `claude/c64-payment-reconciliation`: consulta sem prova reconsultada com backoff até `REVIEW`, checkout↔pagamento conferido, fora de ordem sem regressão. Também liga o processador ao worker (bean ausente no `main`). Falta SB (C04).
 
 ### C65 — `feat(payments): retain and reconcile unknown external operations`
 
@@ -1984,7 +2005,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C93 — `test(database): verify upgrades backups and isolated restores`
 
-- [ ] **Depende:** C92. **Alvos:** testes de migration, procedimento backup/restore e fixture; M.
+- [x] **Depende:** C92. **Alvos:** testes de migration, procedimento backup/restore e fixture; M. `DatabaseUpgradeAndRestoreIT` 3/3 e `docs/backup-restore.md`; restauração sobre o banco principal fica para C94.
 - **Aceite:** banco vazio sobe; snapshot da versão anterior migra; restore em banco separado preserva dados e constraints.
 - **Verificar:** B + restauração isolada; não sobrescrever dados do ambiente principal para demonstrar recuperação.
 

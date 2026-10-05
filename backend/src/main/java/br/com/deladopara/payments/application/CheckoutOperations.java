@@ -24,6 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CheckoutOperations {
 
+    /**
+     * The intent is created in the same transaction as the order's stock reservation, which is held for exactly 15
+     * minutes (D11, enforced by {@code inventory_reservation_hold_15_minutes}).
+     */
+    static final Duration RESERVATION_HOLD = Duration.ofMinutes(15);
+
     private final PaymentRepository payments;
     private final PaymentIntentService intents;
     private final Clock clock;
@@ -55,7 +61,12 @@ public class CheckoutOperations {
             var intent = payments.find(operation.intentId()).orElseThrow();
             intents.transition(intent.id(), PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
             return new Claimed(
-                    operation.id(), new CheckoutRequest(intent.id(), intent.orderId(), intent.amountCents()));
+                    operation.id(),
+                    new CheckoutRequest(
+                            intent.id(),
+                            intent.orderId(),
+                            intent.amountCents(),
+                            intent.createdAt().plus(RESERVATION_HOLD)));
         });
     }
 

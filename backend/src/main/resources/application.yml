@@ -93,6 +93,14 @@ app:
 
 payments:
   provider: ${PAYMENTS_PROVIDER:}
+  asaas:
+    # Lido só com PAYMENTS_PROVIDER=asaas (homologação opt-in, C63/C89).
+    base-url: ${ASAAS_BASE_URL:https://api-sandbox.asaas.com}
+    api-key: ${ASAAS_API_KEY:}
+    store-url: ${ASAAS_STORE_URL:http://localhost:4200}
+    minutes-to-expire: ${ASAAS_MINUTES_TO_EXPIRE:10}
+    timeout: ${ASAAS_TIMEOUT:PT10S}
+    checkout-hosts: ${ASAAS_CHECKOUT_HOSTS:sandbox.asaas.com}
   worker:
     enabled: ${PAYMENTS_WORKER_ENABLED:false}
     batch-size: ${PAYMENTS_WORKER_BATCH_SIZE:10}
