@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "e2e:local": "playwright test --config=e2e/playwright.config.ts",
+    "e2e:c81:live": "playwright test --config=e2e/playwright.c81.config.ts",
     "contracts:lint": "redocly lint --config ../redocly.yaml ../contracts/openapi/v1.yaml",
     "contracts:generate": "openapi-ts",
     "contracts:check-events": "node scripts/check-events.mjs",

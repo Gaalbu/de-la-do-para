@@ -7,6 +7,12 @@ export interface Account {
   email: string;
   emailVerified: boolean;
   role: string;
+  cartMergeRequired?: boolean;
+}
+
+export interface RegistrationInput {
+  email: string;
+  password: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,6 +42,41 @@ export class IdentityService {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async register(input: RegistrationInput): Promise<Account> {
+    await this.fetchCsrf();
+    return firstValueFrom(
+      this.http.post<Account>('/api/v1/accounts', input, { withCredentials: true }),
+    );
+  }
+
+  async verifyEmail(token: string): Promise<{ emailVerified: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ emailVerified: boolean }>(
+        '/api/v1/accounts/verify',
+        { token },
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  async requestRecovery(email: string): Promise<void> {
+    await this.fetchCsrf();
+    await firstValueFrom(
+      this.http.post<void>('/api/v1/accounts/recovery', { email }, { withCredentials: true }),
+    );
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ passwordChanged: boolean }> {
+    await this.fetchCsrf();
+    return firstValueFrom(
+      this.http.post<{ passwordChanged: boolean }>(
+        '/api/v1/accounts/reset',
+        { token, newPassword },
+        { withCredentials: true },
+      ),
+    );
   }
 
   async fetchCurrent(): Promise<Account | null> {

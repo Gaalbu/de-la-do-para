@@ -41,6 +41,8 @@ import { IdentityService } from '../../services/identity.service';
           {{ loading() ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
+      <p><a routerLink="/recover-access">Esqueci minha senha</a></p>
+      <p>Não tem conta? <a routerLink="/register">Crie uma conta opcional</a></p>
       <p><a routerLink="/">Voltar à vitrine</a></p>
     </section>
   `,
@@ -88,7 +90,9 @@ export class LoginComponent {
     this.loading.set(true);
     try {
       const account = await this.identity.login(this.email, this.password);
-      if (account.role === 'ADMIN') {
+      if (account.cartMergeRequired) {
+        await this.router.navigateByUrl('/cart/merge');
+      } else if (account.role === 'ADMIN') {
         await this.router.navigateByUrl('/admin');
       } else {
         await this.router.navigateByUrl('/');
