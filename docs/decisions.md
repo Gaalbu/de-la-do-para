@@ -1,6 +1,6 @@
 # Registro de decisões — De Lá do Pará
 
-Transcrição fiel das decisões aprovadas pelo usuário (D01–D67), das propostas
+Transcrição fiel das decisões aprovadas pelo usuário (D01–D76), das propostas
 técnicas em revisão (A01–A10) e das perguntas com encaminhamento. Fonte:
 `docs/PLANO-MESTRE.md` (consolidação 20/09/2026). Quando houver sobreposição,
 a decisão mais recente e específica prevalece. Não repetir perguntas já
@@ -80,6 +80,12 @@ respondidas em D01–D65.
 | D68 | Após qualquer pacote ser entregue à transportadora, os demais pacotes continuam o fluxo normal por padrão. Pausar pacotes ainda não despachados exige decisão administrativa; não há cancelamento, reembolso automático ou reembolso parcial |
 | D69 | Alocação de estoque entre lotes elegíveis por FEFO (primeiro a vencer, primeiro alocado), desempate por recebimento e UUID; só entre lotes que já passaram validade, bloqueio e saldo (aprovado em 2026-09-24, C57) |
 | D70 | Bloquear lote com reserva ativa mantém as reservas existentes e só impede novas; ajuste que deixaria o físico abaixo do reservado é recusado e segue para reconciliação administrativa, sem liberar ou trocar lote automaticamente (aprovado em 2026-09-24, C57) |
+| D71 | Código de retirada de uso único aparece somente na tela segura do pedido; atendente/admin confirma a retirada informando esse código |
+| D72 | Token de verificação de e-mail usa fila durável; conteúdo sensível fica cifrado com chave configurada e o worker tenta SMTP até obter aceite do relay. Não prometer entrega única |
+| D73 | Recuperação de senha limita solicitações a 3 por hora por combinação de IP + e-mail |
+| D74 | Após redefinir senha, invalidar todas as sessões abertas da conta |
+| D75 | Tokens de verificação expiram em 30 minutos; tokens de recuperação expiram em 15 minutos |
+| D76 | Ao login com carrinhos convidado e da conta, exigir escolha explícita: manter o da conta, substituí-lo pelo convidado ou combinar somando por SKU. A operação é transacional, preserva SKUs inativos para revalidação no checkout e falha integralmente em overflow/conflito/checkout iniciado; o carrinho convidado é descartado após a escolha. Rotacionar o ID de sessão no login e manter a referência hash do convidado somente no contexto autenticado do servidor até a decisão persistir (C80, aprovado em 2026-09-25) |
 
 ## Propostas técnicas (revisão do plano, não respostas do usuário)
 
@@ -95,13 +101,19 @@ respondidas em D01–D65.
 | A08 | Uma moeda, um ponto, unidade/SKU | Confirmada em D17 |
 | A09 | 80% branches no núcleo + metas locais | Aprovadas em D38–D41 como metas futuras |
 | A10 | E-mail em Mailpit; conteúdo fictício identificado | Fluxos sem contratar serviço |
+| A11 | Para link de pedido convidado por e-mail, emitir token aleatório de propósito exclusivo; persistir apenas hash, guardar o token bruto cifrado somente na outbox até aceite do relay, colocar o token no fragmento e removê-lo antes da chamada à API; reemissão invalida o token anterior | Revisão C74/C75; prazo de validade depende de ORD-Q02 |
+| A12 | Manter dados de contato do pedido sem limpeza automática até haver prazo de retenção aprovado; limitar o conteúdo de notificação persistido e não registrar endereço/corpo em logs | Revisão C74/C75; prazo depende de ORD-Q01 |
+| A13 | Para recuperar acesso de convidado por e-mail, enviar código aleatório de 8 caracteres Crockford Base32 (40 bits), single-use, com validade de 15 min contada do ACK SMTP. Solicitações limitadas a 3/h por IP+e-mail conforme D73; no máximo 5 tentativas inválidas por código, depois revogar. Aceitar apenas por POST same-origin; respostas uniformes. Após validação, emitir autorização aleatória de 256 bits, válida por 15 min, restrita a um pedido e mantida só em memória do browser; enviar em `X-Order-Token`, sem criar sessão de conta nem associar pedido a conta. Nunca colocar segredos em URL/fragmento/query/redirect/log/telemetria; armazenar hashes no banco e segredo do código cifrado na outbox até ACK SMTP. Revogar códigos/autorização ao encerrar o pedido. Token permanente atual mantém a proposta ORD-Q02: válido enquanto pedido estiver aberto e por 90 dias após conclusão | Proposta para revisão antes de C75/C78; reutiliza D73/D75, mas os limites específicos do código, TTL da autorização e ORD-Q02 seguem sem aprovação |
 
 ## Perguntas e encaminhamento
 
-- **Q01 (aberta):** tons exatos, contraste, famílias de fontes e referências
-  dentro da direção aprovada (D43–D48); storyboard/roteiro técnico e seleção
-  de fotos (D51). **Momento:** C03 (design) — apresentar proposta concreta e
-  revisar com o usuário. Não fechar automaticamente.
+- **Q01 (parcialmente resolvida):** direção, paleta, Fraunces + Inter e regra
+  anti-genérica aprovadas em 20/09/2026; formato e sequência do vídeo principal
+  (vertical em loop ≤30 s, sem legendas) e roteiro técnico horizontal também
+  revisados e registrados em `docs/design/storyboard.md`. A nova divisão de
+  cenas/tempos é proposta e aguarda revisão. Seleção de fotos (D51) e protótipo
+  concreto também aguardam revisão visual do usuário em C03. Não fechar
+  automaticamente.
 - **Resolvidas:** Q02→D17; Q07→D18; Q03a→D21; Q03b→D22; Q03c→D23; Q03d→D24;
   Q03e→D25; Q03f→D26; Q04a→D27; Q05a→D29; Q05b→D30; Q05c→D31; Q06a→D33;
   Q06b→D34; Q10a→D37; Q08a→D38; Q08b→D39; Q08c→D40; Q08d→D41; Q09→D42;
@@ -126,3 +138,9 @@ respondidas em D01–D65.
   retirada e validade tardia (specs orders/shipping); despacho parcial
   (specs checkout/payments/shipping); reserva global de cupons (spec pricing);
   licença/destino de releases/publicação (preparação repo/release).
+- **C74/C75 (propostas A11–A13, não aprovadas):** A11 propõe token de acesso
+  separado e fragmento, mas deixa exposição no histórico/telemetria do browser;
+  A13 propõe troca por código curto via POST e autorização temporária por pedido,
+  sem segredo em URL. Prazo do token principal depende de ORD-Q02. Retenção de
+  contato depende de ORD-Q01. Não iniciar a entrega de links convidados nem
+  limpeza automática antes das respostas.

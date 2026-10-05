@@ -1,8 +1,10 @@
 # Brief de design — De Lá do Pará (proposta C03 para revisão)
 
-Preserva D43–D48 e o nome D45. Tons, fontes, assets e protótipo são **proposta
-concreta**: Q01 segue aberta e nada aqui fecha decisão sem revisão do usuário.
-Nenhuma disponibilidade de marca, domínio ou rede é alegada.
+Preserva D43–D48 e o nome D45. Paleta, famílias tipográficas e direção
+anti-genérica já foram aprovadas; seleção de fotos e protótipo são propostas
+concretas para revisão visual (Q01 parcialmente resolvida). Nada aqui fecha
+decisão pendente sem revisão do usuário. Nenhuma disponibilidade de marca,
+domínio ou rede é alegada.
 
 ## Direção
 
@@ -40,6 +42,10 @@ restante. Foco visível de teclado usa contorno terracota 2 px + offset.
 
 ## Fluxos (protótipo a validar com usuário antes do frontend final)
 
+Prévia estática dos cinco fluxos: [prototype.html](prototype.html). As fotos
+estão carregadas diretamente do Wikimedia Commons para inspeção e continuam
+pendentes de aprovação; o arquivo não as armazena nem as usa no app.
+
 1. **Catálogo:** grade com foto, nome, origem, preço e disponibilidade;
    filtros (produtor, preço, tipo) na URL; estados vazio/erro/carregando.
 2. **Produto:** foto grande, história do produtor (fictício identificado),
@@ -71,8 +77,13 @@ condição: não parecer "visual vibecodado"/AIslop. Regras concretas:
 - Todo componente novo passa pela pergunta: "isso poderia estar em qualquer
   template?" — se sim, redesenhar com conteúdo real da loja.
 
-## Aberto para sua revisão (Q01) — respondido em 20/09/2026
+## Estado da revisão de Q01
 
 1. Paleta aprovada + condição anti-genérica acima. ✅
 2. Fraunces + Inter aprovadas; teste de acentos no bootstrap (C07). ✅
-3. Fotos: editorial fundo claro. ✅ (curadoria em `assets.md`)
+3. Direção fotográfica editorial em fundo claro aprovada. ✅ A seleção concreta
+   está na [shortlist de assets](assets.md) e no protótipo; licença e autoria
+   foram documentadas, mas enquadramento/adequação cultural ainda aguardam
+   revisão visual. ⏳
+4. Os cinco fluxos estão em prévia estática; protótipo e distribuição de
+   tempos do storyboard aguardam revisão. ⏳

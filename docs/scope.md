@@ -61,7 +61,8 @@ código. Revisão do mapa pelo usuário é pré-requisito das specs de módulos.
   D58/D60. Dados fictícios, sem orientação de conservação real.
 - Nome **De Lá do Pará** (D45); paleta fundo marfim / verde profundo /
   terracota (D46); títulos com serifa, textos/botões sem serifa (D47); tom
-  acolhedor e direto (D48). Vídeo principal vertical 60–90 s + demonstração
+  acolhedor e direto (D48). Vídeo principal vertical em loop de até 30 s, sem
+  legendas, + demonstração
   técnica horizontal; sequência vitrine/origem → compra → falha breve →
   recuperação sem repetir a compra (D49/D50). Fotos gratuitas com licença
   verificada e autoria registrada; sem apresentar pessoas reais como
