@@ -52,6 +52,8 @@ app:
     bcrypt-strength: 12
     verification-token-ttl: PT30M
     verification-url: ${APP_IDENTITY_VERIFICATION_URL:https://localhost/verify-email}
+    recovery-token-ttl: PT15M
+    recovery-url: ${APP_IDENTITY_RECOVERY_URL:https://localhost/reset-password}
     mail-from: ${APP_IDENTITY_MAIL_FROM:no-reply@deladopara.local}
 
 shipping:

@@ -3,6 +3,8 @@ app:
     bcrypt-strength: 10
     verification-token-ttl: PT30M
     verification-url: https://localhost/verify-email
+    recovery-token-ttl: PT15M
+    recovery-url: https://localhost/reset-password
     mail-from: no-reply@deladopara.local
 
 spring:

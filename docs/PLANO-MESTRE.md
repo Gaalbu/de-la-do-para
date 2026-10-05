@@ -1835,13 +1835,15 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C08, C14, C15. **Alvos:** cadastro, token de verificação, adapter SMTP de identidade e testes; M.
 - **Aceite:** cadastro opcional com e-mail verificado; token de uso único e expiração; login não concede papel admin.
 - **Verificar:** BI(CustomerRegistration), token vencido/repetido e e-mail duplicado sem exposição indevida.
-- **Estado atual (2026-10-05):** implementação backend no PR #136 draft, branch `codex/c76-account-verification`; backend local passou em Temurin 25.0.4 com `-Xint` (128 unitários + 161 integrações, Spotless e Checkstyle), `contracts:check` passou com 8 avisos Redocly existentes e `docs:check` passou. GitHub Actions passou 7/7 no SHA `887f94c` (backend, frontend, contracts, docs, security, commit-policy, quality-gate); `aislop` 100/100 sem achados. Manter o marco aberto até integração do PR e conclusão das tarefas dependentes de frontend.
+- **Estado atual (2026-10-05):** implementação backend na PR #136, branch `codex/c76-account-verification`, OPEN e pronta para revisão; sem merge. Backend local passou em Temurin 25.0.4 com `-Xint` (128 unitários + 161 integrações, Spotless e Checkstyle), `contracts:check` passou com 8 avisos Redocly existentes e `docs:check` passou. GitHub Actions passou 7/7 no SHA atual `b4712c0` (backend, frontend, contracts, docs, security, commit-policy, quality-gate); `aislop` 100/100 sem achados. Manter o marco aberto até integração do PR e conclusão das tarefas dependentes de frontend.
 
 ### C77 — `feat(identity): recover customer access securely`
 
 - [ ] **Depende:** C76. **Alvos:** solicitação/consumo de recuperação e testes; M.
 - **Aceite:** resposta evita enumerar contas; token de uso único; troca de senha trata sessões anteriores conforme spec.
-- **Verificar:** BI(AccountRecovery), rate limit, token inválido e tentativa concorrente.
+- **Verificar:** BI(AccountRecovery), rate limit, token inválido/expirado e tentativa concorrente; duas redefinições com tokens ativos da mesma conta devem produzir exatamente um `200` e um `410`, sem deadlock.
+- **Políticas confirmadas (2026-10-05):** no máximo 3 solicitações/hora por IP+e-mail; token com validade de 15 minutos; redefinição revoga todas as sessões existentes.
+- **Estado atual (2026-10-05):** PR #138, branch `codex/c77-account-recovery`, empilhada sobre C76/PR #136, está pronta para revisão. CI passou 7/7 no SHA `9bd11f4` (run `37375333673`), incluindo backend completo; o commit documental `3a404f3` tem nova rodada de CI em andamento. Manter aberta até C76 ser integrada.
 
 ### C78 — `feat(identity): link guest purchases after proof of ownership`
 
