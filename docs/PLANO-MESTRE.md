@@ -1775,6 +1775,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C59, C63, C64. **Alvos:** conciliador de UNKNOWN, política de consulta e testes; M.
 - **Aceite:** timeout pós-efeito não duplica criação; resultado não conclusivo continua pendente/análise; operador terá informação auditável.
 - **Verificar:** BI(UnknownPaymentRecovery), V07/V19 e regras observadas em C04; consulta negativa eventual não vira prova imediata de ausência.
+- **Estado atual (2026-10-03):** **parcial.** `UnknownPaymentRecoveryIT` (BI, V07/V19) na branch `claude/c65-unknown-payment-recovery`. Limite de 3 consultas segue a proposta PAY-Q02, ainda não aprovada; faltam as regras observadas no sandbox (C04).
 
 ### C66 — `feat(checkout): expire reservations without losing late payments`
 

@@ -56,6 +56,7 @@ Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 | PAY-007 retorno de navegação não confirma | `AsaasCheckoutContractIT.callbackDoesNotConfirm` | WireMock (C55) |
 | PAY-008 evento de provedor repetido/fora de ordem | `PaymentReconciliationIT.lateOrRepeatedNotificationsNeverRegressAConfirmedPayment`; `PaymentOutcomeIT.duplicatedWebhookIsProcessedOnce` | Testcontainers |
 | PAY-008a consulta sem prova não descarta a notificação (C64) | `PaymentReconciliationIT` (pagamento ainda não visível, falha de consulta, esgotamento → `REVIEW`, checkout divergente, fila não bloqueada) | Testcontainers |
+| PAY-006a `UNKNOWN` resolvido só por consulta (C65, V07/V19) | `UnknownPaymentRecoveryIT` (8: pago confirmado sem nova criação, nada antes do backoff, vazio não é prova e só a última consulta manda à análise, checkout pendente ligado e confirmado pelo webhook, falha auditada, valor divergente, lease de consulta abandonado, três workers → uma consulta) | Testcontainers |
 | PAY-009 valor divergente | `PaymentResultIT.amountMismatchGoesToReview` | Testcontainers |
 | PAY-010 reembolso integral único | `RefundIT.secondRefundRequestIsNoOp` | Testcontainers + WireMock |
 
@@ -65,7 +66,7 @@ Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado co
 
 - A unicidade de `externalReference` no Asaas e a existência de chave de idempotência na criação **não estão provadas** (C04). Esta spec assume o pior caso: não há repetição segura; timeout vira `UNKNOWN` e conciliação.
 - **PAY-Q01 (aberta):** `minutesToExpire` do link. Proposta: 15 min menos o tempo já decorrido da reserva, com mínimo aceito pelo provedor; se não houver tempo útil, a compra expira de forma controlada sem criar link. Momento: C59, depois de revalidar o intervalo no spike.
-- **PAY-Q02 (aberta):** quanto tempo uma operação `UNKNOWN` sem conclusão aguarda antes de ir para análise administrativa. Proposta: 3 consultas de conciliação espaçadas pelo backoff aprovado da C45, depois análise. Momento: C64.
+- **PAY-Q02 (aberta):** quanto tempo uma operação `UNKNOWN` sem conclusão aguarda antes de ir para análise administrativa. Proposta: 3 consultas de conciliação espaçadas pelo backoff aprovado da C45, depois análise. Momento: C64. C65 implementa a proposta como padrão configurável (`PAYMENTS_RECONCILIATION_MAX_LOOKUPS`); o valor final segue pendente de aprovação.
 - **PAY-Q03 (aberta):** estado `EXPIRED` do pagamento para `CHECKOUT_EXPIRED`. Proposta: estado próprio terminal, sem efeito no pedido além do que a reserva já determina. Momento: C58.
 - Silêncio não é aprovação: as propostas acima só valem após revisão.
 
@@ -77,6 +78,7 @@ Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado co
 - R02: cada chamada ao provedor é precedida por uma `payment_external_operation` com identidade própria, tipo (`CREATE_CHECKOUT`, `REFUND`, `QUERY`), estado `PENDING` e instante de início, gravada e **commitada** antes do HTTP.
 - R03: o worker reclama a operação (lease da C45), commita, chama o provedor fora de transação e grava o resultado em outra transação. Lease vencido não autoriza repetir uma operação `IN_FLIGHT`: ela vira `UNKNOWN`.
 - R04: resposta perdida, timeout ou 5xx após envio → operação `UNKNOWN`; nunca se cria outra cobrança para destravar. Só `QUERY`/conciliação decide.
+- R04a (C65): intent `UNKNOWN` só se resolve por consulta, registrada como operação `QUERY` (lease, início, fim e diagnóstico `FOUND:<estado>`, `NOT_FOUND` ou `LOOKUP_FAILED:<tipo>`), que é a trilha de auditoria do operador. Consultas espaçadas por 1 s ×2 até 1 min; uma por vez por intent, mesmo com vários workers. Pago com valor exato → `CONFIRMED`; valor divergente → `UNDER_REVIEW` (`AMOUNT_MISMATCH`); checkout encontrado e não pago → só liga `provider_checkout_id`, para o webhook poder confirmar depois. Resposta vazia ou falha não prova ausência; após `payments.reconciliation.max-lookups` (padrão 3, proposta PAY-Q02) a intent vai para `UNDER_REVIEW` (`UNKNOWN_UNRESOLVED`), nunca `DECLINED`. Consulta com lease vencido conta como inconclusiva sem mexer na intent.
 - R05: 4xx de validação antes de efeito → operação `FAILED` e intent `DECLINED` com motivo `PROVIDER_REJECTED`.
 - R06: retorno do navegador (`callback`) só leva a tela a consultar o backend; confirmação vem de webhook autenticado e validado por consulta ao provedor (C60/C61).
 - R07: valor confirmado diferente de `amount_cents` → intent `UNDER_REVIEW`, sem confirmar o pedido.
