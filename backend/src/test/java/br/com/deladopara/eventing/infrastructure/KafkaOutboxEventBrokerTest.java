@@ -1,11 +1,13 @@
 package br.com.deladopara.eventing.infrastructure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import br.com.deladopara.eventing.domain.OutboxEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -35,6 +37,20 @@ class KafkaOutboxEventBrokerTest {
         assertThat(record.getValue().key()).isEqualTo("order-1");
         assertThat(record.getValue().value().toString()).contains("\"eventType\":\"order.created\"");
         assertThat(record.getValue().value().toString()).doesNotContain("attemptCount");
+    }
+
+    @Test
+    void failsWhenKafkaDoesNotAcknowledgeWithinDeadline() {
+        @SuppressWarnings("unchecked")
+        Producer<String, String> producer = org.mockito.Mockito.mock(Producer.class);
+        when(producer.send(org.mockito.ArgumentMatchers.any(ProducerRecord.class)))
+                .thenReturn(new CompletableFuture<>());
+        var broker = new KafkaOutboxEventBroker(
+                producer, new ObjectMapper().findAndRegisterModules(), "events.v1", Duration.ofMillis(10));
+
+        assertThatThrownBy(() -> broker.publish(event()))
+                .isInstanceOf(OutboxPublishException.class)
+                .hasCauseInstanceOf(java.util.concurrent.TimeoutException.class);
     }
 
     private OutboxEvent event() {
