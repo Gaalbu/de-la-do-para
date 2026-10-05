@@ -1,7 +1,9 @@
 package br.com.deladopara.identity.adapter.web;
 
+import br.com.deladopara.identity.application.AccountRecoveryService;
 import br.com.deladopara.identity.application.AccountService;
 import br.com.deladopara.identity.application.AccountVerificationService;
+import br.com.deladopara.identity.application.RecoveryRateLimitException;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,6 +35,20 @@ public class IdentityExceptionHandler {
     @ExceptionHandler(AccountVerificationService.InvalidVerificationTokenException.class)
     ResponseEntity<Problem> invalidVerificationToken() {
         return problem(HttpStatus.GONE, "IDENTITY_004", "token inválido, expirado ou já utilizado");
+    }
+
+    @ExceptionHandler(AccountRecoveryService.InvalidRecoveryTokenException.class)
+    ResponseEntity<Problem> invalidRecoveryToken() {
+        return problem(HttpStatus.GONE, "IDENTITY_013", "token inválido, expirado ou já utilizado");
+    }
+
+    @ExceptionHandler(RecoveryRateLimitException.class)
+    ResponseEntity<Problem> recoveryRateLimit(RecoveryRateLimitException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", Integer.toString(ex.getRetryAfterSeconds()))
+                .contentType(MediaType.parseMediaType("application/problem+json"))
+                .body(new Problem(
+                        "Erro", 429, "limite de recuperação excedido", "IDENTITY_012", MDC.get("correlationId")));
     }
 
     @ExceptionHandler(MailException.class)

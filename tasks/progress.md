@@ -1072,6 +1072,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | A UI usa respostas simuladas no Playwright; nenhuma confirmação Asaas externa foi testada. Chrome DevTools MCP não está configurado; Chromium via Playwright foi usado. C62 ainda não foi merged. |
 | Próximo passo | Enviar este registro, acompanhar o CI atualizado da PR #111 e deixá-la pronta para revisão quando os checks finais passarem; depois seguir a próxima tarefa elegível de acordo com as dependências e o acesso real exigido por C63. |
 
+## Sessão 2026-10-05 — C77 recuperação de conta
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Worktree isolada `/home/gaalbu/codigos/de-la-do-para-wt/c77-account-recovery`, branch `codex/c77-account-recovery`, base C76 SHA `b4712c0`. O checkout compartilhado e as worktrees de peers não foram alterados. |
+| Decisões | Usuário confirmou: 3 solicitações/hora por IP+e-mail, token de recuperação válido por 15 minutos e revogação de todas as sessões após redefinir a senha. Limite de login 5/15m continua pendente. Registrado na spec, decisões e plano mestre. |
+| Mudanças | Endpoints `/api/v1/accounts/recovery` e `/reset`; respostas idênticas sem enumeração; limitador fixo em memória, chave SHA-256 do IP+e-mail, capacidade limitada; token opaco/hash, uso único e expiração; bloqueio por conta antes da atualização condicional de token para serializar resets sem deadlock; troca de senha limpa lockout e revoga sessões `SPRING_SESSION` na mesma transação; e-mails, propriedades HTTPS, contrato OpenAPI, spec e matriz de rastreio atualizados. |
+| Verificação | Temurin 25.0.4 com `-Xint`: `IdentityMailIT` 8/8 (PostgreSQL/Testcontainers), `IdentitySmtpIT` 2/2 (Mailpit), `IdentityPropertiesTest` 2/2. O teste concorrente primeiro reproduziu deadlock/500 e depois passou com exactly um 200 e um 410; teste de token inválido/expirado passou. `contracts:check`, `docs:check`, `scripts/verify.sh security`, Spotless/Checkstyle, `git diff --check` e `aislop` serão atualizados após os gates finais desta sessão. |
+| Limite | `scripts/verify.sh backend` completo foi tentado, mas a JVM sofreu `SIGSEGV` durante Surefire após 31 testes sem falha observada; o gate não está aprovado. A prova focal de C77 passou. O rate-limit é local por processo; sem UI frontend (C81a) ou homologação de SMTP externo. |
+| Remoto | Ainda sem commit/push de C77; PR #136/C76 permanece OPEN/draft e separado. |
+| Próximo passo | Finalizar gates estáticos, criar commit atômico C77, enviar branch e abrir PR draft empilhado sobre C76; acompanhar CI antes de atualizar o estado remoto no registro. |
+
 ### Revisão de privacidade C62 — 2026-09-28
 
 - Revisão apontou que a chave de `sessionStorage` continha a intenção serializada, incluindo e-mail/endereço. O commit atômico `2207582` substitui o nome por HMAC-SHA-256 com sal aleatório da sessão; retry da mesma intenção mantém a chave idempotente, e os nomes não revelam dados pessoais.

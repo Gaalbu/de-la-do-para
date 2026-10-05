@@ -1841,7 +1841,9 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 - [ ] **Depende:** C76. **Alvos:** solicitação/consumo de recuperação e testes; M.
 - **Aceite:** resposta evita enumerar contas; token de uso único; troca de senha trata sessões anteriores conforme spec.
-- **Verificar:** BI(AccountRecovery), rate limit, token inválido e tentativa concorrente.
+- **Verificar:** BI(AccountRecovery), rate limit, token inválido/expirado e tentativa concorrente; duas redefinições com tokens ativos da mesma conta devem produzir exatamente um `200` e um `410`, sem deadlock.
+- **Políticas confirmadas (2026-10-05):** no máximo 3 solicitações/hora por IP+e-mail; token com validade de 15 minutos; redefinição revoga todas as sessões existentes.
+- **Estado local (2026-10-05):** implementação e cobertura focada passam em Temurin 25.0.4; aguardando publicação/CI do PR desta fatia antes de marcar concluída.
 
 ### C78 — `feat(identity): link guest purchases after proof of ownership`
 

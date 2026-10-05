@@ -2,6 +2,7 @@ package br.com.deladopara.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import br.com.deladopara.identity.application.AccountService;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,6 +14,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -37,12 +39,18 @@ class IdentityMailIT {
     private final int port;
     private final JdbcTemplate jdbc;
     private final CapturingMailSender mailSender;
+    private final AccountService accounts;
 
     @Autowired
-    IdentityMailIT(@Value("${local.server.port}") int port, JdbcTemplate jdbc, CapturingMailSender mailSender) {
+    IdentityMailIT(
+            @Value("${local.server.port}") int port,
+            JdbcTemplate jdbc,
+            CapturingMailSender mailSender,
+            AccountService accounts) {
         this.port = port;
         this.jdbc = jdbc;
         this.mailSender = mailSender;
+        this.accounts = accounts;
     }
 
     @Test
@@ -101,6 +109,164 @@ class IdentityMailIT {
     }
 
     @Test
+    void recoveryIsNonEnumerableSingleUseAndRevokesEveryExistingSession() throws Exception {
+        var email = "recovery-" + UUID.randomUUID() + "@example.com";
+        var client = new Client();
+        client.fetchCsrf();
+        assertThat(client.post("/api/v1/accounts", credentials(email, PASSWORD)).statusCode())
+                .isEqualTo(201);
+        var verificationToken = mailSender.lastMessage().getText().replaceAll("(?s).*#token=([A-Za-z0-9_-]+).*", "$1");
+        assertThat(client.postWithoutCsrf("/api/v1/accounts/verify", "{\"token\":\"" + verificationToken + "\"}")
+                        .statusCode())
+                .isEqualTo(200);
+
+        var other = new Client();
+        other.fetchCsrf();
+        var beforeUnknown = client.post(
+                "/api/v1/accounts/recovery", "{\"email\":\"unknown-" + UUID.randomUUID() + "@example.com\"}");
+        var beforeKnown = other.post("/api/v1/accounts/recovery", "{\"email\":\"" + email + "\"}");
+        assertThat(beforeUnknown.statusCode()).isEqualTo(202);
+        assertThat(beforeKnown.statusCode()).isEqualTo(202);
+        assertThat(beforeKnown.body()).isEqualTo(beforeUnknown.body());
+        var recoveryMessage = mailSender.lastMessage();
+        assertThat(recoveryMessage.getText()).contains("https://localhost/reset-password#token=", "15 minutos");
+        var recoveryToken = recoveryMessage.getText().replaceAll("(?s).*#token=([A-Za-z0-9_-]+).*", "$1");
+
+        var accountId = accounts.accountIdByEmail(email).orElseThrow();
+        var sessions = jdbc.update(
+                "insert into spring_session (primary_id, session_id, creation_time, last_access_time, max_inactive_interval, expiry_time, principal_name) values (?, ?, ?, ?, ?, ?, ?)",
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                System.currentTimeMillis(),
+                System.currentTimeMillis(),
+                1800,
+                System.currentTimeMillis() + 1_800_000,
+                email);
+        assertThat(sessions).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from spring_session where principal_name = ?", Integer.class, email))
+                .isEqualTo(1);
+
+        var reset = client.post(
+                "/api/v1/accounts/reset",
+                "{\"token\":\"" + recoveryToken + "\",\"newPassword\":\"brand-new-password\"}");
+        assertThat(reset.statusCode()).isEqualTo(200);
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from spring_session where principal_name = ?", Integer.class, email))
+                .isZero();
+        assertThat(jdbc.queryForObject(
+                        "select used_at is not null from verification_tokens where account_id = ? and type = 'RECOVERY'",
+                        Boolean.class,
+                        accountId))
+                .isTrue();
+        assertThat(client.post(
+                                "/api/v1/accounts/reset",
+                                "{\"token\":\"" + recoveryToken + "\",\"newPassword\":\"another-new-password\"}")
+                        .statusCode())
+                .isEqualTo(410);
+
+        var login = new Client();
+        login.fetchCsrf();
+        assertThat(login.post("/api/v1/sessions", credentials(email, PASSWORD)).statusCode())
+                .isEqualTo(401);
+        assertThat(login.post("/api/v1/sessions", credentials(email, "brand-new-password"))
+                        .statusCode())
+                .isEqualTo(200);
+    }
+
+    @Test
+    void invalidAndExpiredRecoveryTokensReturnGone() throws Exception {
+        var email = "recovery-expired-" + UUID.randomUUID() + "@example.com";
+        var client = new Client();
+        client.fetchCsrf();
+        assertThat(client.post("/api/v1/accounts", credentials(email, PASSWORD)).statusCode())
+                .isEqualTo(201);
+        var verificationToken = mailSender.lastMessage().getText().replaceAll("(?s).*#token=([A-Za-z0-9_-]+).*", "$1");
+        assertThat(client.postWithoutCsrf("/api/v1/accounts/verify", "{\"token\":\"" + verificationToken + "\"}")
+                        .statusCode())
+                .isEqualTo(200);
+        assertThat(client.post("/api/v1/accounts/recovery", "{\"email\":\"" + email + "\"}")
+                        .statusCode())
+                .isEqualTo(202);
+
+        var recoveryToken = mailSender.lastMessage().getText().replaceAll("(?s).*#token=([A-Za-z0-9_-]+).*", "$1");
+        jdbc.update(
+                "update verification_tokens set expires_at = now() - interval '1 second' where token_hash = ?",
+                hash(recoveryToken));
+        assertThat(client.post(
+                                "/api/v1/accounts/reset",
+                                "{\"token\":\"" + recoveryToken + "\",\"newPassword\":\"expired-password\"}")
+                        .statusCode())
+                .isEqualTo(410);
+        assertThat(client.post(
+                                "/api/v1/accounts/reset",
+                                "{\"token\":\"unknown-recovery-token-1234567890123456789012345\","
+                                        + "\"newPassword\":\"unknown-password\"}")
+                        .statusCode())
+                .isEqualTo(410);
+    }
+
+    @Test
+    void recoveryLimitIsThreePerHourForCombinedIpAndEmail() throws Exception {
+        var email = "limit-" + UUID.randomUUID() + "@example.com";
+        var client = new Client();
+        client.fetchCsrf();
+        for (var attempt = 0; attempt < 3; attempt++) {
+            assertThat(client.post("/api/v1/accounts/recovery", "{\"email\":\"" + email + "\"}")
+                            .statusCode())
+                    .isEqualTo(202);
+        }
+        var limited = client.post("/api/v1/accounts/recovery", "{\"email\":\"" + email + "\"}");
+        assertThat(limited.statusCode()).isEqualTo(429);
+        assertThat(limited.headers().firstValue("Retry-After")).isPresent();
+    }
+
+    @Test
+    void concurrentRecoveryResetsForDifferentTokensAllowOnlyOnePasswordChange() throws Exception {
+        var email = "recovery-race-" + UUID.randomUUID() + "@example.com";
+        var client = new Client();
+        client.fetchCsrf();
+        assertThat(client.post("/api/v1/accounts", credentials(email, PASSWORD)).statusCode())
+                .isEqualTo(201);
+        var verificationToken = mailSender.lastMessage().getText().replaceAll("(?s).*#token=([A-Za-z0-9_-]+).*", "$1");
+        assertThat(client.postWithoutCsrf("/api/v1/accounts/verify", "{\"token\":\"" + verificationToken + "\"}")
+                        .statusCode())
+                .isEqualTo(200);
+
+        var accountId = accounts.accountIdByEmail(email).orElseThrow();
+        var firstToken = "concurrent-recovery-first-" + UUID.randomUUID();
+        var secondToken = "concurrent-recovery-second-" + UUID.randomUUID();
+        jdbc.update(
+                "insert into verification_tokens (id, account_id, token_hash, type, expires_at, created_at) "
+                        + "values (?, ?, ?, 'RECOVERY', now() + interval '15 minutes', now()), "
+                        + "(?, ?, ?, 'RECOVERY', now() + interval '15 minutes', now())",
+                UUID.randomUUID(),
+                accountId,
+                hash(firstToken),
+                UUID.randomUUID(),
+                accountId,
+                hash(secondToken));
+
+        var ready = new CountDownLatch(2);
+        var start = new CountDownLatch(1);
+        var firstClient = new Client();
+        var secondClient = new Client();
+        firstClient.fetchCsrf();
+        secondClient.fetchCsrf();
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(
+                    () -> concurrentReset(firstClient, firstToken, "first-reset-password", ready, start));
+            var second = executor.submit(
+                    () -> concurrentReset(secondClient, secondToken, "second-reset-password", ready, start));
+            assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+
+            var statuses = java.util.List.of(first.get(15, TimeUnit.SECONDS), second.get(15, TimeUnit.SECONDS));
+            assertThat(statuses).containsExactlyInAnyOrder(200, 410);
+        }
+    }
+
+    @Test
     void smtpFailureReturnsUnavailableAndRollsBackTheUnverifiedAccount() throws Exception {
         var email = "smtp-failure-" + UUID.randomUUID() + "@example.com";
         var client = new Client();
@@ -155,6 +321,20 @@ class IdentityMailIT {
         ready.countDown();
         assertThat(start.await(10, TimeUnit.SECONDS)).isTrue();
         return client.post("/api/v1/accounts", credentials(email, PASSWORD)).statusCode();
+    }
+
+    private int concurrentReset(
+            Client client, String token, String password, CountDownLatch ready, CountDownLatch start) throws Exception {
+        ready.countDown();
+        assertThat(start.await(10, TimeUnit.SECONDS)).isTrue();
+        return client.post(
+                        "/api/v1/accounts/reset", "{\"token\":\"" + token + "\",\"newPassword\":\"" + password + "\"}")
+                .statusCode();
+    }
+
+    private static String hash(String token) throws Exception {
+        return HexFormat.of()
+                .formatHex(MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8)));
     }
 
     private static String credentials(String email, String password) {
