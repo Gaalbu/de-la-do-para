@@ -97,6 +97,43 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
+        '503':
+          description: Serviço de e-mail indisponível
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/accounts/verify:
+    post:
+      operationId: verifyAccountEmail
+      summary: Confirmar e-mail da conta
+      description: Consome um token opaco de uso único enviado por e-mail; o token bruto só aparece no fragmento do link do frontend.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+      responses:
+        '200':
+          description: E-mail confirmado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          description: Token ausente ou request inválido
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '410':
+          description: Token inválido, expirado ou já utilizado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
   /api/v1/sessions:
     post:
       operationId: login
@@ -1499,6 +1536,14 @@ components:
           type: string
           minLength: 8
           maxLength: 72
+    VerifyEmailRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 40
+          maxLength: 64
     LoginRequest:
       type: object
       required: [email, password]

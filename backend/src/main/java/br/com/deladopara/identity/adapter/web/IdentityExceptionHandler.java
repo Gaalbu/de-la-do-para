@@ -1,10 +1,12 @@
 package br.com.deladopara.identity.adapter.web;
 
 import br.com.deladopara.identity.application.AccountService;
+import br.com.deladopara.identity.application.AccountVerificationService;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,6 +28,16 @@ public class IdentityExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<Problem> badCredentials() {
         return problem(HttpStatus.UNAUTHORIZED, "IDENTITY_005", "credenciais inválidas");
+    }
+
+    @ExceptionHandler(AccountVerificationService.InvalidVerificationTokenException.class)
+    ResponseEntity<Problem> invalidVerificationToken() {
+        return problem(HttpStatus.GONE, "IDENTITY_004", "token inválido, expirado ou já utilizado");
+    }
+
+    @ExceptionHandler(MailException.class)
+    ResponseEntity<Problem> mailUnavailable() {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "IDENTITY_009", "não foi possível enviar a verificação agora");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
