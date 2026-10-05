@@ -56,5 +56,10 @@ public class CartItemEntity {
         return quantity;
     }
 
+    public void updateQuantity(int quantity, Instant now) {
+        this.quantity = quantity;
+        this.updatedAt = now;
+    }
+
     public record Key(UUID cart, UUID skuId) {}
 }

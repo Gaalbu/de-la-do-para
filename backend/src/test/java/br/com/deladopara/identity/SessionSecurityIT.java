@@ -3,6 +3,7 @@ package br.com.deladopara.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import br.com.deladopara.identity.application.AccountService;
+import br.com.deladopara.identity.application.SecretCipher;
 import br.com.deladopara.identity.domain.Account;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.net.URI;
@@ -28,12 +29,15 @@ class SessionSecurityIT {
     private final int port;
     private final AccountService accounts;
     private final JdbcTemplate jdbc;
+    private final SecretCipher cipher;
 
     @Autowired
-    SessionSecurityIT(@Value("${local.server.port}") int port, AccountService accounts, JdbcTemplate jdbc) {
+    SessionSecurityIT(
+            @Value("${local.server.port}") int port, AccountService accounts, JdbcTemplate jdbc, SecretCipher cipher) {
         this.port = port;
         this.accounts = accounts;
         this.jdbc = jdbc;
+        this.cipher = cipher;
     }
 
     @Test
@@ -55,6 +59,95 @@ class SessionSecurityIT {
     }
 
     @Test
+    void verificationPostConsumesEncryptedOutboxTokenOnce() throws Exception {
+        var account = accounts.register(uniqueEmail(), PASSWORD, Account.Role.CUSTOMER);
+        var encrypted = jdbc.queryForObject(
+                "select encrypted_payload from identity_mail_outbox where account_id = ?",
+                String.class,
+                account.getId());
+        var token = cipher.decrypt("identity-verification", encrypted);
+        var body = "{\"token\":\"" + token + "\"}";
+
+        var first = send("POST", "/api/v1/accounts/verify", body, new Client());
+        var second = send("POST", "/api/v1/accounts/verify", body, new Client());
+
+        assertThat(first.statusCode()).isEqualTo(200);
+        assertThat(first.body()).contains("\"emailVerified\":true");
+        assertThat(second.statusCode()).isEqualTo(410);
+    }
+
+    @Test
+    void recoveryRequestDoesNotEnumerateAndRateLimitReturnsRetryAfter() throws Exception {
+        var email = uniqueEmail();
+        var client = new Client();
+        var body = "{\"email\":\"" + email + "\"}";
+
+        assertThat(client.post("/api/v1/accounts/recovery", body).statusCode()).isEqualTo(202);
+        assertThat(client.post("/api/v1/accounts/recovery", body).statusCode()).isEqualTo(202);
+        assertThat(client.post("/api/v1/accounts/recovery", body).statusCode()).isEqualTo(202);
+        var limited = client.post("/api/v1/accounts/recovery", body);
+
+        assertThat(limited.statusCode()).isEqualTo(429);
+        assertThat(limited.headers().firstValue("Retry-After")).isPresent();
+        assertThat(limited.body()).contains("IDENTITY_012");
+    }
+
+    @Test
+    void recoveryResponseIsIdenticalForKnownAndUnknownEmail() throws Exception {
+        var existingEmail = uniqueEmail();
+        var account = accounts.register(existingEmail, PASSWORD, Account.Role.CUSTOMER);
+        var encrypted = jdbc.queryForObject(
+                "select encrypted_payload from identity_mail_outbox where account_id = ? and message_type = 'VERIFY'",
+                String.class,
+                account.getId());
+        accounts.verifyEmail(cipher.decrypt("identity-verification", encrypted));
+
+        var known = new Client().post("/api/v1/accounts/recovery", "{\"email\":\"" + existingEmail + "\"}");
+        var unknownEmail = uniqueEmail();
+        var unknown = new Client().post("/api/v1/accounts/recovery", "{\"email\":\"" + unknownEmail + "\"}");
+
+        assertThat(known.statusCode()).isEqualTo(202);
+        assertThat(unknown.statusCode()).isEqualTo(known.statusCode());
+        assertThat(unknown.body()).isEqualTo(known.body()).doesNotContain(existingEmail, unknownEmail);
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from identity_mail_outbox where account_id = ? and message_type = 'RECOVERY'",
+                        Integer.class,
+                        account.getId()))
+                .isEqualTo(1);
+    }
+
+    @Test
+    void passwordResetInvalidatesEveryExistingAccountSession() throws Exception {
+        var email = uniqueEmail();
+        var account = accounts.register(email, PASSWORD, Account.Role.CUSTOMER);
+        var verifyEncrypted = jdbc.queryForObject(
+                "select encrypted_payload from identity_mail_outbox where account_id = ? and message_type = 'VERIFY'",
+                String.class,
+                account.getId());
+        accounts.verifyEmail(cipher.decrypt("identity-verification", verifyEncrypted));
+        var firstSession = loggedIn(email);
+        var secondSession = loggedIn(email);
+
+        var anonymous = new Client();
+        var recovery = anonymous.post("/api/v1/accounts/recovery", "{\"email\":\"" + email + "\"}");
+        assertThat(recovery.statusCode()).isEqualTo(202);
+        var recoveryEncrypted = jdbc.queryForObject(
+                "select encrypted_payload from identity_mail_outbox where account_id = ? and message_type = 'RECOVERY'",
+                String.class,
+                account.getId());
+        var recoveryToken = cipher.decrypt("identity-recovery", recoveryEncrypted);
+
+        var reset = anonymous.post(
+                "/api/v1/accounts/reset",
+                "{\"token\":\"" + recoveryToken + "\",\"newPassword\":\"new-correct-horse\"}");
+
+        assertThat(reset.statusCode()).isEqualTo(200);
+        assertThat(reset.body()).contains("\"passwordChanged\":true");
+        assertThat(firstSession.get("/api/v1/sessions/current").statusCode()).isEqualTo(401);
+        assertThat(secondSession.get("/api/v1/sessions/current").statusCode()).isEqualTo(401);
+    }
+
+    @Test
     void duplicateEmailIgnoringCaseIsRejectedWithoutSecondAccount() throws Exception {
         var email = uniqueEmail();
         var client = new Client();
@@ -65,7 +158,10 @@ class SessionSecurityIT {
         var duplicate = client.post("/api/v1/accounts", credentials(email.toUpperCase(), PASSWORD));
 
         assertThat(duplicate.statusCode()).isEqualTo(409);
-        assertThat(duplicate.body()).contains("IDENTITY_002");
+        assertThat(duplicate.body()).contains("IDENTITY_002").doesNotContain(email, PASSWORD, "accountId");
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from accounts where lower(email) = lower(?)", Integer.class, email))
+                .isEqualTo(1);
     }
 
     @Test

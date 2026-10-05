@@ -7,6 +7,7 @@ import br.com.deladopara.cart.adapter.web.dto.CartItemRequest;
 import br.com.deladopara.cart.adapter.web.dto.CartItemsRequest;
 import br.com.deladopara.cart.adapter.web.dto.CartResponse;
 import br.com.deladopara.catalog.adapter.persistence.ProductSkuRepository;
+import br.com.deladopara.identity.adapter.persistence.AccountRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,11 +27,13 @@ public class GuestCartService {
     private final CartRepository carts;
     private final ProductSkuRepository skus;
     private final Clock clock;
+    private final AccountRepository accounts;
 
-    public GuestCartService(CartRepository carts, ProductSkuRepository skus, Clock clock) {
+    public GuestCartService(CartRepository carts, ProductSkuRepository skus, Clock clock, AccountRepository accounts) {
         this.carts = carts;
         this.skus = skus;
         this.clock = clock;
+        this.accounts = accounts;
     }
 
     @Transactional
@@ -39,8 +42,37 @@ public class GuestCartService {
     }
 
     @Transactional
+    public CartResponse getAccount(String email) {
+        var accountId = accountId(email);
+        return CartResponse.from(carts.findByAccountId(accountId)
+                .orElseGet(() -> carts.save(new CartEntity(UUID.randomUUID(), null, accountId, Instant.now(clock)))));
+    }
+
+    @Transactional
     public CartResponse replace(String sessionId, CartItemsRequest request) {
         var cart = findOrCreate(sessionId);
+        cart.requireWritable(request.expectedVersion());
+        var items = request.items() == null ? List.<CartItemRequest>of() : request.items();
+        var skuIds = items.stream().map(CartItemRequest::skuId).toList();
+        if (new HashSet<>(skuIds).size() != skuIds.size()) {
+            throw new CartInvalidInputException("SKU duplicado no carrinho");
+        }
+        var now = Instant.now(clock);
+        var entities = items.stream()
+                .map(item -> {
+                    skus.findById(item.skuId())
+                            .filter(sku -> sku.isActive())
+                            .orElseThrow(() -> new CartInvalidInputException("SKU não encontrado ou inativo"));
+                    return new CartItemEntity(cart, item.skuId(), item.quantity(), now);
+                })
+                .toList();
+        cart.replaceItems(entities, now);
+        return CartResponse.from(carts.saveAndFlush(cart));
+    }
+
+    @Transactional
+    public CartResponse replaceAccount(String email, CartItemsRequest request) {
+        var cart = findOrCreateAccount(email);
         cart.requireWritable(request.expectedVersion());
         var items = request.items() == null ? List.<CartItemRequest>of() : request.items();
         var skuIds = items.stream().map(CartItemRequest::skuId).toList();
@@ -70,8 +102,25 @@ public class GuestCartService {
     }
 
     @Transactional
+    public CartResponse removeAccount(String email, UUID skuId, long expectedVersion) {
+        var cart = findAccount(email);
+        cart.requireWritable(expectedVersion);
+        cart.getItems().removeIf(item -> item.getSkuId().equals(skuId));
+        cart.replaceItems(List.copyOf(cart.getItems()), Instant.now(clock));
+        return CartResponse.from(carts.saveAndFlush(cart));
+    }
+
+    @Transactional
     public CartResponse clear(String sessionId, long expectedVersion) {
         var cart = find(sessionId);
+        cart.requireWritable(expectedVersion);
+        cart.replaceItems(List.of(), Instant.now(clock));
+        return CartResponse.from(carts.saveAndFlush(cart));
+    }
+
+    @Transactional
+    public CartResponse clearAccount(String email, long expectedVersion) {
+        var cart = findAccount(email);
         cart.requireWritable(expectedVersion);
         cart.replaceItems(List.of(), Instant.now(clock));
         return CartResponse.from(carts.saveAndFlush(cart));
@@ -104,6 +153,22 @@ public class GuestCartService {
 
     private CartEntity find(String sessionId) {
         return carts.findByGuestSessionKey(hashSession(sessionId)).orElseThrow(CartNotFoundException::new);
+    }
+
+    private UUID accountId(String email) {
+        return accounts.findByEmailIgnoreCase(email)
+                .map(account -> account.getId())
+                .orElseThrow(CartNotFoundException::new);
+    }
+
+    private CartEntity findOrCreateAccount(String email) {
+        return carts.findByAccountId(accountId(email))
+                .orElseGet(() ->
+                        carts.save(new CartEntity(UUID.randomUUID(), null, accountId(email), Instant.now(clock))));
+    }
+
+    private CartEntity findAccount(String email) {
+        return carts.findByAccountId(accountId(email)).orElseThrow(CartNotFoundException::new);
     }
 
     public static String hashSession(String sessionId) {

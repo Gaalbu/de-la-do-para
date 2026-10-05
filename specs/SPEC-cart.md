@@ -1,7 +1,7 @@
 # SPEC — Carrinho convidado e snapshot de compra
 
-Status: proposta executável para C38; não autoriza implementação de checkout
-ou pagamento fora dos contratos descritos aqui.
+Status: contrato funcional C38; política C80 aprovada em 2026-09-25 (D76).
+Operações de checkout e pagamento seguem suas próprias specs.
 
 ## Objetivo e limites
 
@@ -60,17 +60,36 @@ retornam erro sem alterar o agregado.
 
 ## Login e combinação
 
-Ao autenticar, se houver carrinho convidado e carrinho da conta, o servidor não
-combina silenciosamente. A resposta deve informar a escolha disponível:
+**C80 — aprovado em 2026-09-25 (D76).**
+
+Ao autenticar, se houver carrinho convidado e carrinho da conta, o cliente
+precisa escolher explicitamente uma das seguintes opções; o servidor nunca
+combina silenciosamente. A API de login conclui a autenticação e informa que a
+decisão está pendente. O servidor guarda a referência hash da sessão convidada
+no contexto autenticado do servidor e rotaciona o identificador de sessão no
+login; o identificador antigo deixa de autenticar:
 
 - manter o carrinho da conta;
 - substituir o carrinho da conta pelo convidado;
 - combinar itens, somando quantidades por SKU.
 
-A combinação é transacional, limitada pelas quantidades máximas definidas pelo
-contrato de inventário e incrementa a versão. Se houver conflito ou item
-inválido, nenhuma das duas cestas é parcialmente alterada. A sessão convidada
-é invalidada somente depois da escolha persistida.
+A combinação é transacional: soma quantidades iguais por SKU, preserva SKUs que
+ficaram inativos desde a adição ao carrinho e limita cada linha a 2.147.483.647,
+o maior inteiro aceito pelo modelo persistido. A disponibilidade será
+revalidada no checkout; combinação não reserva estoque. A consulta de merge
+identifica SKUs inativos e a tela os marca como indisponíveis no catálogo,
+explicando que serão revalidados no checkout. Se a soma exceder esse
+limite, houver conflito de versão ou o carrinho de destino estiver em checkout,
+nenhuma das cestas é parcialmente alterada. Substituir copia todas as linhas do
+convidado, incluindo SKUs hoje inativos, sem criar duplicatas. Manter descarta
+somente o carrinho convidado. Em todos os casos, as cestas são vinculadas à
+conta e à sessão convidada apenas depois de a escolha persistir. A pendência
+fica associada à sessão autenticada no servidor, nunca ao cliente como prova
+de autorização, e é removida somente após a transação persistir.
+
+Se só houver carrinho convidado, a opção de manter esse carrinho o associa à
+conta e mantém as mesmas linhas. Se não houver carrinho convidado, a API não
+solicita escolha.
 
 ## Snapshot de checkout
 
