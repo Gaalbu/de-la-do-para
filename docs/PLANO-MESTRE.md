@@ -1866,6 +1866,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C38, C39, C76. **Alvos:** regra de combinação/versionamento e testes; M.
 - **Aceite:** regra aprovada combina itens sem perda silenciosa; indisponibilidade é apresentada; login repetido não repete quantidades.
 - **Verificar:** BI(CartMerge) com duas abas e item desativado após adição.
+- **Estado atual (2026-10-05):** implementação backend e interface em ramo empilhado sobre a PR #136 de C76. Prova local de PostgreSQL 6/6 e gate frontend completo aprovados; PR própria aguardando integração de C76.
 
 ### C81 — `feat(account-ui): register and verify optional customer accounts`
 

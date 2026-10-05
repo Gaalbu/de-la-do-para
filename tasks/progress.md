@@ -1103,3 +1103,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Ainda não publicado. C72 #117 permanece OPEN; sua CI do SHA documental `6788499` está em andamento. |
 | Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
 | Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
+
+## Sessão 2026-10-05 — C80: combinação explícita de carrinhos
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `codex/c80-cart-merge`, empilhada sobre `codex/c76-account-verification` (PR #136). Worktree separado; a árvore compartilhada permaneceu intacta. |
+| Tarefa | Integrar o carrinho convidado ao login sem perda silenciosa quando a conta já tem carrinho. |
+| Mudanças | Rotação de sessão no login; transferência automática do carrinho convidado quando não existe carrinho da conta; escolha autenticada e transacional entre manter/substituir/combinar quando ambos existem; versões otimistas, bloqueios de linha e tratamento de SKU desativado. Interface acessível de escolha, contrato OpenAPI e cenários Playwright/API adicionados. |
+| Verificação | `CartMergeApiIT`: 6/6 em PostgreSQL 18.6/Testcontainers; `GOMAXPROCS=1 scripts/verify.sh frontend`: 29 unitários, build SSR e Playwright 7/7; `contracts:check`, lint, Prettier e `git diff --check` passaram. O gate backend completo continua em execução, sem resultado final ainda. |
+| Remoto | C80 preparado em branch própria sobre a PR #136; a publicação da PR e o estado de CI serão registrados após o push. |
+| Limite | A implementação usa o contrato de C76 que está aberto; merge final depende da integração da PR #136. Testes locais e mocks não representam sessão ou execução em ambiente externo. |
+| Próximo passo | Publicar a branch como PR encadeada, acompanhar CI e só então integrar C80 após sua base C76. |
