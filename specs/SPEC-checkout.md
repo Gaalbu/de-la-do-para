@@ -161,7 +161,7 @@ convidado, o token de acesso mostrado uma única vez.
 | `PENDING_PAYMENT` | `ACTIVE` | `RESERVED` | `REQUESTED`…`AWAITING_PAYMENT`/`UNKNOWN` | aguardando pagamento |
 | `PAID` | `COMMITTED` | `CONSUMED` | `CONFIRMED` | compra efetivada |
 | `EXPIRED` | `RELEASED` | `RELEASED` | qualquer não confirmado | prazo esgotado sem pagamento |
-| `UNDER_REVIEW` | `RELEASED` | `RELEASED` | `UNDER_REVIEW`→`REFUND_REQUESTED` | pagamento tardio (D13) |
+| `UNDER_REVIEW` | `RELEASED` | `RELEASED` | `CONFIRMED`→`REFUND_REQUESTED` (`LATE_PAYMENT`) | pagamento tardio (D13) |
 | `CANCELLED` | `RELEASED` ou devolvida | `RELEASED` ou `CONSUMED` até reembolso | `REFUND_REQUESTED`/`REFUNDED` se pago | cancelada |
 
 ## A6. Transições coordenadas
@@ -172,7 +172,7 @@ qualquer outra linha, sempre na ordem pedido → reserva → cupom → pagamento
 | Gatilho | Precondição (lida sob lock) | Efeitos atômicos | Eventos |
 |---|---|---|---|
 | Pagamento `CONFIRMED` (C61) | pedido `PENDING_PAYMENT`, reserva `ACTIVE` e `now < expiresAt`, valor igual | reserva `COMMITTED`, cupom `CONSUMED`, pedido `PAID` | `order.status_changed` |
-| Pagamento `CONFIRMED` tardio (D13, V10) | reserva vencida ou liberada | pedido `PENDING_PAYMENT`→`UNDER_REVIEW` (`LATE_PAYMENT`) se ainda pendente; reserva e cupom liberados; pagamento `UNDER_REVIEW`→`REFUND_REQUESTED` | `order.status_changed`, `payment.refund_requested` |
+| Pagamento `CONFIRMED` tardio (D13, V10) | reserva vencida ou liberada | pedido `PENDING_PAYMENT`→`UNDER_REVIEW` (`LATE_PAYMENT`) se ainda pendente; reserva e cupom liberados; pagamento `CONFIRMED`→`REFUND_REQUESTED` com motivo `LATE_PAYMENT` (a SPEC-payments não permite `CONFIRMED`→`UNDER_REVIEW`) | `order.status_changed`, `payment.refund_requested` |
 | Pagamento `CONFIRMED` com valor divergente | qualquer | pedido inalterado; pagamento `UNDER_REVIEW` (SPEC-payments R07) | `payment.status_changed` |
 | Expiração (job, relógio controlado) | pedido `PENDING_PAYMENT`, reserva `ACTIVE`, `now >= expiresAt`, pagamento não confirmado | reserva e cupom liberados, pedido `EXPIRED` | `order.status_changed` |
 | Cancelamento sem pagamento | pedido `PENDING_PAYMENT` | reserva e cupom liberados, pedido `CANCELLED` | `order.status_changed` |
@@ -196,19 +196,24 @@ reembolso.
 
 | ID | Corrida | Mecanismo | Teste previsto |
 |---|---|---|---|
-| V01 | Duas compras para a última unidade | reserva em ordem estável com lock/versão do lote | `StockReservationIT.lastUnitGoesToOneBuyer` |
-| V02 | Mesmo aceite repetido | idempotência `COMPLETED` | `CheckoutIdempotencyIT.sameKeySameIntentReturnsSameOrder` |
+| V01 | Duas compras para a última unidade | reserva em ordem estável com lock/versão do lote | `StockReservationIT.twoBuyersForTheLastUnitGetExactlyOneReservation` |
+| V02 | Mesmo aceite repetido | idempotência `COMPLETED` | `CheckoutIdempotencyIT.sameKeyAndIntentReplaysTheSameOrder` |
 | V03 | Mesma chave com outro corpo/sujeito | hash + sujeito | `CheckoutIdempotencyIT.changedBodyConflictsAndSubjectsAreIsolated` |
-| V04 | Kafka fora no aceite | outbox na transação | `CheckoutAcceptanceIT.brokerDownStillAccepts` |
-| V05 | Queda após envio e antes de marcar outbox | consumo idempotente (C48) | `PaymentOutcomeIT.duplicateEventAppliesOnce` |
-| V06 | Queda entre efeito e offset | ledger de consumo transacional | `PaymentOutcomeIT.redeliveryDoesNotMoveStockAgain` |
-| V07 | Timeout após criação no provedor | `UNKNOWN` + `findCheckout` (C54/C55) | `CheckoutOperationRunnerIT`, conciliação C64 |
-| V08 | Webhook duplicado/antigo | inbox + versão | `AsaasWebhookIT`, `PaymentOutcomeIT.staleEventDoesNotRegress` |
-| V09 | Webhook forjado ou valor divergente | token + consulta + comparação de valor | `AsaasWebhookIT.forgedIsRejected`, `PaymentOutcomeIT.amountMismatchGoesToReview` |
-| V10 | Reserva expira com confirmação em trânsito | lock do pedido e checagem de `expiresAt` sob lock | `PaymentOutcomeIT.latePaymentGoesToReviewAndRefund` |
-| V11 | Cupom em duas compras | lock da linha do cupom (C31) | `CouponReservationServiceIT` (existente) + `CheckoutAcceptanceIT` |
-| V12 | Preço/cotação/endereço muda | `summaryVersion` | `CheckoutAcceptanceIT.changedSummaryIsRejectedWithoutWrites` |
-| V16 | Cancelamento contra expedição/retirada | lock do pedido; transição validada no estado atual | `OrderCancellationIT.cancelAndPickupAreMutuallyExclusive` |
+| V04 | Kafka fora no aceite | outbox na transação | Parcial: `PurchaseAcceptanceIT.guestPurchaseCreatesOrderReservationIntentAndEventsInOneTransaction` verifica persistência dos eventos; falta interromper Kafka e provar publicação após recuperação |
+| V05 | Queda após envio e antes de marcar outbox | consumidor idempotente (C48) | Parcial: `EventingWorkerConfigIT.realKafkaDeliveryCommitsAfterPostgresEffectAndReceiptAndReplayIsIdempotent`; falta forçar a queda exatamente após o ACK do broker e antes de persistir o ACK da outbox |
+| V06 | Queda entre efeito e offset | ledger de consumo transacional | Parcial: `EventingWorkerConfigIT.kafkaRebalanceRedeliversAppliedEventAndConsumerCommitsAfterDedupe` cobre redelivery após rebalance; falta uma queda controlada entre commit PostgreSQL e commit do offset |
+| V07 | Timeout após criação no provedor | `UNKNOWN` + `findCheckout` (C54/C55) | `CheckoutOperationRunnerIT.timeoutAfterSendingKeepsUnknownAndIsNeverRetried`; conciliação C64 permanece pendente |
+| V08 | Webhook duplicado/antigo | inbox + versão monotônica | `AsaasWebhookIT.redeliveryIsAcknowledgedAndStoredOnce` e `PaymentOutcomeIT.duplicatedWebhookIsProcessedOnce`; falta provar não regressão com evento antigo/fora de ordem |
+| V09 | Webhook forjado ou valor divergente | token + consulta + comparação de valor | `AsaasWebhookIT.missingOrWrongTokenIsRejectedAndNothingStored`, `PaymentOutcomeIT.forgedWebhookWithoutPaymentAtTheProviderConfirmsNothing` e `PaymentOutcomeIT.divergentAmountGoesToReviewWithoutConfirmingTheOrder` |
+| V10 | Reserva expira com confirmação em trânsito | lock do pedido e checagem de `expiresAt` sob lock | `PaymentOutcomeIT.paymentAfterTheReservationExpiredGoesToReviewAndRefund` |
+| V11 | Cupom em duas compras | lock da linha do cupom (C31) | `CouponReservationServiceIT.concurrentReservationsNeverExceedTheGlobalLimit` e `CouponReservationServiceIT.concurrentReservationsForTheSameEmailNeverExceedThePerEmailLimit` |
+| V12 | Preço/cotação/endereço muda | `summaryVersion` | Parcial: `PurchaseAcceptanceIT.changedPriceAfterSummaryIsRejectedWithTheNewSummaryAndNoWrites` cobre preço; cotação/endereço e mudança concorrente precisam de prova própria |
+| V16 | Cancelamento contra expedição/retirada | lock do pedido; transição validada no estado atual | Pendente: `OrderCancellationIT.cancelAndPickupAreMutuallyExclusive` não existe no checkout atual; depende da implementação e corrida logística C66/C68/C70–C72 |
+
+Os nomes acima foram comparados com os arquivos atuais de teste em 2026-09-30.
+“Parcial” e “Pendente” não são aceite; C88 exige executar cenários com o
+gatilho descrito, barreiras/relógio quando aplicável e asserções no estado
+persistido.
 
 ## A8. Erros
 

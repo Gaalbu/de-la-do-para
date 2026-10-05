@@ -118,6 +118,62 @@ class OrderLifecycleIT {
     }
 
     @Test
+    void changingCouponRulesDoesNotRewriteAnAcceptedOrderSnapshot() {
+        var couponCode =
+                "SNAPSHOT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        jdbc.update(
+                "INSERT INTO coupon (id, code_normalized, discount_type, discount_value, valid_from, valid_until)"
+                        + " VALUES (?, ?, 'PERCENTAGE', 10, now() - interval '1 day',"
+                        + " now() + interval '1 day')",
+                UUID.randomUUID(),
+                couponCode);
+        var base = command("chk-coupon-snapshot", FulfillmentMode.DELIVERY);
+        var accepted = service.create(new CreateOrderCommand(
+                base.checkoutKey(),
+                base.accountId(),
+                base.contactEmail(),
+                base.mode(),
+                base.subtotalCents(),
+                base.shippingCents(),
+                base.discountType(),
+                base.discountValue(),
+                base.discountCents(),
+                couponCode,
+                base.totalCents(),
+                base.preparationDays(),
+                base.deliveryDays(),
+                base.pricingRuleVersion(),
+                base.destination(),
+                base.items(),
+                base.correlationId()));
+
+        assertThat(jdbc.queryForObject(
+                        "SELECT coupon_code FROM purchase_order WHERE id = ?", String.class, accepted.id()))
+                .isEqualTo(couponCode);
+        assertThat(jdbc.queryForObject(
+                        "SELECT discount_cents FROM purchase_order WHERE id = ?", Long.class, accepted.id()))
+                .isEqualTo(450L);
+
+        jdbc.update(
+                "UPDATE coupon SET discount_type = 'FIXED', discount_value = 700, active = false"
+                        + " WHERE code_normalized = ?",
+                couponCode);
+
+        assertThat(jdbc.queryForObject(
+                        "SELECT coupon_code FROM purchase_order WHERE id = ?", String.class, accepted.id()))
+                .isEqualTo(couponCode);
+        assertThat(jdbc.queryForObject(
+                        "SELECT discount_type FROM purchase_order WHERE id = ?", String.class, accepted.id()))
+                .isEqualTo("PERCENTAGE");
+        assertThat(jdbc.queryForObject(
+                        "SELECT discount_value FROM purchase_order WHERE id = ?", Long.class, accepted.id()))
+                .isEqualTo(10L);
+        assertThat(jdbc.queryForObject(
+                        "SELECT discount_cents FROM purchase_order WHERE id = ?", Long.class, accepted.id()))
+                .isEqualTo(450L);
+    }
+
+    @Test
     void databaseRejectsInconsistentTotals() {
         var bad = command("chk-3", FulfillmentMode.DELIVERY);
         var wrong = new CreateOrderCommand(

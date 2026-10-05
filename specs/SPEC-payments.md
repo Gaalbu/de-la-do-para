@@ -25,7 +25,7 @@ C56) e homologação real no sandbox (C04, dependente de conta do usuário).
 Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 
 - `./backend/mvnw -f backend/pom.xml -Dtest='PaymentTransitionsTest' test`
-- `./backend/mvnw -f backend/pom.xml -Dit.test='PaymentIntentIT,AsaasCheckoutContractIT' verify`
+- `./backend/mvnw -f backend/pom.xml -Dit.test='PaymentIntentIT,CheckoutOperationRunnerIT,PaymentWorkerIT,AsaasWebhookIT,PaymentOutcomeIT' verify`
 - `npm --prefix frontend run contracts:check`
 
 ## 3. Estrutura ◆
@@ -44,20 +44,23 @@ Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 
 ## 5. Estratégia de testes ◆
 
-| Critério | Teste | Onde |
+| Critério | Evidência atual / lacuna | Onde |
 |---|---|---|
-| PAY-001 intent imutável | `PaymentIntentIT.referenceAndAmountCannotChange` | Testcontainers |
-| PAY-002 uma intent por pedido | `PaymentIntentIT.sameOrderReturnsSameIntent` | Testcontainers |
-| PAY-003 operação registrada antes do HTTP | `PaymentIntentIT.operationIsDurableBeforeProviderCall` (provedor falso que lê o banco na chamada) | Testcontainers |
-| PAY-004 nada de HTTP dentro de transação | `PaymentIntentIT.providerCallRunsWithoutActiveTransaction` | Testcontainers |
-| PAY-005 transições | `PaymentTransitionsTest` (tabela origem×destino completa) | unitário |
-| PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `AsaasCheckoutContractIT.timeoutAfterEffectKeepsUnknown` | WireMock (C55) |
-| PAY-007 retorno de navegação não confirma | `AsaasCheckoutContractIT.callbackDoesNotConfirm` | WireMock (C55) |
-| PAY-008 evento de provedor repetido/fora de ordem | `PaymentResultIT.duplicateAndStaleEventsDoNotRegress` | Testcontainers |
-| PAY-009 valor divergente | `PaymentResultIT.amountMismatchGoesToReview` | Testcontainers |
-| PAY-010 reembolso integral único | `RefundIT.secondRefundRequestIsNoOp` | Testcontainers + WireMock |
+| PAY-001 intent imutável | `PaymentIntentIT.referenceAndAmountCannotChangeAndIntentCannotBeDeleted` | PostgreSQL/Testcontainers |
+| PAY-002 uma intent por pedido | `PaymentIntentIT.requestWritesIntentPendingOperationAndEventAndIsIdempotentByOrder`; concorrência em `concurrentRequestsForTheSameOrderCreateOneIntent` | PostgreSQL/Testcontainers |
+| PAY-003 operação registrada antes do HTTP | `CheckoutOperationRunnerIT.operationIsDurableAndInFlightBeforeProviderCallWhichRunsWithoutTransaction` | PostgreSQL/Testcontainers; provedor de teste inspeciona a operação durante a chamada |
+| PAY-004 nada de HTTP dentro de transação | `CheckoutOperationRunnerIT.operationIsDurableAndInFlightBeforeProviderCallWhichRunsWithoutTransaction` | PostgreSQL/Testcontainers |
+| PAY-005 transições | `PaymentTransitionsTest.matchesTheSpecTableExactly` e `terminalStatesNeverLeave` | unitário |
+| PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `CheckoutOperationRunnerIT.timeoutAfterSendingKeepsUnknownAndIsNeverRetried`; contrato herdado `PaymentProviderContract.timeoutAfterEffectIsNotARejectionAndTheCheckoutExists` | PostgreSQL/Testcontainers + simulador; adapter Asaas/WireMock C63 ainda ausente |
+| PAY-007 retorno de navegação não confirma | Sem rota/teste de retorno do provedor localizado no checkout atual | Pendente de C63; nenhum callback de navegador deve confirmar pagamento |
+| PAY-008 evento de provedor repetido/fora de ordem | `PaymentOutcomeIT.duplicatedWebhookIsProcessedOnce`; o contrato herdado `paymentProducesOneNotificationWhoseRedeliveryKeepsItsIdentity` cobre identidade de redelivery, não ordenação de estados | PostgreSQL/Testcontainers + simulador; cenário fora de ordem continua pendente |
+| PAY-009 valor divergente | `PaymentOutcomeIT.divergentAmountGoesToReviewWithoutConfirmingTheOrder`; `mismatchedIntentValueCannotMarkOrderPaid`; `PaymentProviderContract.paidAmountIsReportedAsPaidEvenWhenItDiffers` | PostgreSQL/Testcontainers + simulador |
+| PAY-010 reembolso integral único | Nenhum teste/adapter de reembolso localizado | Pendente de C67; não há prova de WireMock nem de provedor real |
 
-Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado como homologação Asaas.
+Relógio controlado; sem `sleep`; nomes e escopo das evidências foram comparados
+com os fontes do checkout em 2026-09-30. Resultado do simulador nunca é
+apresentado como homologação Asaas. PAY-007, PAY-008 fora de ordem e PAY-010
+continuam pendentes; não fechar estes critérios com os testes parciais acima.
 
 ## 6. Limites de atuação ◆
 
