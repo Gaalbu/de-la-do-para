@@ -38,6 +38,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -50,6 +51,7 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest
 @ActiveProfiles("worker")
 @Testcontainers
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import({PostgresTestContainer.class, EventingWorkerConfigIT.ConsumerTestConfiguration.class})
 class EventingWorkerConfigIT {
 
@@ -153,14 +155,14 @@ class EventingWorkerConfigIT {
         var eventId = UUID.randomUUID();
         var event = new EventEnvelope(
                 eventId,
-                "order.created",
+                "test.order.created",
                 1,
-                "kafka-order-" + eventId,
+                eventId.toString(),
                 0,
                 Instant.now().toString(),
                 eventId,
                 eventId,
-                objectMapper.createObjectNode().put("orderId", "order-" + eventId));
+                objectMapper.createObjectNode().put("orderId", eventId.toString()));
         var serialized = objectMapper.writeValueAsString(event);
         try (var producer = createProducer();
                 var firstConsumer = createConsumer(group)) {
@@ -225,14 +227,14 @@ class EventingWorkerConfigIT {
         var eventId = UUID.randomUUID();
         var event = new EventEnvelope(
                 eventId,
-                "order.created",
+                "test.order.created",
                 1,
-                "rebalance-order-" + eventId,
+                eventId.toString(),
                 0,
                 Instant.now().toString(),
                 eventId,
                 eventId,
-                objectMapper.createObjectNode().put("orderId", "rebalance-order-" + eventId));
+                objectMapper.createObjectNode().put("orderId", eventId.toString()));
         try (var producer = createProducer();
                 var firstConsumer = createConsumer(group)) {
             producer.send(new ProducerRecord<>(topic, event.aggregateId(), objectMapper.writeValueAsString(event)))
@@ -285,9 +287,9 @@ class EventingWorkerConfigIT {
         var poisonId = UUID.randomUUID();
         var poison = new EventEnvelope(
                 poisonId,
-                "order.created",
+                "test.order.created",
                 2,
-                "poison-order-" + poisonId,
+                poisonId.toString(),
                 0,
                 Instant.now().toString(),
                 poisonId,
@@ -296,14 +298,14 @@ class EventingWorkerConfigIT {
         var validId = UUID.randomUUID();
         var valid = new EventEnvelope(
                 validId,
-                "order.created",
+                "test.order.created",
                 1,
-                "valid-order-" + validId,
+                validId.toString(),
                 0,
                 Instant.now().toString(),
                 validId,
                 validId,
-                objectMapper.createObjectNode().put("orderId", "order-" + validId));
+                objectMapper.createObjectNode().put("orderId", validId.toString()));
         try (var producer = createProducer();
                 var consumer = createConsumer(group)) {
             producer.send(new ProducerRecord<>(topic, poison.aggregateId(), objectMapper.writeValueAsString(poison)))
@@ -418,7 +420,7 @@ class EventingWorkerConfigIT {
 
         @Override
         public String eventType() {
-            return "order.created";
+            return "test.order.created";
         }
 
         @Override

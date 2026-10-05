@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 class EventConsumptionServiceIT {
 
     private static final Instant NOW = Instant.parse("2026-09-24T12:00:00Z");
+    private static final String ORDER_ID = "00000000-0000-0000-0000-000000000001";
 
     private final EventConsumptionRepository consumptions;
     private final JdbcTemplate jdbc;
@@ -97,7 +98,7 @@ class EventConsumptionServiceIT {
     void rejectsUnknownEventTypeAndSchemaBeforeWritingReceipt() {
         var event = new EventEnvelope(
                 UUID.randomUUID(),
-                "order.created",
+                "test.order.created",
                 2,
                 "order-unknown",
                 0,
@@ -161,14 +162,14 @@ class EventConsumptionServiceIT {
         var eventId = UUID.randomUUID();
         return new EventEnvelope(
                 eventId,
-                "order.created",
+                "test.order.created",
                 1,
-                "order-service-it",
+                ORDER_ID,
                 version,
                 NOW.toString(),
                 UUID.randomUUID(),
                 eventId,
-                objectMapper.createObjectNode().put("orderId", "order-service-it"));
+                objectMapper.createObjectNode().put("orderId", ORDER_ID));
     }
 
     static class JdbcEventHandler implements EventHandler {
@@ -191,7 +192,7 @@ class EventConsumptionServiceIT {
 
         @Override
         public String eventType() {
-            return "order.created";
+            return "test.order.created";
         }
 
         @Override

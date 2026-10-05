@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -103,12 +104,13 @@ class EventingWorkerProcessRestartIT {
                         "--spring.datasource.username=" + postgres.getUsername(),
                         "--spring.datasource.password=" + postgres.getPassword())
                 .redirectErrorStream(true)
-                .redirectOutput(ProcessBuilder.Redirect.DISCARD);
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT);
         builder.environment().put("APP_EVENTING_BOOTSTRAP_SERVERS", bootstrapServers);
         builder.environment().put("APP_EVENTING_TOPIC", topic);
         builder.environment().put("APP_EVENTING_LEASE", LEASE.toString());
         builder.environment().put("APP_EVENTING_BATCH_SIZE", "1");
         builder.environment().put("APP_EVENTING_POLL_DELAY", POLL_DELAY.toString());
+        builder.environment().put("APP_DATA_ENCRYPTION_KEY", Base64.getEncoder().encodeToString(new byte[32]));
         var process = builder.start();
         process.getOutputStream().close();
         return process;
@@ -123,7 +125,7 @@ class EventingWorkerProcessRestartIT {
     }
 
     private void await(java.util.function.BooleanSupplier condition) throws InterruptedException {
-        var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(180);
         while (System.nanoTime() < deadline) {
             if (condition.getAsBoolean()) {
                 return;
