@@ -32,7 +32,7 @@ class CheckoutOperationRunnerTest {
 
     private static final Claimed CLAIMED = new Claimed(
             UUID.fromString("00000000-0000-0000-0000-00000000000a"),
-            new CheckoutRequest(UUID.randomUUID(), UUID.randomUUID(), 5_250));
+            new CheckoutRequest(UUID.randomUUID(), UUID.randomUUID(), 5_250, Instant.parse("2026-09-24T12:15:00Z")));
     private static final CreatedCheckout CREATED =
             new CreatedCheckout("chk_42", "https://sandbox.example/c/chk_42", Instant.parse("2026-09-24T12:15:00Z"));
 

@@ -55,6 +55,7 @@ scripts/verify.sh frontend
 - [API](docs/api-guide.md): contrato canônico e exemplos executáveis.
 - [Observabilidade](docs/observability.md): correlação, logs e probes.
 - [Imagens de release](docs/release.md): API, worker e frontend em imagens imutáveis.
+- [Backup e restauração](docs/backup-restore.md): migrations com dados, cópia do banco e conferência em banco separado.
 
 ## Regras do repositório
 
