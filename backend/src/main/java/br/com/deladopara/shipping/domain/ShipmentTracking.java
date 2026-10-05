@@ -13,6 +13,12 @@ public record ShipmentTracking(String eventType, Progress progress, boolean exce
 
     public ShipmentTracking apply(String nextEvent, Instant nextOccurredAt) {
         var next = from(nextEvent, nextOccurredAt);
+        if (progress == Progress.CANCELLED && next.progress != Progress.CANCELLED) {
+            if (nextOccurredAt.isAfter(occurredAt)) {
+                return new ShipmentTracking(nextEvent, Progress.CANCELLED, true, nextOccurredAt);
+            }
+            return this;
+        }
         if (next.exception && nextOccurredAt.isAfter(occurredAt)) {
             return new ShipmentTracking(nextEvent, progress, true, nextOccurredAt);
         }

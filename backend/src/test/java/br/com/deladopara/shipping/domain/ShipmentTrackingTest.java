@@ -35,6 +35,16 @@ class ShipmentTrackingTest {
     }
 
     @Test
+    void doesNotAdvanceACancelledShipmentWhenALaterStatusArrives() {
+        var cancelled = ShipmentTracking.from("order.cancelled", NOW);
+
+        var result = cancelled.apply("order.posted", NOW.plusSeconds(1));
+
+        assertThat(result.progress()).isEqualTo(ShipmentTracking.Progress.CANCELLED);
+        assertThat(result.exception()).isTrue();
+    }
+
+    @Test
     void rejectsUnknownProviderEvent() {
         assertThatThrownBy(() -> ShipmentTracking.from("order.unknown", NOW))
                 .isInstanceOf(IllegalArgumentException.class);
