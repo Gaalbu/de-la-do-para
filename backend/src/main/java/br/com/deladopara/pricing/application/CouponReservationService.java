@@ -112,6 +112,13 @@ public class CouponReservationService {
     }
 
     @Transactional
+    public boolean isConsumed(String reservationKey) {
+        return coupons.lockUsage(reservationKey)
+                .map(usage -> usage.state() == CouponUsageState.CONSUMED)
+                .orElse(false);
+    }
+
+    @Transactional
     public void markFullyRefunded(String reservationKey) {
         move(reservationKey, CouponUsageState.CONSUMED, CouponUsageState.REFUNDED);
     }
