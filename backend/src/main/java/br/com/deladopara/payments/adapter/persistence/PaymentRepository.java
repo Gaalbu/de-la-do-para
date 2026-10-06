@@ -221,6 +221,76 @@ public class PaymentRepository {
                 last == null ? rs.getTimestamp("refund_finished_at").toInstant() : last.toInstant());
     }
 
+    /** The lookup an administrator queued for this intent that no worker has claimed yet, if any. */
+    public Optional<UUID> pendingQuery(UUID intentId) {
+        return jdbc
+                .queryForList(
+                        "SELECT id FROM payment_external_operation WHERE intent_id = ? AND kind = 'QUERY'"
+                                + " AND status = 'PENDING'",
+                        UUID.class,
+                        intentId)
+                .stream()
+                .findFirst();
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void insertAdminLookupRequest(
+            UUID id, UUID intentId, UUID operationId, String actor, String reason, Instant now) {
+        jdbc.update(
+                "INSERT INTO payment_admin_lookup_request (id, intent_id, operation_id, actor, reason, requested_at)"
+                        + " VALUES (?, ?, ?, ?, ?, ?)",
+                id,
+                intentId,
+                operationId,
+                actor,
+                reason,
+                Timestamp.from(now));
+    }
+
+    /** Intents that still need recovery work, oldest change first. */
+    public List<AttentionIntent> needingAttention(int limit) {
+        return jdbc.query(
+                """
+                SELECT id, order_id, amount_cents, status, status_reason, updated_at FROM payment_intent
+                WHERE status IN ('UNKNOWN', 'UNDER_REVIEW', 'REFUND_REQUESTED')
+                ORDER BY updated_at, id
+                LIMIT ?
+                """,
+                (rs, row) -> new AttentionIntent(
+                        rs.getObject("id", UUID.class),
+                        rs.getObject("order_id", UUID.class),
+                        rs.getLong("amount_cents"),
+                        PaymentStatus.valueOf(rs.getString("status")),
+                        rs.getString("status_reason"),
+                        rs.getTimestamp("updated_at").toInstant()),
+                limit);
+    }
+
+    /** Every provider operation of the intent, newest first: the operator's audit trail. */
+    public List<OperationTrail> operationTrail(UUID intentId) {
+        return jdbc.query(
+                """
+                SELECT o.id, o.kind, o.status, o.last_error, o.created_at, o.finished_at, a.actor, a.reason
+                FROM payment_external_operation o
+                LEFT JOIN payment_admin_lookup_request a ON a.operation_id = o.id
+                WHERE o.intent_id = ?
+                ORDER BY o.created_at DESC, o.id
+                """,
+                (rs, row) -> {
+                    var finished = rs.getTimestamp("finished_at");
+                    return new OperationTrail(
+                            rs.getObject("id", UUID.class),
+                            OperationKind.valueOf(rs.getString("kind")),
+                            OperationStatus.valueOf(rs.getString("status")),
+                            rs.getString("last_error"),
+                            rs.getTimestamp("created_at").toInstant(),
+                            finished == null ? null : finished.toInstant(),
+                            rs.getString("actor"),
+                            rs.getString("reason"));
+                },
+                intentId);
+    }
+
     /** Records a provider lookup as already in flight, in the same transaction that chose the intent. */
     @Transactional(propagation = Propagation.MANDATORY)
     public void startQuery(UUID id, UUID intentId, Instant now, Instant leaseUntil) {
@@ -278,6 +348,20 @@ public class PaymentRepository {
 
     /** {@code since} is when the last lookup finished, or when the refund call finished. */
     public record RefundAwaitingLookup(UUID intentId, int lookups, Instant since) {}
+
+    public record AttentionIntent(
+            UUID id, UUID orderId, long amountCents, PaymentStatus status, String reason, Instant updatedAt) {}
+
+    /** {@code requestedBy}/{@code requestReason} are set only for lookups an administrator asked for. */
+    public record OperationTrail(
+            UUID id,
+            OperationKind kind,
+            OperationStatus status,
+            String result,
+            Instant createdAt,
+            Instant finishedAt,
+            String requestedBy,
+            String requestReason) {}
 
     public record Operation(
             UUID id, UUID intentId, OperationKind kind, OperationStatus status, Instant leaseUntil, String lastError) {}
