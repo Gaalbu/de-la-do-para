@@ -48,3 +48,30 @@ JSON foi parseado e conferido sem token, cookie ou query enviados na sonda.
 RSS observado: 232.596 KiB (aproximadamente 227 MiB), após a primeira sonda,
 sem carga; é uma amostra local, não orçamento de produção ou benchmark.
 Readiness recusando tráfego retorna 503 sem derrubar liveness, coberto por teste.
+
+## Métricas de recuperação — C79 (parcial)
+
+Expostas pelo perfil `worker` em `/actuator/metrics` (o perfil inclui
+`health,metrics`). Os rótulos são só estados, nunca pedido, intent ou evento,
+para manter a cardinalidade fixa.
+
+| Métrica | Rótulo | Significado |
+|---|---|---|
+| `dlp.eventing.outbox.pending.count` | — | eventos da outbox ainda não publicados |
+| `dlp.eventing.outbox.pending.oldest_age_seconds` | — | idade do evento pendente mais antigo |
+| `dlp.eventing.outbox.pending.attempts` | — | tentativas acumuladas dos pendentes |
+| `dlp.eventing.consumer.failures` | `state` = `RETRYING`/`QUARANTINED` | registros consumidos que falharam |
+| `dlp.eventing.consumer.retrying.attempts` | — | tentativas gastas nos que ainda vão ser reprocessados |
+| `dlp.payments.intents` | `status` = `UNKNOWN`/`UNDER_REVIEW`/`REFUND_REQUESTED` | intents que ainda exigem conciliação, análise ou reembolso |
+| `dlp.payments.intents.oldest_age_seconds` | `status` (mesmos valores) | tempo desde que a intent mais antiga entrou no estado |
+| `dlp.payments.operations.in_flight` | — | chamadas ao provedor reclamadas e ainda sem resultado gravado |
+| `dlp.payments.provider_events` | `status` = `RECEIVED`/`REVIEW` | notificações aguardando processamento ou operador |
+
+Correlação: o `correlationId` do request HTTP vai para o evento da outbox
+(`EventEnvelope.correlationId`) e, no consumo, é colocado no MDC enquanto o
+efeito roda, então os logs do efeito carregam o mesmo identificador; o
+contexto anterior do worker é restaurado depois.
+
+Ainda faltam nesta fatia: traces distribuídos (OpenTelemetry), instrumentação
+de etiquetas de frete (C70) e de notificações (C75), e a medição de recursos da
+stack. O provisionamento de Prometheus/Grafana é a C79a.

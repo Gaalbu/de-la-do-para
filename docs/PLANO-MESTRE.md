@@ -1874,6 +1874,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 ### C79 — `feat(observability): trace checkout events and recovery metrics`
 
 - [ ] **Depende:** C12, C47, C61, C65, C68, C70, C75. **Alvos:** instrumentação de eventos/efeitos e testes; M.
+- **Estado atual (2026-10-05):** parcial. Gauges de recuperação de pagamentos (intents `UNKNOWN`/`UNDER_REVIEW`/`REFUND_REQUESTED` e idade, chamadas em voo, notificações pendentes) e de falhas do consumidor (`RETRYING`/`QUARANTINED`, tentativas), rotulados só por estado; correlação do evento no MDC durante o efeito. `RecoveryMetricsIT` 2/2 e `KafkaEventConsumerIT` 7/7. Faltam traces OpenTelemetry, instrumentação de C70/C75 (dependências abertas) e medição de recursos; permanece aberta.
 - **Aceite:** correlação HTTP→outbox→Kafka→efeito; métricas de backlog/idade/retries/UNKNOWN/quarentena; recursos da stack medidos.
 - **Verificar:** executar V04/V07 e acompanhar trace; scan de logs/traces sem dados sensíveis. Sem número de pedido como label de alta cardinalidade em métricas.
 
