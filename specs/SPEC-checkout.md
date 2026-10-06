@@ -180,6 +180,11 @@ qualquer outra linha, sempre na ordem pedido → reserva → cupom → pagamento
 | Reembolso confirmado | pagamento `REFUND_REQUESTED` | pagamento `REFUNDED`; uso por e-mail do cupom devolvido (D34), limite global permanece gasto (proposta C31) | `payment.refunded` |
 | Pedido com pacote na transportadora (D30) | pedido `IN_TRANSIT` | pedido `UNDER_REVIEW`; sem reembolso automático | `order.status_changed` |
 
+A expiração (C66, `CheckoutExpirationService` no perfil worker) lê os pedidos
+vencidos sem lock e decide cada um sob o lock do pedido, com motivo
+`RESERVATION_EXPIRED`. Pagamento já `CONFIRMED` e ainda não aplicado fica com o
+handler de resultado, que o trata como tardio.
+
 O pedido `EXPIRED` é terminal: se o pagamento chegar depois da expiração já
 aplicada, o pedido fica `EXPIRED` e só o pagamento segue para análise e
 reembolso.
@@ -205,7 +210,7 @@ reembolso.
 | V07 | Timeout após criação no provedor | `UNKNOWN` + `findCheckout` (C54/C55) | `CheckoutOperationRunnerIT`, conciliação C64 |
 | V08 | Webhook duplicado/antigo | inbox + versão | `AsaasWebhookIT`, `PaymentOutcomeIT.staleEventDoesNotRegress` |
 | V09 | Webhook forjado ou valor divergente | token + consulta + comparação de valor | `AsaasWebhookIT.forgedIsRejected`, `PaymentOutcomeIT.amountMismatchGoesToReview` |
-| V10 | Reserva expira com confirmação em trânsito | lock do pedido e checagem de `expiresAt` sob lock | `PaymentOutcomeIT.latePaymentGoesToReviewAndRefund` |
+| V10 | Reserva expira com confirmação em trânsito | lock do pedido e checagem de `expiresAt` sob lock; expiração não age sobre pagamento já `CONFIRMED` (C66) | `PaymentOutcomeIT.paymentAfterTheReservationExpiredGoesToReviewAndRefund`; `CheckoutExpirationIT` (confirmação em trânsito, pagamento após expiração, corrida expiração × confirmação e três expiradores concorrentes) |
 | V11 | Cupom em duas compras | lock da linha do cupom (C31) | `CouponReservationServiceIT` (existente) + `CheckoutAcceptanceIT` |
 | V12 | Preço/cotação/endereço muda | `summaryVersion` | `CheckoutAcceptanceIT.changedSummaryIsRejectedWithoutWrites` |
 | V16 | Cancelamento contra expedição/retirada | lock do pedido; transição validada no estado atual | `OrderCancellationIT.cancelAndPickupAreMutuallyExclusive` |

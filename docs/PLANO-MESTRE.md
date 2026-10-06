@@ -1782,6 +1782,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C57, C58a, C61, C65. **Alvos:** expiração/claim, relógio e testes; M.
 - **Aceite:** aos 15 minutos libera reserva/cupom uma vez; confirmação concorrente produz transição válida; pagamento tardio é registrado para compensação.
 - **Verificar:** BI(CheckoutExpiration), V10 com tempo controlado e concorrência real no banco.
+- **Estado atual (2026-10-03):** `CheckoutExpirationIT` na branch `claude/c66-checkout-expiration`; o worker de expiração é opt-in (`CHECKOUT_EXPIRATION_ENABLED`). CHK-Q03 (estoque de pedido pago cancelado) continua aberta e pertence ao cancelamento (C68).
 
 ### C67 — `feat(payments): issue and reconcile full sandbox refunds`
 

@@ -51,6 +51,12 @@ métricas `dlp.eventing.outbox.pending.count`,
 `dlp.eventing.outbox.pending.attempts`. O estado de quarentena será medido
 quando o modelo de C49 existir; esta fatia não cria uma quarentena implícita.
 
+No mesmo perfil, `CHECKOUT_EXPIRATION_ENABLED=true` liga a expiração de
+pedidos não pagos ao fim da reserva de 15 min (C66): a cada
+`CHECKOUT_EXPIRATION_POLL_DELAY` (padrão 5 s), até
+`CHECKOUT_EXPIRATION_BATCH_SIZE` pedidos (padrão 20) passam a `EXPIRED`, com
+reserva e cupom liberados. Vários workers podem rodar juntos.
+
 ## Superfícies expostas
 
 Só as portas acima, só em `localhost`. Banco, broker e simuladores ficam na
