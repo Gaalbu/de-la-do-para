@@ -1786,7 +1786,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C67 — `feat(payments): issue and reconcile full sandbox refunds`
 
-- [ ] **Depende:** C53, C63, C64, C65. **Alvos:** refund intent/adapter, migration quando necessária e testes; M.
+- [x] **Depende:** C53, C63, C64, C65. **Alvos:** refund intent/adapter, migration quando necessária e testes; M. Implementado em 2026-10-05 sem migration nova (V30 já tinha a operação `REFUND` única); `RefundLifecycleIT` 7/7 e `AsaasRefundTest` 7/7. SB de Pix/cartão segue pendente em C04/C89.
 - **Aceite:** reembolso integral tem operação durável; reexecução segura conforme contrato; resultado incerto permanece em conciliação.
 - **Verificar:** BI(RefundLifecycle), SB de Pix/cartão conforme capacidade observada e falha depois do efeito externo.
 

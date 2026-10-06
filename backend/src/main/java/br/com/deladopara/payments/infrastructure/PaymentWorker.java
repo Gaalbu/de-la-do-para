@@ -4,6 +4,9 @@ import br.com.deladopara.payments.application.CheckoutOperationRunner;
 import br.com.deladopara.payments.application.CheckoutOperations;
 import br.com.deladopara.payments.application.PaymentProvider;
 import br.com.deladopara.payments.application.ProviderEventProcessor;
+import br.com.deladopara.payments.application.RefundOperations;
+import br.com.deladopara.payments.application.RefundProvider;
+import br.com.deladopara.payments.application.RefundRunner;
 import br.com.deladopara.payments.application.UnknownPaymentLookups;
 import br.com.deladopara.payments.application.UnknownPaymentReconciler;
 import org.slf4j.Logger;
@@ -32,6 +35,7 @@ public class PaymentWorker {
     private final CheckoutOperationRunner runner;
     private final ProviderEventProcessor events;
     private final UnknownPaymentReconciler reconciler;
+    private final RefundRunner refunds;
     private final int batchSize;
 
     public PaymentWorker(
@@ -39,6 +43,8 @@ public class PaymentWorker {
             PaymentProvider provider,
             ProviderEventProcessor events,
             UnknownPaymentLookups lookups,
+            RefundOperations refundOperations,
+            RefundProvider refundProvider,
             @Value("${payments.worker.batch-size:10}") int batchSize) {
         if (batchSize < 1) {
             throw new IllegalArgumentException("Payment worker batch size must be positive");
@@ -47,12 +53,13 @@ public class PaymentWorker {
         this.runner = new CheckoutOperationRunner(operations, provider);
         this.events = events;
         this.reconciler = new UnknownPaymentReconciler(lookups, provider);
+        this.refunds = new RefundRunner(refundOperations, refundProvider);
         this.batchSize = batchSize;
     }
 
     /**
-     * Returns how many operations, notifications and UNKNOWN lookups ran; abandoned leases are settled before new
-     * claims.
+     * Returns how many operations, notifications, UNKNOWN lookups, refunds and refund lookups ran; abandoned leases
+     * are settled before new claims.
      */
     @Scheduled(fixedDelayString = "${payments.worker.poll-delay:PT1S}")
     public int tick() {
@@ -72,6 +79,14 @@ public class PaymentWorker {
         while (looked < batchSize && reconciler.runNext()) {
             looked++;
         }
-        return ran + processed + looked;
+        var refunded = 0;
+        while (refunded < batchSize && refunds.runNext()) {
+            refunded++;
+        }
+        var followed = 0;
+        while (followed < batchSize && refunds.lookUpNext()) {
+            followed++;
+        }
+        return ran + processed + looked + refunded + followed;
     }
 }

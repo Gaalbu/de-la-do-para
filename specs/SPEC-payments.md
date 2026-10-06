@@ -58,7 +58,7 @@ Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 | PAY-008a consulta sem prova não descarta a notificação (C64) | `PaymentReconciliationIT` (pagamento ainda não visível, falha de consulta, esgotamento → `REVIEW`, checkout divergente, fila não bloqueada) | Testcontainers |
 | PAY-006a `UNKNOWN` resolvido só por consulta (C65, V07/V19) | `UnknownPaymentRecoveryIT` (8: pago confirmado sem nova criação, nada antes do backoff, vazio não é prova e só a última consulta manda à análise, checkout pendente ligado e confirmado pelo webhook, falha auditada, valor divergente, lease de consulta abandonado, três workers → uma consulta) | Testcontainers |
 | PAY-009 valor divergente | `PaymentResultIT.amountMismatchGoesToReview` | Testcontainers |
-| PAY-010 reembolso integral único | `RefundIT.secondRefundRequestIsNoOp` | Testcontainers + WireMock |
+| PAY-010 reembolso integral único (C67) | `RefundLifecycleIT` (7: operação durável antes da chamada, liquidado uma vez, aceito e seguido por consultas, resposta perdida resolvida por consulta sem reenvio, vazio/falha não provam nada, recusa fica para o operador, três workers → uma chamada); `AsaasRefundTest` (7, HTTP gravado) | Testcontainers, unitário |
 
 Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado como homologação Asaas.
 
@@ -84,6 +84,7 @@ Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado co
 - R07: valor confirmado diferente de `amount_cents` → intent `UNDER_REVIEW`, sem confirmar o pedido.
 - R07a (C64): notificação de pagamento só confirma se a consulta ao provedor mostrar a cobrança paga **do mesmo checkout**. Consulta que falha ou ainda não mostra o pagamento não prova nada: a notificação continua `RECEIVED` e é reconsultada com backoff (1 s ×2, teto 1 min, atraso entre metade e o passo inteiro), sem bloquear as seguintes. Após 8 tentativas fica `REVIEW` com `last_error` para o operador; a intent não muda. Pagamento pago em outro checkout da mesma intent → notificação `REVIEW` (`CHECKOUT_MISMATCH`) e intent `UNDER_REVIEW`. Notificação atrasada ou repetida nunca tira a intent de um estado já decidido.
 - R08: reembolso é sempre integral (D12), no máximo um por intent (constraint), e só a partir de `CONFIRMED` ou `UNDER_REVIEW` com pagamento recebido.
+- R08a (C67): a transição para `REFUND_REQUESTED` grava a operação `REFUND` na mesma transação. O worker a reclama (lease), chama o provedor fora de transação (Asaas: `POST /v3/payments/{id}/refund` sem `value`, na cobrança paga com a referência da intent e valor igual ao da intent) e grava o resultado. A intent só vira `REFUNDED` quando o provedor mostra o reembolso liquidado. Reembolso aceito e ainda não liquidado, ou com resposta perdida (`UNKNOWN`), nunca é reenviado: consultas `QUERY` (`REFUND:DONE`, `REFUND:PENDING`, `REFUND:NOT_FOUND`, `LOOKUP_FAILED:<tipo>`) com o backoff da C45 o acompanham sem limite, e vazio ou falha não provam nada. Recusa antes de efeito (`REJECTED:<motivo>`, inclusive `NO_PAID_PAYMENT` e `AMOUNT_MISMATCH`) deixa a intent `REFUND_REQUESTED` para o operador (C82a).
 
 ### 7.2 Estados da intent
 

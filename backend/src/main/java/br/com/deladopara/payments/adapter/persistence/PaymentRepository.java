@@ -85,16 +85,18 @@ public class PaymentRepository {
                 .findFirst();
     }
 
-    /** Claims the oldest pending CREATE_CHECKOUT operation without waiting on rows another worker holds. */
+    /** Claims the oldest pending operation of this kind without waiting on rows another worker holds. */
     @Transactional(propagation = Propagation.MANDATORY)
-    public Optional<Operation> claimPendingCheckout(Instant now, Instant leaseUntil) {
-        return jdbc.query("""
+    public Optional<Operation> claimPending(OperationKind kind, Instant now, Instant leaseUntil) {
+        return jdbc
+                .query("""
                         UPDATE payment_external_operation SET status = 'IN_FLIGHT', lease_until = ?, started_at = ?
                         WHERE id = (SELECT id FROM payment_external_operation
-                                    WHERE status = 'PENDING' AND kind = 'CREATE_CHECKOUT'
+                                    WHERE status = 'PENDING' AND kind = ?
                                     ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
                         RETURNING *
-                        """, PaymentRepository::operation, Timestamp.from(leaseUntil), Timestamp.from(now)).stream()
+                        """, PaymentRepository::operation, Timestamp.from(leaseUntil), Timestamp.from(now), kind.name())
+                .stream()
                 .findFirst();
     }
 
@@ -163,6 +165,39 @@ public class PaymentRepository {
                 limit);
     }
 
+    /**
+     * Locks REFUND_REQUESTED intents whose refund was sent (SUCCEEDED but not settled, or UNKNOWN) and have no lookup
+     * in flight, with how many lookups ran since the refund and when the last one, or the refund, finished.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<RefundAwaitingLookup> lockRefundsAwaitingLookup(int limit) {
+        return jdbc.query(
+                """
+                SELECT i.id, r.finished_at AS refund_finished_at,
+                       (SELECT count(*) FROM payment_external_operation q
+                        WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at) AS lookups,
+                       (SELECT max(q.finished_at) FROM payment_external_operation q
+                        WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at)
+                           AS last_lookup_at
+                FROM payment_intent i
+                JOIN payment_external_operation r ON r.intent_id = i.id AND r.kind = 'REFUND'
+                WHERE i.status = 'REFUND_REQUESTED' AND r.status IN ('SUCCEEDED', 'UNKNOWN')
+                  AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
+                                  WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
+                ORDER BY r.finished_at, i.id
+                LIMIT ?
+                FOR UPDATE OF i SKIP LOCKED
+                """,
+                (rs, row) -> {
+                    var last = rs.getTimestamp("last_lookup_at");
+                    return new RefundAwaitingLookup(
+                            rs.getObject("id", UUID.class),
+                            rs.getInt("lookups"),
+                            last == null ? rs.getTimestamp("refund_finished_at").toInstant() : last.toInstant());
+                },
+                limit);
+    }
+
     /** Records a provider lookup as already in flight, in the same transaction that chose the intent. */
     @Transactional(propagation = Propagation.MANDATORY)
     public void startQuery(UUID id, UUID intentId, Instant now, Instant leaseUntil) {
@@ -217,6 +252,9 @@ public class PaymentRepository {
 
     /** {@code since} is when the last lookup finished, or when the intent became UNKNOWN. */
     public record UnknownIntent(UUID id, long amountCents, int lookups, Instant since) {}
+
+    /** {@code since} is when the last lookup finished, or when the refund call finished. */
+    public record RefundAwaitingLookup(UUID intentId, int lookups, Instant since) {}
 
     public record Operation(
             UUID id, UUID intentId, OperationKind kind, OperationStatus status, Instant leaseUntil, String lastError) {}
