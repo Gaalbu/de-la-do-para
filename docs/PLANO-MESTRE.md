@@ -1914,7 +1914,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C82 — `feat(eventing): authorize and audit quarantined event replay`
 
-- [ ] **Depende:** C15, C49, C79. **Alvos:** API operacional de eventing, auditoria e testes; M.
+- [x] **Depende:** C15, C49, C79. **Alvos:** API operacional de eventing, auditoria e testes; M. Implementado em 2026-10-05 sobre a C79 parcial (gauge de quarentena já exposto): replay auditado reconsome o envelope original da outbox pelo serviço de consumo; `EventReplayIT` 3/3. UI na C83.
 - **Aceite:** admin consulta quarentena e solicita replay elegível com motivo; identidade do evento preservada; nenhum override de regra comercial.
 - **Verificar:** BI(OperationalReplay), V14/V19, papel insuficiente e replay duplicado.
 
