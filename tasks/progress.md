@@ -1121,3 +1121,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS` em 15min44s; 126 unitários e 159 IT sem falhas; Spotless e Checkstyle limpos. Uma execução anterior travou no encerramento do fork do Failsafe e foi interrompida |
 | Limite | Cada cenário usa banco próprio em PostgreSQL de teste; o banco do ambiente local não é tocado. Restauração sobre o banco principal e recuperação após restore antigo ficam para C94 |
 | Próximo passo | C94 após C63–C68 |
+
+## Sessão 2026-10-05 — lane do Claude: C63–C69, C79/C79a, C82, C82a, C83 (parcial)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Avançar a lane do Claude definida no PR #129 com commits atômicos, PR por fatia e merge após CI verde |
+| Integrado no main | #129 (lanes), #131 C93, #130 C63, #132 C64, #139 C65, #140 C66, #142 alerta GHSA-68fv-2mgg-jv7q (`source-map-js` 1.2.2), #141 C67, #144 C68, #145 C69, #146 corrida no claim de consultas (C65/C67), #147 reconciliação do plano (38 tarefas com SHA), #148 C79 parcial, #149 C82a, #150 C82, #151 C79a parcial, #152 C83 parcial. Todos com CI 7/7 no SHA mesclado. |
+| Verificação | ITs por fatia com PostgreSQL real (Testcontainers): `RefundLifecycleIT` 8/8, `OrderCancellationIT` 7/7, `CancellationApiIT` 5/5, `AdminPaymentOperationsIT` 5/5, `EventReplayIT` 3/3, `RecoveryMetricsIT` 2/2, `EventingWorkerConfigIT` 6/6, entre outros; Playwright `checkout.spec.ts` 5/5 e `admin-operations.spec.ts` 2/2 (suíte E2E 10/10). C79a validada localmente com worker real, Prometheus e Grafana (detalhes em `docs/observability.md`). |
+| Decisões aplicadas como padrão sinalizado | CHK-Q03 (devolução de estoque ao lote no cancelamento pago) e PAY-Q02 (3 consultas) seguem propostas; implementadas como padrão e registradas nas specs, sem marcá-las aprovadas. |
+| Bloqueios | C70/C71/C73/C73a/C82b (lane do Codex, drafts #134/#135); C75/C78/C81b (A13/ORD-Q02); C03 (revisão visual); C04/C45/C63/C89 (credenciais de sandbox); C31/C32/C84 (política de cupom, PR #125 em draft); C24a/C25/C29 (revisão das specs). Daí dependem C79 (traces e instrumentação de frete/notificações), C79a (traces), C83 (etiquetas), C85–C88, C90–C98. |
+| Migrations | V36 (`payment_admin_lookup_request`) e V37 (`event_replay_request`) no main; os drafts #134/#135 usam V35/V36 e precisam renumerar ao mesclar. |
+| Próximo passo | Destravar as dependências externas acima; em seguida C94 (após C70 e C82b) e o fechamento da C79. |
