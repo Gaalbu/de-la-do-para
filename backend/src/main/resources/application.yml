@@ -91,6 +91,13 @@ app:
       enabled: ${APP_EVENTING_CONSUMER_ENABLED:false}
       poll-delay: ${APP_EVENTING_CONSUMER_POLL_DELAY:PT0.5S}
 
+eventing:
+  replay:
+    # Replays pedidos por administrador (C82); ligar no worker.
+    enabled: ${EVENTING_REPLAY_ENABLED:false}
+    batch-size: ${EVENTING_REPLAY_BATCH_SIZE:10}
+    poll-delay: ${EVENTING_REPLAY_POLL_DELAY:PT5S}
+
 checkout:
   expiration:
     # Expira pedidos não pagos ao fim da reserva de 15 min (C66); ligar no worker.
