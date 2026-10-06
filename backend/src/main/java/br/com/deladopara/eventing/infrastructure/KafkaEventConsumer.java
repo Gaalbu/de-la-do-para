@@ -21,6 +21,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class KafkaEventConsumer implements AutoCloseable {
 
@@ -91,7 +92,16 @@ public class KafkaEventConsumer implements AutoCloseable {
         EventEnvelope envelope = null;
         try {
             envelope = validator.validate(record.value());
-            consumption.consume(envelope);
+            // Effects and their logs carry the correlation of the request that produced the event (C79).
+            var previous = MDC.get("correlationId");
+            if (envelope.correlationId() != null) {
+                MDC.put("correlationId", envelope.correlationId().toString());
+            }
+            try {
+                consumption.consume(envelope);
+            } finally {
+                restoreCorrelation(previous);
+            }
             return true;
         } catch (RuntimeException exception) {
             return handleFailure(partition, record, envelope, exception);
@@ -152,5 +162,13 @@ public class KafkaEventConsumer implements AutoCloseable {
     @Override
     public void close() {
         consumer.close();
+    }
+
+    private static void restoreCorrelation(String previous) {
+        if (previous == null) {
+            MDC.remove("correlationId");
+        } else {
+            MDC.put("correlationId", previous);
+        }
     }
 }
