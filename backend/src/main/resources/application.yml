@@ -91,6 +91,13 @@ app:
       enabled: ${APP_EVENTING_CONSUMER_ENABLED:false}
       poll-delay: ${APP_EVENTING_CONSUMER_POLL_DELAY:PT0.5S}
 
+checkout:
+  expiration:
+    # Expira pedidos não pagos ao fim da reserva de 15 min (C66); ligar no worker.
+    enabled: ${CHECKOUT_EXPIRATION_ENABLED:false}
+    batch-size: ${CHECKOUT_EXPIRATION_BATCH_SIZE:20}
+    poll-delay: ${CHECKOUT_EXPIRATION_POLL_DELAY:PT5S}
+
 payments:
   provider: ${PAYMENTS_PROVIDER:}
   asaas:
