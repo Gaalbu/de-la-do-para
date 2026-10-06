@@ -1,6 +1,7 @@
 package br.com.deladopara.payments.adapter.asaas;
 
 import br.com.deladopara.payments.application.PaymentProvider;
+import br.com.deladopara.payments.application.RefundProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
@@ -25,7 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * never retried here (SPEC-payments PAY-006). Behaviour is proven against recorded HTTP responses; sandbox evidence
  * stays in the opt-in homologation script.
  */
-public class AsaasPaymentProvider implements PaymentProvider {
+public class AsaasPaymentProvider implements PaymentProvider, RefundProvider {
 
     static final String ITEM_NAME = "Pedido De Lá do Pará";
 
@@ -35,6 +37,11 @@ public class AsaasPaymentProvider implements PaymentProvider {
 
     /** Statuses of an Asaas payment (cobrança) that mean the buyer paid. */
     private static final Set<String> PAID_STATUSES = Set.of("CONFIRMED", "RECEIVED", "RECEIVED_IN_CASH");
+
+    /** Statuses of an Asaas payment whose refund was accepted but has not settled yet. */
+    private static final Set<String> REFUNDING_STATUSES = Set.of("REFUND_REQUESTED", "REFUND_IN_PROGRESS");
+
+    private static final String REFUNDED = "REFUNDED";
 
     private final RestClient http;
     private final AsaasProperties properties;
@@ -89,13 +96,8 @@ public class AsaasPaymentProvider implements PaymentProvider {
      */
     @Override
     public Optional<CheckoutState> findCheckout(UUID paymentIntentId) {
-        var uri = UriComponentsBuilder.fromPath("/v3/payments")
-                .queryParam("externalReference", paymentIntentId)
-                .build()
-                .toUriString();
-        var payments = exchange(http.get().uri(uri), false).path("data");
         JsonNode chosen = null;
-        for (var payment : payments) {
+        for (var payment : payments(paymentIntentId)) {
             if (chosen == null || PAID_STATUSES.contains(payment.path("status").asText())) {
                 chosen = payment;
             }
@@ -106,6 +108,50 @@ public class AsaasPaymentProvider implements PaymentProvider {
         var status =
                 PAID_STATUSES.contains(chosen.path("status").asText()) ? CheckoutStatus.PAID : CheckoutStatus.PENDING;
         return Optional.of(new CheckoutState(text(chosen, "checkoutSession"), status, cents(chosen.path("value"))));
+    }
+
+    /**
+     * Refunds the paid payment carrying our reference in full (no {@code value}, D12). Without a paid payment there is
+     * nothing to refund and nothing was sent, so it is a rejection; a 4xx on the refund call is one too.
+     */
+    @Override
+    public RefundState refund(RefundRequest request) {
+        var paid = StreamSupport.stream(payments(request.paymentIntentId()).spliterator(), false)
+                .filter(payment -> PAID_STATUSES.contains(payment.path("status").asText()))
+                .findFirst()
+                .orElseThrow(() -> new ProviderRejectedException("NO_PAID_PAYMENT"));
+        if (cents(paid.path("value")) != request.amountCents()) {
+            throw new ProviderRejectedException("AMOUNT_MISMATCH");
+        }
+        var body = exchange(
+                http.post()
+                        .uri("/v3/payments/{id}/refund", text(paid, "id"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{}"),
+                true);
+        return REFUNDED.equals(body.path("status").asText()) ? RefundState.DONE : RefundState.PENDING;
+    }
+
+    @Override
+    public Optional<RefundState> findRefund(UUID paymentIntentId) {
+        var pending = false;
+        for (var payment : payments(paymentIntentId)) {
+            var status = payment.path("status").asText();
+            if (REFUNDED.equals(status)) {
+                return Optional.of(RefundState.DONE);
+            }
+            pending |= REFUNDING_STATUSES.contains(status);
+        }
+        return pending ? Optional.of(RefundState.PENDING) : Optional.empty();
+    }
+
+    /** Payments (cobranças) Asaas created for checkouts carrying this intent as {@code externalReference}. */
+    private JsonNode payments(UUID paymentIntentId) {
+        var uri = UriComponentsBuilder.fromPath("/v3/payments")
+                .queryParam("externalReference", paymentIntentId)
+                .build()
+                .toUriString();
+        return exchange(http.get().uri(uri), false).path("data");
     }
 
     private Map<String, Object> checkoutBody(CheckoutRequest request, int minutes) {
@@ -137,11 +183,11 @@ public class AsaasPaymentProvider implements PaymentProvider {
      * A client error means Asaas refused the request before acting; anything else after sending (server error,
      * timeout, unreadable body) leaves the outcome unknown.
      */
-    private JsonNode exchange(RestClient.RequestHeadersSpec<?> request, boolean creating) {
+    private JsonNode exchange(RestClient.RequestHeadersSpec<?> request, boolean acting) {
         try {
             return request.exchange((req, response) -> {
                 var status = response.getStatusCode();
-                if (creating && isRejection(status)) {
+                if (acting && isRejection(status)) {
                     throw new ProviderRejectedException("HTTP_" + status.value());
                 }
                 if (!status.is2xxSuccessful()) {

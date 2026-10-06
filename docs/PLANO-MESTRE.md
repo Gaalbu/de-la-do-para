@@ -1758,35 +1758,35 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C63 — `feat(payments): integrate hosted Asaas sandbox checkout`
 
-- [ ] **Depende:** C04, C53, C59, C62. **Alvos:** adapter Asaas, config e testes de contrato; M.
+- [ ] **Depende:** C04, C53, C59, C62. **Alvos:** adapter Asaas, config e testes de contrato; M. Adapter e HTTP gravado integrados no PR #130 (2026-10-05); permanece aberta até a evidência SB de C04.
 - **Aceite:** Pix/cartão hospedado; total externo coincide com o snapshot, inclusive frete/desconto; expiração e host de redirecionamento validados.
 - **Verificar:** testes HTTP determinísticos + SB para ambos os meios. Link recebido após prazo insuficiente não prolonga reserva silenciosamente.
 - **Estado atual (2026-10-03):** **parcial.** Adapter `AsaasPaymentProvider`, config opt-in (`PAYMENTS_PROVIDER=asaas`) e `AsaasPaymentProviderTest` (17 cenários HTTP gravados: total exato, Pix+cartão, host/HTTPS do link, recusa × UNKNOWN, link encurtado até o fim da reserva e recusa sem chamada quando o prazo restante é insuficiente) entregues em `claude/c63-asaas-hosted-checkout`. Falta a evidência SB dos dois meios, que depende de C04 (conta sandbox); manter aberta até lá.
 
 ### C64 — `feat(payments): reconcile webhook facts against provider state`
 
-- [ ] **Depende:** C60, C63. **Alvos:** consulta/correlação de pagamento, normalização e testes; M.
+- [x] **Depende:** C60, C63. **Alvos:** consulta/correlação de pagamento, normalização e testes; M. PR #132 merged em 2026-10-05 (CI 7/7).
 - **Aceite:** confirmação financeira consulta/valida o recurso correto; referencia checkout↔pagamento; webhook fora de ordem não regrede estado.
 - **Verificar:** BI(PaymentReconciliation), SB e V08/V09.
 - **Estado atual (2026-10-03):** **parcial.** `PaymentReconciliationIT` cobre a parte BI e V08/V09 na branch `claude/c64-payment-reconciliation`: consulta sem prova reconsultada com backoff até `REVIEW`, checkout↔pagamento conferido, fora de ordem sem regressão. Também liga o processador ao worker (bean ausente no `main`). Falta SB (C04).
 
 ### C65 — `feat(payments): retain and reconcile unknown external operations`
 
-- [ ] **Depende:** C59, C63, C64. **Alvos:** conciliador de UNKNOWN, política de consulta e testes; M.
+- [x] **Depende:** C59, C63, C64. **Alvos:** conciliador de UNKNOWN, política de consulta e testes; M. PR #139 merged em 2026-10-05 (CI 7/7); limite de consultas segue proposta PAY-Q02.
 - **Aceite:** timeout pós-efeito não duplica criação; resultado não conclusivo continua pendente/análise; operador terá informação auditável.
 - **Verificar:** BI(UnknownPaymentRecovery), V07/V19 e regras observadas em C04; consulta negativa eventual não vira prova imediata de ausência.
 - **Estado atual (2026-10-03):** **parcial.** `UnknownPaymentRecoveryIT` (BI, V07/V19) na branch `claude/c65-unknown-payment-recovery`. Limite de 3 consultas segue a proposta PAY-Q02, ainda não aprovada; faltam as regras observadas no sandbox (C04).
 
 ### C66 — `feat(checkout): expire reservations without losing late payments`
 
-- [ ] **Depende:** C57, C58a, C61, C65. **Alvos:** expiração/claim, relógio e testes; M.
+- [x] **Depende:** C57, C58a, C61, C65. **Alvos:** expiração/claim, relógio e testes; M. PR #140 merged em 2026-10-05 (CI 7/7); `CheckoutExpirationIT` 6/6.
 - **Aceite:** aos 15 minutos libera reserva/cupom uma vez; confirmação concorrente produz transição válida; pagamento tardio é registrado para compensação.
 - **Verificar:** BI(CheckoutExpiration), V10 com tempo controlado e concorrência real no banco.
 - **Estado atual (2026-10-03):** `CheckoutExpirationIT` na branch `claude/c66-checkout-expiration`; o worker de expiração é opt-in (`CHECKOUT_EXPIRATION_ENABLED`). CHK-Q03 (estoque de pedido pago cancelado) continua aberta e pertence ao cancelamento (C68).
 
 ### C67 — `feat(payments): issue and reconcile full sandbox refunds`
 
-- [ ] **Depende:** C53, C63, C64, C65. **Alvos:** refund intent/adapter, migration quando necessária e testes; M.
+- [x] **Depende:** C53, C63, C64, C65. **Alvos:** refund intent/adapter, migration quando necessária e testes; M. Implementado em 2026-10-05 sem migration nova (V30 já tinha a operação `REFUND` única); `RefundLifecycleIT` 7/7 e `AsaasRefundTest` 7/7. SB de Pix/cartão segue pendente em C04/C89.
 - **Aceite:** reembolso integral tem operação durável; reexecução segura conforme contrato; resultado incerto permanece em conciliação.
 - **Verificar:** BI(RefundLifecycle), SB de Pix/cartão conforme capacidade observada e falha depois do efeito externo.
 

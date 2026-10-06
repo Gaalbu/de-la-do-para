@@ -57,17 +57,18 @@ public class CheckoutOperations {
     @Transactional
     public Optional<Claimed> claim() {
         var now = clock.instant();
-        return payments.claimPendingCheckout(now, now.plus(lease)).map(operation -> {
-            var intent = payments.find(operation.intentId()).orElseThrow();
-            intents.transition(intent.id(), PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
-            return new Claimed(
-                    operation.id(),
-                    new CheckoutRequest(
-                            intent.id(),
-                            intent.orderId(),
-                            intent.amountCents(),
-                            intent.createdAt().plus(RESERVATION_HOLD)));
-        });
+        return payments.claimPending(OperationKind.CREATE_CHECKOUT, now, now.plus(lease))
+                .map(operation -> {
+                    var intent = payments.find(operation.intentId()).orElseThrow();
+                    intents.transition(intent.id(), PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
+                    return new Claimed(
+                            operation.id(),
+                            new CheckoutRequest(
+                                    intent.id(),
+                                    intent.orderId(),
+                                    intent.amountCents(),
+                                    intent.createdAt().plus(RESERVATION_HOLD)));
+                });
     }
 
     @Transactional

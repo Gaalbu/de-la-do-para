@@ -8,6 +8,7 @@ import br.com.deladopara.payments.application.CheckoutOperations;
 import br.com.deladopara.payments.application.PaymentIntentService;
 import br.com.deladopara.payments.application.PaymentProvider;
 import br.com.deladopara.payments.application.ProviderEventProcessor;
+import br.com.deladopara.payments.application.RefundOperations;
 import br.com.deladopara.payments.application.UnknownPaymentLookups;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.time.Clock;
@@ -36,6 +37,7 @@ class PaymentWorkerIT {
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
     private final UnknownPaymentLookups lookups;
+    private final RefundOperations refunds;
     private final SimulatedPaymentProvider simulator = new SimulatedPaymentProvider(Clock.systemUTC());
     private final ConcurrentHashMap<UUID, AtomicInteger> calls = new ConcurrentHashMap<>();
 
@@ -45,8 +47,10 @@ class PaymentWorkerIT {
             CheckoutOperations operations,
             JdbcTemplate jdbc,
             TransactionTemplate tx,
-            UnknownPaymentLookups lookups) {
+            UnknownPaymentLookups lookups,
+            RefundOperations refunds) {
         this.intents = intents;
+        this.refunds = refunds;
         this.lookups = lookups;
         this.operations = operations;
         this.jdbc = jdbc;
@@ -84,6 +88,8 @@ class PaymentWorkerIT {
                 provider,
                 new ProviderEventProcessor(jdbc, tx, intents, provider, Clock.systemUTC()),
                 lookups,
+                refunds,
+                simulator,
                 batchSize);
     }
 
