@@ -1881,6 +1881,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 ### C79a — `chore(observability): provision local recovery dashboards`
 
 - [ ] **Depende:** C79. **Alvos:** profile Collector/Prometheus/Grafana/traces e dashboards; M.
+- **Estado atual (2026-10-05):** parcial. Profile `observability` com Prometheus e Grafana em versões fixas, painel de recuperação provisionado e scrape do worker validados localmente (alvo `up`, fluxo `UNKNOWN` → `UNDER_REVIEW` visível, consumo medido em `docs/observability.md`). Collector/traces dependem da parte de traces da C79; permanece aberta.
 - **Aceite:** painel de backlog/idade/retries/UNKNOWN/quarentena provisionado; versões fixas; consumo da stack medido em modo opcional.
 - **Verificar:** subir profile, executar V04/V07 e localizar métricas/traces correlacionados pelo fluxo real.
 
