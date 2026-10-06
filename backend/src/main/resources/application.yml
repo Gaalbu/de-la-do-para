@@ -69,6 +69,19 @@ management:
       enabled: false
     db:
       enabled: true
+  # C79: spans de HTTP, outbox→Kafka e consumo. Export OTLP é opt-in (profile `observability`).
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      export:
+        enabled: ${OTLP_TRACING_EXPORT_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://127.0.0.1:14318/v1/traces}
 
 ---
 

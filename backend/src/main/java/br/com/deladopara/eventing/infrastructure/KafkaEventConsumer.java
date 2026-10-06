@@ -33,6 +33,7 @@ public class KafkaEventConsumer implements AutoCloseable {
     private final EventConsumptionService consumption;
     private final EventFailureService failures;
     private final Clock clock;
+    private final ConsumerTracing tracing;
     private final Map<TopicPartition, Instant> pausedUntil = new HashMap<>();
 
     public KafkaEventConsumer(
@@ -41,11 +42,22 @@ public class KafkaEventConsumer implements AutoCloseable {
             EventConsumptionService consumption,
             EventFailureService failures,
             Clock clock) {
+        this(consumer, validator, consumption, failures, clock, ConsumerTracing.NONE);
+    }
+
+    public KafkaEventConsumer(
+            Consumer<String, String> consumer,
+            EventEnvelopeValidator validator,
+            EventConsumptionService consumption,
+            EventFailureService failures,
+            Clock clock,
+            ConsumerTracing tracing) {
         this.consumer = consumer;
         this.validator = validator;
         this.consumption = consumption;
         this.failures = failures;
         this.clock = clock;
+        this.tracing = tracing;
     }
 
     public int pollAndProcess() {
@@ -98,7 +110,8 @@ public class KafkaEventConsumer implements AutoCloseable {
                 MDC.put("correlationId", envelope.correlationId().toString());
             }
             try {
-                consumption.consume(envelope);
+                var valid = envelope;
+                tracing.inSpan(record, valid.eventType(), () -> consumption.consume(valid));
             } finally {
                 restoreCorrelation(previous);
             }
