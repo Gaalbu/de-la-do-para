@@ -1798,7 +1798,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C69 — `feat(orders-ui): explain cancellation and refund progress`
 
-- [ ] **Depende:** C62, C68. **Alvos:** ações/status no acompanhamento e testes; M.
+- [x] **Depende:** C62, C68. **Alvos:** ações/status no acompanhamento e testes; M. Implementado em 2026-10-05 em `/orders/:id`: cancelamento elegível com confirmação na página, aviso de análise para pedido com a transportadora, reembolso solicitado/concluído/em análise e recarga que preserva o resultado; Playwright `checkout.spec.ts` 5/5 com API interceptada.
 - **Aceite:** cliente solicita cancelamento elegível; vê reembolso solicitado/confirmado/análise; tentativa duplicada preserva a operação.
 - **Verificar:** F/E; cancelar durante confirmação e recuperar após reload.
 
