@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import br.com.deladopara.payments.adapter.simulated.SimulatedPaymentProvider;
 import br.com.deladopara.payments.adapter.simulated.SimulatedPaymentProvider.Outcome;
+import br.com.deladopara.payments.application.AdminPaymentLookups;
 import br.com.deladopara.payments.application.CheckoutOperations;
 import br.com.deladopara.payments.application.PaymentIntentService;
 import br.com.deladopara.payments.application.PaymentProvider;
@@ -38,6 +39,7 @@ class PaymentWorkerIT {
     private final TransactionTemplate tx;
     private final UnknownPaymentLookups lookups;
     private final RefundOperations refunds;
+    private final AdminPaymentLookups adminLookups;
     private final SimulatedPaymentProvider simulator = new SimulatedPaymentProvider(Clock.systemUTC());
     private final ConcurrentHashMap<UUID, AtomicInteger> calls = new ConcurrentHashMap<>();
 
@@ -48,8 +50,10 @@ class PaymentWorkerIT {
             JdbcTemplate jdbc,
             TransactionTemplate tx,
             UnknownPaymentLookups lookups,
-            RefundOperations refunds) {
+            RefundOperations refunds,
+            AdminPaymentLookups adminLookups) {
         this.intents = intents;
+        this.adminLookups = adminLookups;
         this.refunds = refunds;
         this.lookups = lookups;
         this.operations = operations;
@@ -90,6 +94,7 @@ class PaymentWorkerIT {
                 lookups,
                 refunds,
                 simulator,
+                adminLookups,
                 batchSize);
     }
 

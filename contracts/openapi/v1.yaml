@@ -744,6 +744,91 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/payments/attention:
+    get:
+      operationId: listPaymentsNeedingAttention
+      summary: Listar pagamentos que ainda exigem conciliação, análise ou reembolso
+      description: >
+        Intents em UNKNOWN, UNDER_REVIEW ou REFUND_REQUESTED (até 50, a mais antiga primeiro), cada uma com todas as
+        operações no provedor e, para consultas pedidas por um administrador, quem pediu e o motivo. Resposta private,
+        no-store.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Pagamentos e trilha de operações
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PaymentAttention'}
+        '401': {$ref: '#/components/responses/Problem401'}
+        '403':
+          description: Papel insuficiente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/admin/payments/{intentId}/lookups:
+    parameters:
+      - in: path
+        name: intentId
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: requestPaymentLookup
+      summary: Pedir nova consulta ao provedor para um pagamento incerto
+      description: >
+        Registra quem pediu e o motivo e enfileira uma consulta para o worker. Nunca cria cobrança nem reembolso: a
+        consulta só confirma pagamento pago com o valor exato, conclui reembolso já liquidado ou manda valor divergente
+        para análise. Uma consulta ainda não iniciada é reaproveitada (created false). Exige CSRF.
+      security:
+        - sessionCookie: []
+      parameters:
+        - {$ref: '#/components/parameters/CsrfToken'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: {type: string, minLength: 1, maxLength: 200}
+            example: {reason: Cliente informou pagamento por Pix às 10h}
+      responses:
+        '202':
+          description: Consulta enfileirada ou reaproveitada
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [operationId, created]
+                properties:
+                  operationId: {type: string, format: uuid}
+                  created: {type: boolean}
+        '400':
+          description: Identificador ou motivo inválido (PAYMENT_022)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '401': {$ref: '#/components/responses/Problem401'}
+        '403':
+          description: Papel insuficiente ou CSRF ausente
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Pagamento inexistente (PAYMENT_020)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '409':
+          description: Pagamento fora de conciliação, análise ou reembolso pendente (PAYMENT_021)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/admin/orders/{id}/pickup/ready:
     parameters:
       - in: path
@@ -2219,6 +2304,37 @@ components:
     OrderStatus:
       type: string
       enum: [PENDING_PAYMENT, PAID, PREPARING, READY_FOR_PICKUP, IN_TRANSIT, DELIVERED, PICKED_UP, CANCELLED, EXPIRED, UNDER_REVIEW]
+    PaymentAttention:
+      type: object
+      additionalProperties: false
+      required: [intent, operations]
+      properties:
+        intent:
+          type: object
+          additionalProperties: false
+          required: [id, orderId, amountCents, status, reason, updatedAt]
+          properties:
+            id: {type: string, format: uuid}
+            orderId: {type: string, format: uuid}
+            amountCents: {type: integer, format: int64}
+            status: {type: string, enum: [UNKNOWN, UNDER_REVIEW, REFUND_REQUESTED]}
+            reason: {type: [string, 'null']}
+            updatedAt: {type: string, format: date-time}
+        operations:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, kind, status, result, createdAt, finishedAt, requestedBy, requestReason]
+            properties:
+              id: {type: string, format: uuid}
+              kind: {type: string, enum: [CREATE_CHECKOUT, REFUND, QUERY]}
+              status: {type: string, enum: [PENDING, IN_FLIGHT, SUCCEEDED, FAILED, UNKNOWN]}
+              result: {type: [string, 'null']}
+              createdAt: {type: string, format: date-time}
+              finishedAt: {type: [string, 'null'], format: date-time}
+              requestedBy: {type: [string, 'null']}
+              requestReason: {type: [string, 'null']}
     CancellationResult:
       type: object
       additionalProperties: false

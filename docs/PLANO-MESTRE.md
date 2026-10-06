@@ -1920,7 +1920,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C82a — `feat(payments): authorize reconciliation of uncertain financial effects`
 
-- [ ] **Depende:** C15, C65, C67, C79. **Alvos:** API de operações financeiras, auditoria e testes; M.
+- [x] **Depende:** C15, C65, C67, C79. **Alvos:** API de operações financeiras, auditoria e testes; M. Implementado em 2026-10-05 sobre a C79 parcial (gauges de intents já expostos): consulta auditada e enfileirada para o worker, sem recriar cobrança/reembolso; `AdminPaymentOperationsIT` 5/5. UI na C83.
 - **Aceite:** admin consulta UNKNOWN e solicita nova consulta elegível; conciliação não recria cobrança/reembolso; resultado conflitante exige análise.
 - **Verificar:** BI(PaymentOperations), V07, permissões e comandos repetidos.
 
