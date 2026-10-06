@@ -1934,6 +1934,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 ### C83 — `feat(operations-ui): inspect and recover failed purchase flows`
 
 - [ ] **Depende:** C16, C79a, C82, C82a, C82b. **Alvos:** `F/admin/operations`, detalhe do incidente e testes; M.
+- **Estado atual (2026-10-05):** parcial. `/admin/operations` mostra pagamentos incertos com trilha completa (estado, motivo, resultado, quem pediu) e eventos em quarentena com correlação; nova consulta e replay exigem motivo e explicam o efeito antes de confirmar. Playwright `admin-operations.spec.ts` 2/2. Falta a recuperação de etiquetas (C82b, lane do Codex); permanece aberta.
 - **Aceite:** estado/motivo/correlação visíveis; confirmação de ação informa o efeito; auditoria mostra quem solicitou a recuperação.
 - **Verificar:** F/E; usuário admin resolve um incidente do roteiro sem manipular SQL.
 
