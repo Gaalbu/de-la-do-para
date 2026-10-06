@@ -63,7 +63,13 @@ public class UnknownPaymentLookups {
     @Transactional
     public Optional<Claimed> claim() {
         var now = clock.instant();
-        for (var intent : payments.lockUnknownWithoutActiveQuery(CANDIDATES)) {
+        for (var candidate : payments.lockUnknownWithoutActiveQuery(CANDIDATES)) {
+            // Now that the row is ours, a fresh read sees a lookup another worker committed meanwhile.
+            var current = payments.unknownWithoutActiveQuery(candidate.id());
+            if (current.isEmpty()) {
+                continue;
+            }
+            var intent = current.get();
             if (intent.since().plus(delay(intent.lookups())).isAfter(now)) {
                 continue;
             }

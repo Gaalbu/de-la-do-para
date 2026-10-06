@@ -76,7 +76,13 @@ public class RefundOperations {
     @Transactional
     public Optional<Lookup> claimLookup() {
         var now = clock.instant();
-        for (var refund : payments.lockRefundsAwaitingLookup(CANDIDATES)) {
+        for (var candidate : payments.lockRefundsAwaitingLookup(CANDIDATES)) {
+            // Now that the row is ours, a fresh read sees a lookup another worker committed meanwhile.
+            var current = payments.refundAwaitingLookup(candidate.intentId());
+            if (current.isEmpty()) {
+                continue;
+            }
+            var refund = current.get();
             if (refund.since()
                     .plus(UnknownPaymentLookups.delay(refund.lookups()))
                     .isAfter(now)) {

@@ -37,6 +37,7 @@ class RefundLifecycleIT {
     private final JdbcTemplate jdbc;
     private final SimulatedPaymentProvider simulator = new SimulatedPaymentProvider(Clock.systemUTC());
     private final AtomicInteger refundCalls = new AtomicInteger();
+    private final AtomicInteger refundLookups = new AtomicInteger();
     private final AtomicBoolean lookupsFail = new AtomicBoolean();
 
     @Autowired
@@ -67,6 +68,7 @@ class RefundLifecycleIT {
 
             @Override
             public Optional<RefundState> findRefund(UUID paymentIntentId) {
+                refundLookups.incrementAndGet();
                 if (lookupsFail.get()) {
                     throw new IllegalStateException("provider unavailable");
                 }
@@ -237,5 +239,34 @@ class RefundLifecycleIT {
         }
         assertThat(refundCalls).hasValue(1);
         assertThat(status(intentId)).isEqualTo("REFUNDED");
+    }
+
+    @Test
+    void concurrentWorkersRunOneLookupPerDueRefund() throws Exception {
+        var intentId = refundRequested();
+        simulator.failNextRefund(RefundOutcome.ACCEPTED);
+        runner().runNext();
+        waitOutBackoff();
+        var start = new CountDownLatch(1);
+        var pool = Executors.newFixedThreadPool(3);
+        try {
+            var tasks = new ArrayList<Callable<Boolean>>();
+            for (var i = 0; i < 3; i++) {
+                var runner = runner();
+                tasks.add(() -> {
+                    start.await();
+                    return runner.lookUpNext();
+                });
+            }
+            var futures = tasks.stream().map(pool::submit).toList();
+            start.countDown();
+            for (var future : futures) {
+                future.get(30, TimeUnit.SECONDS);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(refundLookups).hasValue(1);
+        assertThat(lookupTrail(intentId)).hasSize(1);
     }
 }
