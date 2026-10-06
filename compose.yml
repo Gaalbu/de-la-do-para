@@ -112,6 +112,15 @@ services:
       timeout: 3s
       retries: 10
 
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    profiles: ["observability"]
+    container_name: dlp-jaeger
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${JAEGER_UI_PORT:-16686}:16686"
+      - "127.0.0.1:${OTLP_HTTP_PORT:-14318}:4318"
+
   grafana:
     image: grafana/grafana:13.0.10
     profiles: ["observability"]
