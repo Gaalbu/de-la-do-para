@@ -133,69 +133,92 @@ public class PaymentRepository {
                 intentId);
     }
 
+    private static final String UNKNOWN_WITHOUT_ACTIVE_QUERY = """
+            SELECT i.id, i.amount_cents, i.updated_at,
+                   (SELECT count(*) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS lookups,
+                   (SELECT max(q.finished_at) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS last_lookup_at
+            FROM payment_intent i
+            WHERE i.status = 'UNKNOWN'
+              AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
+                              WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
+            """;
+
+    private static final String REFUNDS_AWAITING_LOOKUP = """
+            SELECT i.id, r.finished_at AS refund_finished_at,
+                   (SELECT count(*) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at) AS lookups,
+                   (SELECT max(q.finished_at) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at)
+                       AS last_lookup_at
+            FROM payment_intent i
+            JOIN payment_external_operation r ON r.intent_id = i.id AND r.kind = 'REFUND'
+            WHERE i.status = 'REFUND_REQUESTED' AND r.status IN ('SUCCEEDED', 'UNKNOWN')
+              AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
+                              WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
+            """;
+
     /**
      * Locks UNKNOWN intents that have no lookup in flight, skipping rows another worker holds, with how many lookups
-     * already ran and when the last one finished.
+     * already ran and when the last one finished. The candidates come from the statement's snapshot: a lookup another
+     * worker committed while this statement waited is not visible, so callers re-read with
+     * {@link #unknownWithoutActiveQuery(UUID)} before starting one.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public List<UnknownIntent> lockUnknownWithoutActiveQuery(int limit) {
         return jdbc.query(
-                """
-                SELECT i.id, i.amount_cents, i.updated_at,
-                       (SELECT count(*) FROM payment_external_operation q
-                        WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS lookups,
-                       (SELECT max(q.finished_at) FROM payment_external_operation q
-                        WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS last_lookup_at
-                FROM payment_intent i
-                WHERE i.status = 'UNKNOWN'
-                  AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
-                                  WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
-                ORDER BY i.updated_at, i.id
-                LIMIT ?
-                FOR UPDATE OF i SKIP LOCKED
-                """,
-                (rs, row) -> {
-                    var last = rs.getTimestamp("last_lookup_at");
-                    return new UnknownIntent(
-                            rs.getObject("id", UUID.class),
-                            rs.getLong("amount_cents"),
-                            rs.getInt("lookups"),
-                            last == null ? rs.getTimestamp("updated_at").toInstant() : last.toInstant());
-                },
+                UNKNOWN_WITHOUT_ACTIVE_QUERY + " ORDER BY i.updated_at, i.id LIMIT ? FOR UPDATE OF i SKIP LOCKED",
+                PaymentRepository::unknownIntent,
                 limit);
+    }
+
+    /** Re-reads one intent with a fresh snapshot; empty when it is no longer UNKNOWN or a lookup is in flight. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<UnknownIntent> unknownWithoutActiveQuery(UUID intentId) {
+        return jdbc
+                .query(UNKNOWN_WITHOUT_ACTIVE_QUERY + " AND i.id = ?", PaymentRepository::unknownIntent, intentId)
+                .stream()
+                .findFirst();
     }
 
     /**
      * Locks REFUND_REQUESTED intents whose refund was sent (SUCCEEDED but not settled, or UNKNOWN) and have no lookup
-     * in flight, with how many lookups ran since the refund and when the last one, or the refund, finished.
+     * in flight, with how many lookups ran since the refund and when the last one, or the refund, finished. Like
+     * {@link #lockUnknownWithoutActiveQuery(int)}, callers re-read with {@link #refundAwaitingLookup(UUID)}.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public List<RefundAwaitingLookup> lockRefundsAwaitingLookup(int limit) {
         return jdbc.query(
-                """
-                SELECT i.id, r.finished_at AS refund_finished_at,
-                       (SELECT count(*) FROM payment_external_operation q
-                        WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at) AS lookups,
-                       (SELECT max(q.finished_at) FROM payment_external_operation q
-                        WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at)
-                           AS last_lookup_at
-                FROM payment_intent i
-                JOIN payment_external_operation r ON r.intent_id = i.id AND r.kind = 'REFUND'
-                WHERE i.status = 'REFUND_REQUESTED' AND r.status IN ('SUCCEEDED', 'UNKNOWN')
-                  AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
-                                  WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
-                ORDER BY r.finished_at, i.id
-                LIMIT ?
-                FOR UPDATE OF i SKIP LOCKED
-                """,
-                (rs, row) -> {
-                    var last = rs.getTimestamp("last_lookup_at");
-                    return new RefundAwaitingLookup(
-                            rs.getObject("id", UUID.class),
-                            rs.getInt("lookups"),
-                            last == null ? rs.getTimestamp("refund_finished_at").toInstant() : last.toInstant());
-                },
+                REFUNDS_AWAITING_LOOKUP + " ORDER BY r.finished_at, i.id LIMIT ? FOR UPDATE OF i SKIP LOCKED",
+                PaymentRepository::refundAwaitingLookup,
                 limit);
+    }
+
+    /** Re-reads one refund with a fresh snapshot; empty when it settled or a lookup is in flight. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<RefundAwaitingLookup> refundAwaitingLookup(UUID intentId) {
+        return jdbc
+                .query(REFUNDS_AWAITING_LOOKUP + " AND i.id = ?", PaymentRepository::refundAwaitingLookup, intentId)
+                .stream()
+                .findFirst();
+    }
+
+    private static UnknownIntent unknownIntent(ResultSet rs, int row) throws SQLException {
+        var last = rs.getTimestamp("last_lookup_at");
+        return new UnknownIntent(
+                rs.getObject("id", UUID.class),
+                rs.getLong("amount_cents"),
+                rs.getInt("lookups"),
+                last == null ? rs.getTimestamp("updated_at").toInstant() : last.toInstant());
+    }
+
+    private static RefundAwaitingLookup refundAwaitingLookup(ResultSet rs, int row) throws SQLException {
+        var last = rs.getTimestamp("last_lookup_at");
+        return new RefundAwaitingLookup(
+                rs.getObject("id", UUID.class),
+                rs.getInt("lookups"),
+                last == null ? rs.getTimestamp("refund_finished_at").toInstant() : last.toInstant());
     }
 
     /** Records a provider lookup as already in flight, in the same transaction that chose the intent. */
