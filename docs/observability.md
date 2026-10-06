@@ -72,8 +72,16 @@ Correlação: o `correlationId` do request HTTP vai para o evento da outbox
 efeito roda, então os logs do efeito carregam o mesmo identificador; o
 contexto anterior do worker é restaurado depois.
 
-Ainda faltam nesta fatia: traces distribuídos (OpenTelemetry) e a
-instrumentação de etiquetas de frete (C70) e de notificações (C75).
+Traces (C79): o starter OpenTelemetry cria spans de HTTP e o
+`OutboxEventWriter` grava o `traceparent` W3C do request junto do evento
+(`event_outbox.trace_parent`, V38). O publisher envia esse valor como header
+`traceparent` no Kafka e o consumidor abre um span `event.consume` filho dele,
+então request, publicação e efeito ficam no mesmo trace. Amostragem
+`TRACING_SAMPLING_PROBABILITY` (padrão 1.0, local); export OTLP desligado por
+padrão (`OTLP_TRACING_EXPORT_ENABLED=true` e `OTLP_TRACING_ENDPOINT` para ligar).
+Provado em `TracePropagationIT` (mesmo trace id do request no efeito) e
+`KafkaOutboxEventBrokerTest` (header). Falta instrumentar etiquetas de frete
+(C70) e notificações (C75).
 
 ## Painel local — C79a
 
@@ -93,3 +101,9 @@ Prometheus mostrou o alvo `up`, `dlp_payments_intents{status="UNDER_REVIEW"} 1`
 e `dlp_eventing_consumer_failures{state="QUARANTINED"} 1`, e o painel
 respondeu 200 na API do Grafana. Consumo medido: Prometheus 26 MiB, Grafana
 168 MiB, worker 413 MiB de RSS com `-Xmx384m`. Traces ficam para a C79.
+
+O mesmo profile sobe `jaegertracing/jaeger:2.21.0` (UI em `127.0.0.1:16686`,
+OTLP HTTP em `127.0.0.1:14318`). Com `OTLP_TRACING_EXPORT_ENABLED=true` na API e
+no worker, os traces aparecem no Jaeger por serviço e por `correlationId` nos
+logs. A visualização no Jaeger não foi exercitada com uma compra real nesta
+sessão; a continuidade do trace está provada pelos testes acima.
