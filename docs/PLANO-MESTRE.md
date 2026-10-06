@@ -1792,7 +1792,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C68 — `feat(checkout): coordinate cancellation and late-payment refunds`
 
-- [ ] **Depende:** C41, C56, C66, C67. **Alvos:** coordenador de cancelamento/compensação e testes; M.
+- [x] **Depende:** C41, C56, C66, C67. **Alvos:** coordenador de cancelamento/compensação e testes; M. Implementado em 2026-10-05: Q05 resolvida por D29–D31; devolução de estoque segue a proposta CHK-Q03 como padrão até aprovação. `OrderCancellationIT` 7/7 e `CancellationApiIT` 5/5.
 - **Aceite:** cancelamento respeita fronteira de expedição/retirada; reembolso confirma antes de marcar reembolsado; pagamento tardio inicia compensação sem consumir novo estoque.
 - **Verificar:** BI(CancellationCompensation), V10/V16 e replay; regra Q05 precisa estar decidida.
 
