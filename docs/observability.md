@@ -72,6 +72,24 @@ Correlação: o `correlationId` do request HTTP vai para o evento da outbox
 efeito roda, então os logs do efeito carregam o mesmo identificador; o
 contexto anterior do worker é restaurado depois.
 
-Ainda faltam nesta fatia: traces distribuídos (OpenTelemetry), instrumentação
-de etiquetas de frete (C70) e de notificações (C75), e a medição de recursos da
-stack. O provisionamento de Prometheus/Grafana é a C79a.
+Ainda faltam nesta fatia: traces distribuídos (OpenTelemetry) e a
+instrumentação de etiquetas de frete (C70) e de notificações (C75).
+
+## Painel local — C79a
+
+`docker compose --profile observability up -d` sobe Prometheus
+(`prom/prometheus:v3.13.4`, `127.0.0.1:19090`) e Grafana
+(`grafana/grafana:13.0.10`, `127.0.0.1:13000`). O Prometheus coleta
+`/actuator/prometheus` do worker no host (`host.docker.internal:18081`); o
+Grafana provisiona a fonte e o painel "Recuperação de compras"
+(`infra/local/observability/grafana/dashboards/recovery.json`): outbox,
+falhas do consumidor, pagamentos por estado e idade, chamadas em voo e
+notificações do provedor.
+
+Evidência local (2026-10-05): com o worker em `worker,local` contra um banco
+isolado e o provedor simulado, uma intent `UNKNOWN` semeada recebeu três
+consultas `NOT_FOUND` e foi para `UNDER_REVIEW` (`UNKNOWN_UNRESOLVED`); o
+Prometheus mostrou o alvo `up`, `dlp_payments_intents{status="UNDER_REVIEW"} 1`
+e `dlp_eventing_consumer_failures{state="QUARANTINED"} 1`, e o painel
+respondeu 200 na API do Grafana. Consumo medido: Prometheus 26 MiB, Grafana
+168 MiB, worker 413 MiB de RSS com `-Xmx384m`. Traces ficam para a C79.

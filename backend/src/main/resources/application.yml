@@ -127,7 +127,8 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,metrics
+        # prometheus: lido pelo profile `observability` do compose (C79a), só local.
+        include: health,metrics,prometheus
 
 ---
 
