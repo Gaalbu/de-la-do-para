@@ -37,5 +37,3 @@ CREATE TABLE shipping_label_operation
 );
 
 CREATE INDEX shipping_label_operation_order_idx ON shipping_label_operation (order_id, created_at);
-CREATE INDEX shipping_label_operation_recovery_idx ON shipping_label_operation (updated_at)
-    WHERE state IN ('REQUESTED', 'UNKNOWN', 'FAILED');

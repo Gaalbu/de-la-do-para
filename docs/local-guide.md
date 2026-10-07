@@ -45,11 +45,29 @@ parâmetros `APP_EVENTING_BOOTSTRAP_SERVERS`, `APP_EVENTING_TOPIC`,
 Eles não têm valores padrão enquanto a C45 não aprovar lease e polling; o
 worker falha cedo se a configuração estiver incompleta.
 
-O perfil `worker` expõe no Actuator, sem labels de evento ou payload, as
-métricas `dlp.eventing.outbox.pending.count`,
-`dlp.eventing.outbox.pending.oldest_age_seconds` e
-`dlp.eventing.outbox.pending.attempts`. O estado de quarentena será medido
-quando o modelo de C49 existir; esta fatia não cria uma quarentena implícita.
+O perfil `worker` expõe no Actuator (`/actuator/metrics` e
+`/actuator/prometheus`), sem labels de evento, pedido ou payload, as métricas
+de outbox, falhas do consumidor e pagamentos em recuperação listadas em
+[observabilidade](observability.md).
+
+### Painel local de recuperação (opcional, C79a)
+
+```bash
+docker compose --profile observability up -d   # Prometheus 19090, Grafana 13000
+# rode o worker no host com --server.port=18081 (o Prometheus coleta dali)
+docker compose --profile observability down
+```
+
+O Grafana abre em `http://127.0.0.1:13000` com acesso anônimo de leitura e o
+painel "Recuperação de compras" já provisionado. Para editar, entre como
+`admin` com `GRAFANA_ADMIN_PASSWORD` (defina no `.env`). As portas ficam só em
+`127.0.0.1`.
+
+No mesmo perfil, `CHECKOUT_EXPIRATION_ENABLED=true` liga a expiração de
+pedidos não pagos ao fim da reserva de 15 min (C66): a cada
+`CHECKOUT_EXPIRATION_POLL_DELAY` (padrão 5 s), até
+`CHECKOUT_EXPIRATION_BATCH_SIZE` pedidos (padrão 20) passam a `EXPIRED`, com
+reserva e cupom liberados. Vários workers podem rodar juntos.
 
 ## Superfícies expostas
 

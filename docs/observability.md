@@ -48,3 +48,62 @@ JSON foi parseado e conferido sem token, cookie ou query enviados na sonda.
 RSS observado: 232.596 KiB (aproximadamente 227 MiB), após a primeira sonda,
 sem carga; é uma amostra local, não orçamento de produção ou benchmark.
 Readiness recusando tráfego retorna 503 sem derrubar liveness, coberto por teste.
+
+## Métricas de recuperação — C79 (parcial)
+
+Expostas pelo perfil `worker` em `/actuator/metrics` (o perfil inclui
+`health,metrics`). Os rótulos são só estados, nunca pedido, intent ou evento,
+para manter a cardinalidade fixa.
+
+| Métrica | Rótulo | Significado |
+|---|---|---|
+| `dlp.eventing.outbox.pending.count` | — | eventos da outbox ainda não publicados |
+| `dlp.eventing.outbox.pending.oldest_age_seconds` | — | idade do evento pendente mais antigo |
+| `dlp.eventing.outbox.pending.attempts` | — | tentativas acumuladas dos pendentes |
+| `dlp.eventing.consumer.failures` | `state` = `RETRYING`/`QUARANTINED` | registros consumidos que falharam |
+| `dlp.eventing.consumer.retrying.attempts` | — | tentativas gastas nos que ainda vão ser reprocessados |
+| `dlp.payments.intents` | `status` = `UNKNOWN`/`UNDER_REVIEW`/`REFUND_REQUESTED` | intents que ainda exigem conciliação, análise ou reembolso |
+| `dlp.payments.intents.oldest_age_seconds` | `status` (mesmos valores) | tempo desde que a intent mais antiga entrou no estado |
+| `dlp.payments.operations.in_flight` | — | chamadas ao provedor reclamadas e ainda sem resultado gravado |
+| `dlp.payments.provider_events` | `status` = `RECEIVED`/`REVIEW` | notificações aguardando processamento ou operador |
+
+Correlação: o `correlationId` do request HTTP vai para o evento da outbox
+(`EventEnvelope.correlationId`) e, no consumo, é colocado no MDC enquanto o
+efeito roda, então os logs do efeito carregam o mesmo identificador; o
+contexto anterior do worker é restaurado depois.
+
+Traces (C79): o starter OpenTelemetry cria spans de HTTP e o
+`OutboxEventWriter` grava o `traceparent` W3C do request junto do evento
+(`event_outbox.trace_parent`, V38). O publisher envia esse valor como header
+`traceparent` no Kafka e o consumidor abre um span `event.consume` filho dele,
+então request, publicação e efeito ficam no mesmo trace. Amostragem
+`TRACING_SAMPLING_PROBABILITY` (padrão 1.0, local); export OTLP desligado por
+padrão (`OTLP_TRACING_EXPORT_ENABLED=true` e `OTLP_TRACING_ENDPOINT` para ligar).
+Provado em `TracePropagationIT` (mesmo trace id do request no efeito) e
+`KafkaOutboxEventBrokerTest` (header). Falta instrumentar etiquetas de frete
+(C70) e notificações (C75).
+
+## Painel local — C79a
+
+`docker compose --profile observability up -d` sobe Prometheus
+(`prom/prometheus:v3.13.4`, `127.0.0.1:19090`) e Grafana
+(`grafana/grafana:13.0.10`, `127.0.0.1:13000`). O Prometheus coleta
+`/actuator/prometheus` do worker no host (`host.docker.internal:18081`); o
+Grafana provisiona a fonte e o painel "Recuperação de compras"
+(`infra/local/observability/grafana/dashboards/recovery.json`): outbox,
+falhas do consumidor, pagamentos por estado e idade, chamadas em voo e
+notificações do provedor.
+
+Evidência local (2026-10-05): com o worker em `worker,local` contra um banco
+isolado e o provedor simulado, uma intent `UNKNOWN` semeada recebeu três
+consultas `NOT_FOUND` e foi para `UNDER_REVIEW` (`UNKNOWN_UNRESOLVED`); o
+Prometheus mostrou o alvo `up`, `dlp_payments_intents{status="UNDER_REVIEW"} 1`
+e `dlp_eventing_consumer_failures{state="QUARANTINED"} 1`, e o painel
+respondeu 200 na API do Grafana. Consumo medido: Prometheus 26 MiB, Grafana
+168 MiB, worker 413 MiB de RSS com `-Xmx384m`. Traces ficam para a C79.
+
+O mesmo profile sobe `jaegertracing/jaeger:2.21.0` (UI em `127.0.0.1:16686`,
+OTLP HTTP em `127.0.0.1:14318`). Com `OTLP_TRACING_EXPORT_ENABLED=true` na API e
+no worker, os traces aparecem no Jaeger por serviço e por `correlationId` nos
+logs. A visualização no Jaeger não foi exercitada com uma compra real nesta
+sessão; a continuidade do trace está provada pelos testes acima.

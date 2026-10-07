@@ -15,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Records the intent to charge an order before any provider call. The intent, its CREATE_CHECKOUT operation and the
- * {@code payment.checkout_requested} event are written in the caller's transaction.
+ * {@code payment.checkout_requested} event are written in the caller's transaction; a refund request likewise writes
+ * its REFUND operation with the transition.
  */
 @Service
 public class PaymentIntentService {
@@ -74,6 +75,10 @@ public class PaymentIntentService {
         }
         var version = intent.version() + 1;
         payments.updateStatus(intentId, to, version, reason, now);
+        if (to == PaymentStatus.REFUND_REQUESTED) {
+            // The refund call is owed from this commit on; the worker sends it (C67).
+            payments.insertOperation(UUID.randomUUID(), intentId, OperationKind.REFUND, now);
+        }
         var payload = payload(intentId, intent.orderId());
         var type =
                 switch (to) {

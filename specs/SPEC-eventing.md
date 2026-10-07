@@ -100,6 +100,16 @@ leases e quarentena pertencem à persistência do eventing.
 - Eventos de pagamento, expedição e webhook continuam sujeitos a resultado
   `UNKNOWN`; replay não recria chamada externa sem uma operação de
   conciliação específica.
+- Implementação (C82): `GET /admin/events/quarantine` lista os registros em
+  quarentena com o último pedido de replay; `POST
+  /admin/events/quarantine/{topic}/{partition}/{offset}/replays` (ADMIN, CSRF,
+  motivo de 1 a 200 caracteres) grava `event_replay_request` e só enfileira,
+  no máximo um pendente por registro. O worker (`EVENTING_REPLAY_ENABLED`) lê o
+  envelope original em `event_outbox` e o consome pelo mesmo
+  `EventConsumptionService`, com a correlação original no MDC: resultado
+  `APPLIED` (inclui `PENDING_ORDER` como resultado) ou `DUPLICATE`. Se o
+  handler falhar, o efeito é desfeito e o pedido fecha `FAILED`. Registro sem
+  `eventId` legível ou cujo evento saiu da outbox não é elegível (409).
 
 ## 5. Retry, lease, quarentena e retenção
 
@@ -129,7 +139,7 @@ segredo, token ou payload pessoal desnecessário.
 | EVT-005 | consumidor cai depois do efeito e commit | segunda entrega é ignorada pelo registro único |
 | EVT-006 | envelope inválido | quarentena com diagnóstico sanitizado |
 | EVT-007 | versão incompatível ou gap | não aplicar silenciosamente; aguardar/reconciliar |
-| EVT-008 | replay autorizado | mesmo `eventId`, auditoria e deduplicação preservadas |
+| EVT-008 | replay autorizado | mesmo `eventId`, auditoria e deduplicação preservadas (`EventReplayIT`, C82) |
 | EVT-009 | limpeza operacional | pendentes/investigados preservados conforme retenção |
 
 ## 7. Contratos e limites

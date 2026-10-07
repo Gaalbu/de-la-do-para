@@ -66,9 +66,18 @@ public class OutboxEventEntity {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** W3C {@code traceparent} of the request that wrote the event (C79); null outside a traced request. */
+    @Column(updatable = false, length = 55)
+    private String traceParent;
+
     protected OutboxEventEntity() {}
 
     public OutboxEventEntity(OutboxEvent event) {
+        this(event, null);
+    }
+
+    public OutboxEventEntity(OutboxEvent event, String traceParent) {
+        this.traceParent = traceParent;
         this.eventId = event.eventId();
         this.eventType = event.eventType();
         this.schemaVersion = event.schemaVersion();
@@ -107,6 +116,10 @@ public class OutboxEventEntity {
 
     public JsonNode getPayload() {
         return payload.deepCopy();
+    }
+
+    public String getTraceParent() {
+        return traceParent;
     }
 
     public void claim(Instant newLeaseUntil) {

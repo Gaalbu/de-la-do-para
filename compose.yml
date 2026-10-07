@@ -94,6 +94,59 @@ services:
       timeout: 3s
       retries: 10
 
+  # Observabilidade local opcional (C79a): `docker compose --profile observability up -d`.
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    profiles: ["observability"]
+    container_name: dlp-prometheus
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-19090}:9090"
+    volumes:
+      - ./infra/local/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    profiles: ["observability"]
+    container_name: dlp-jaeger
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${JAEGER_UI_PORT:-16686}:16686"
+      - "127.0.0.1:${OTLP_HTTP_PORT:-14318}:4318"
+
+  grafana:
+    image: grafana/grafana:13.0.10
+    profiles: ["observability"]
+    container_name: dlp-grafana
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me-locally}
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-13000}:3000"
+    volumes:
+      - ./infra/local/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/local/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
 volumes:
   dlp-pgdata:
   dlp-kafkadata:

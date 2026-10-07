@@ -1181,6 +1181,25 @@ Status: tarefas propostas, todas pendentes. Nenhum comando abaixo foi executado 
 - Após cada grupo de até três commits de implementação: executar o gate pertinente, verificar a fatia de usuário disponível e registrar evidência. Os marcos G0–G9 são revisões maiores.
 - Não manter a branch principal deliberadamente quebrada. Teste vermelho é evidência de reprodução no trabalho local; o commit final inclui o comportamento que o faz passar.
 
+## Divisão de trabalho entre agentes (a partir de 2026-10-03)
+
+Claude e Codex trabalham em paralelo. A divisão segue fronteiras de módulo para evitar conflito; dentro de cada trilha, a ordem respeita as dependências do backlog. As caixas `[ ]`/`[x]` do backlog podem estar defasadas: o estado real é o PR mesclado em `main`.
+
+| Trilha | Responsável | Tarefas, em ordem | Áreas que só essa trilha edita |
+|---|---|---|---|
+| Release, banco e pagamentos | Claude | C93 (em andamento) → C63 → C64 → C65 → C66 → C67 → C68 → C69 → C79 → C79a → C82 → C82a → C94 | `B/payments`, `B/checkout`, `B/eventing`, observabilidade, `F/checkout` e acompanhamento de cancelamento/reembolso, testes de banco/restore |
+| Identidade, cupons, design e expedição | Codex | PRs abertos #123/#124/#125/#127/#128 → C76 → C77 → C80 → C81 → C81a (trabalho local já existente no checkout principal) → C70 → C71 → C73 → C73a → C82b | `B/identity`, `B/cart`, `B/pricing`, `B/shipping`, `F/account`, `F/identity`, `F/cart`, `F/admin/coupons`, admin de expedição, `docs/design` |
+| Bloqueadas por decisão do usuário | — | C75 (parte convidado), C78, C81b dependem de A13 e ORD-Q02 | Não iniciar sem decisão registrada |
+| Transversais finais | A combinar | C83, C85–C91, C92a, C95–C98 | Atualizar esta tabela antes de iniciar |
+
+Regras de convivência:
+
+- Cada agente usa worktree e branch próprias (`claude/<id>-...` ou `codex/<id>-...`). Claude não edita o checkout principal `/home/gaalbu/codigos/de-la-do-para`, que contém trabalho local da trilha Codex.
+- Migrations Flyway: usar o próximo número livre em `main` no momento do rebase final. Como `outOfOrder` não está habilitado, quem mesclar depois renumera a própria migration para ficar acima da maior versão já mesclada.
+- Arquivos compartilhados (`docs/PLANO-MESTRE.md`, `tasks/progress.md`, `docs/traceability.md`, `contracts/openapi.yaml`, `application.yml`) recebem apenas acréscimos pequenos no próprio PR; rebase em `main` antes de pedir merge.
+- Se uma tarefa exigir editar área da outra trilha, registrar a necessidade no PR e combinar via usuário antes de editar.
+- Para trocar ou pegar tarefa de outra trilha, atualizar esta tabela em PR próprio.
+
 ## Gates e comandos planejados
 
 Estes comandos serão configurados nos primeiros commits; não são scripts existentes. Classes de teste citadas nas tarefas são nomes de trabalho a fixar na spec.
@@ -1204,25 +1223,25 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C00a — `docs(bootstrap): record repository and execution prerequisites`
 
-- [ ] **Depende:** nenhuma. **Alvos:** registro inicial de ambiente, remoto/destino e decisões; S.
+- [x] **Depende:** nenhuma. **Alvos:** registro inicial de ambiente, remoto/destino e decisões; S. Registro inicial preservado no histórico; revalidado em 2026-10-05 (checkout em `/home/gaalbu/codigos/de-la-do-para`, remoto `Gaalbu/de-la-do-para`).
 - **Aceite:** implementação solicitada, owner/URL/nome técnico confirmados e pré-requisitos identificados; não copiar LAPES.
 - **Verificar:** ler status de pastas existentes e registrar Git/Docker/JDK/Node, sem apagar dados. É uma etapa pré-clone; seus registros entram no primeiro commit documental, sem commit vazio.
 
 ### C00b — `docs(setup): preserve the master plan in the new clone`
 
-- [ ] **Depende:** C00a. **Alvos:** novo clone em `/home/gaalbu/codigos`, `docs/PLANO-MESTRE.md`, `tasks/progress.md`; S.
+- [x] **Depende:** C00a. **Alvos:** novo clone em `/home/gaalbu/codigos`, `docs/PLANO-MESTRE.md`, `tasks/progress.md`; S. Commit `7437919` no main.
 - **Aceite:** remoto público correto clonado na pasta do usuário; plano autossuficiente versionado; nenhuma cópia de histórico/código LAPES.
 - **Verificar:** `git remote -v`, `git status --short`, caminho e hash do documento copiado; verificar público no remoto, não inferir pelo nome.
 
 ### C01 — `docs(scope): record approved scope and capability map`
 
-- [ ] **Depende:** C00b. **Alvos:** mapa e registro de decisões; S.
+- [x] **Depende:** C00b. **Alvos:** mapa e registro de decisões; S. Commit `435487c` no main.
 - **Aceite:** respostas do usuário transcritas sem inferência; módulos/dependências revisados; perguntas pendentes do registro de decisões encaminhadas no momento definido; repositório público desde o início da implementação conforme D42, sem criação nesta etapa de planejamento.
 - **Verificar:** DOC; usuário revisa o mapa antes das specs de módulos.
 
 ### C02 — `docs(sdd): define specification and evidence conventions`
 
-- [ ] **Depende:** C01. **Alvos:** `docs/contributing.md`, template de spec, template de ADR, matriz de rastreio; M.
+- [x] **Depende:** C01. **Alvos:** `docs/contributing.md`, template de spec, template de ADR, matriz de rastreio; M. Commit `3b0824f` no main.
 - **Aceite:** seis áreas da spec, formato de critérios e política de commits definidos; separação entre verificação e validação documentada.
 - **Verificar:** DOC; uma spec de exemplo documental demonstra como referenciar teste/evidência, sem implementar aplicação.
 
@@ -1240,7 +1259,7 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C05 — `docs(architecture): record runtime and consistency decisions`
 
-- [ ] **Depende:** C02, C04. **Alvos:** ADRs de monólito, transações/eventos, autenticação, renderização e recursos; M.
+- [x] **Depende:** C02, C04. **Alvos:** ADRs de monólito, transações/eventos, autenticação, renderização e recursos; M. PR #5 integrado em `298f4d9`.
 - **Aceite:** decisões técnicas do plano revisadas; modos local/sandbox identificados; limites do provedor influenciam a máquina de estados.
 - **Verificar:** DOC; dependências sem ciclos e nenhuma decisão comercial desconhecida promovida a fato.
 
@@ -1250,79 +1269,79 @@ Nas notações BT/BI, substituir Nome pelo nome entre parênteses. A task define
 
 ### C06 — `chore(backend): bootstrap the Spring Boot application`
 
-- [ ] **Depende:** C05. **Alvos:** Maven Wrapper, `pom.xml`, entrada da aplicação e configurações mínimas; bootstrap gerado.
+- [x] **Depende:** C05. **Alvos:** Maven Wrapper, `pom.xml`, entrada da aplicação e configurações mínimas; bootstrap gerado. PR #6 integrado em `b7354fe`.
 - **Aceite:** Java/Boot/BOM fixados e compatíveis; build limpo; namespace corresponde à decisão de C03 ou ao rótulo explicitamente autorizado.
 - **Verificar:** build Maven e inicialização mínima; guardar matriz de versões, sem serviços de negócio fictícios.
 
 ### C07 — `chore(frontend): bootstrap standalone Angular with SSR`
 
-- [ ] **Depende:** C03, C05. **Alvos:** workspace Angular, lockfile e rotas mínimas; bootstrap gerado.
+- [x] **Depende:** C03, C05. **Alvos:** workspace Angular, lockfile e rotas mínimas; bootstrap gerado. PR #7 integrado em `13664fc`; curadoria visual de C03 segue aberta.
 - **Aceite:** versão Angular/Node/TypeScript compatível e fixada; standalone/zoneless e strict ativos; renderização pública/privada configurável.
 - **Verificar:** teste padrão suportado pelo CLI e build SSR; conferir HTML inicial de uma rota pública mínima.
 
 ### C08 — `chore(dev): add isolated local infrastructure`
 
-- [ ] **Depende:** C06, C07. **Alvos:** Compose, configuração de proxy, `.env.example` e guia local; M.
+- [x] **Depende:** C06, C07. **Alvos:** Compose, configuração de proxy, `.env.example` e guia local; M. PR #8 integrado em `150630a`.
 - **Aceite:** PostgreSQL, Kafka KRaft, Mailpit e simuladores sobem com health checks; portas/volumes próprios; entrada local e rota do túnel delimitadas.
 - **Verificar:** `docker compose config`, subida/encerramento preservando volumes e acesso apenas às superfícies previstas. Nenhum segredo real em exemplos.
 
 ### C09 — `build(backend): enforce formatting and integration test gates`
 
-- [ ] **Depende:** C06, C08. **Alvos:** `pom.xml`, configuração de testes e `T/architecture`; M.
+- [x] **Depende:** C06, C08. **Alvos:** `pom.xml`, configuração de testes e `T/architecture`; M. PR #9 integrado em `ff5097c`.
 - **Aceite:** Surefire/Failsafe, formatter, análise Java e Testcontainers configurados; teste de arquitetura denuncia uma dependência inválida inserida temporariamente.
 - **Verificar:** B e prova de que o gate falha por violação real; remover somente a violação experimental.
 
 ### C10 — `build(frontend): enforce typed tests and lint checks`
 
-- [ ] **Depende:** C07. **Alvos:** scripts npm, ESLint/formatter, configuração do runner e Playwright; M.
+- [x] **Depende:** C07. **Alvos:** scripts npm, ESLint/formatter, configuração do runner e Playwright; M. PR #10 integrado em `707a26b`.
 - **Aceite:** comandos F/E disponíveis; teste observa comportamento zoneless; nenhum `any` de escape para fazer build passar.
 - **Verificar:** F; E mínimo sobre a aplicação real, com build/runtime iniciado pelo comando documentado.
 
 ### C11 — `build(contracts): validate API schemas and generated clients`
 
-- [ ] **Depende:** C02, C09, C10. **Alvos:** ferramentas de contrato, `contracts/`, scripts de geração e validação; M.
+- [x] **Depende:** C02, C09, C10. **Alvos:** ferramentas de contrato, `contracts/`, scripts de geração e validação; M. PR #11 integrado em `d7b1afd`.
 - **Aceite:** especificação inválida falha no gate; cliente derivado reprodutível; arquivo gerado não é editado manualmente.
 - **Verificar:** C e compilação do cliente mínimo; fixar versões das ferramentas.
 
 ### C11a — `docs(api): establish interactive reference and executable examples`
 
-- [ ] **Depende:** C11. **Alvos:** referência OpenAPI local, guia e exemplos HTTP; M.
+- [x] **Depende:** C11. **Alvos:** referência OpenAPI local, guia e exemplos HTTP; M. PR #12 integrado em `0cac71d`.
 - **Aceite:** documentação acessível localmente e derivada do contrato canônico; exemplos executáveis com dados fictícios e variáveis, sem segredos; critérios API-E-TESTES.md incorporados aos templates de spec.
 - **Verificar:** abrir referência e executar exemplos já implementados contra o ambiente local; cenários futuros não aparecem como funcionais antes da implementação.
 
 ### C11b — `test(contracts): detect undocumented routes and schema drift`
 
-- [ ] **Depende:** C11a. **Alvos:** harness de contrato, inventário de rotas e fixtures de validação; M.
+- [x] **Depende:** C11a. **Alvos:** harness de contrato, inventário de rotas e fixtures de validação; M. PR #13 integrado em `37f86ec`.
 - **Aceite:** rota implementada sem contrato e resposta incompatível são detectadas; exemplos inválidos falham; ferramentas fixadas e exceções técnicas explícitas para endpoints de infraestrutura.
 - **Verificar:** fixtures deliberadamente divergentes comprovam que o gate falha; caso conforme passa; ampliar cobertura junto de cada endpoint implementado.
 
 ### C12 — `feat(observability): correlate HTTP requests and structured logs`
 
-- [ ] **Depende:** C06, C08, C09. **Alvos:** filtro/contexto de correlação, logs, health e teste de redaction; M.
+- [x] **Depende:** C06, C08, C09. **Alvos:** filtro/contexto de correlação, logs, health e teste de redaction; M. PR #14 integrado em `a631ef8`.
 - **Aceite:** requisição tem correlação verificável; logs não contêm segredos/PII; orçamento inicial de memória medido e documentado.
 - **Verificar:** teste de redaction, health/readiness e observação do consumo local sob inicialização normal.
 
 ### C13 — `ci: assemble reproducible local quality and build checks`
 
-- [ ] **Depende:** C09, C10, C11, C11a, C11b, C12. **Alvos:** entrada local de checks, workflow obrigatório e documentação; M.
+- [x] **Depende:** C09, C10, C11, C11a, C11b, C12. **Alvos:** entrada local de checks, workflow obrigatório e documentação; M. PR #14 integrado em `a631ef8`.
 - **Aceite:** mesmos comandos de qualidade rodáveis localmente e em CI; cache não mascara lockfile; credenciais externas ausentes dos jobs comuns.
 - **Verificar:** B/F/C/E local; verificar configuração do workflow sem afirmar que houve execução remota.
 
 ### C13a — `ci(docs): enforce documentation and API example checks`
 
-- [ ] **Depende:** C13, C11a, C11b. **Alvos:** job docs/contracts e scripts de validação; M.
+- [x] **Depende:** C13, C11a, C11b. **Alvos:** job docs/contracts e scripts de validação; M. PR #15 integrado em `d2fb069`.
 - **Aceite:** links internos, exemplos e contrato acompanhados por gate; erro intencional é detectado; cada endpoint futuro herda a verificação.
 - **Verificar:** executar fixtures inválidas e conformes; cliente gerado sem diff e exemplos contra a aplicação disponível.
 
 ### C13b — `ci(security): enforce scoped permissions and dependency checks`
 
-- [ ] **Depende:** C13a. **Alvos:** permissões, pinagem, scans e configuração de atualizações; M.
+- [x] **Depende:** C13a. **Alvos:** permissões, pinagem, scans e configuração de atualizações; M. PR #16 integrado em `d0ce796`.
 - **Aceite:** actions por SHA, dependências fixadas, scans de segredos/dependências com triagem; PR externo sem acesso a segredos; política de atualização documentada.
 - **Verificar:** inspecionar permissões efetivas e simular achado controlado em fixture sem segredo real; gate não esconde erro da ferramenta.
 
 ### C13c — `ci(quality): require healthy pull requests and scheduled checks`
 
-- [ ] **Depende:** C13b. **Alvos:** agregador, checks de commits, agenda, proteção de main e documentação; M.
+- [x] **Depende:** C13b. **Alvos:** agregador, checks de commits, agenda, proteção de main e documentação; M. PR #25 integrado em `2db8139`.
 - **Aceite:** gates exigidos corretamente por tipo de alteração; main com checks verificados no remoto; periodicidade e retenção compatíveis com orçamento zero.
 - **Verificar:** observar PR real e seus checks, cenário de docs-only, teste falho e run cancelado; nenhum falso verde. Configuração indisponível exige registrar limitação e alternativa, sem alegar proteção ativa.
 
@@ -1334,19 +1353,19 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C14 — `docs(identity): specify sessions and optional customer accounts`
 
-- [ ] **Depende:** C01, C02, C05. **Alvos:** `specs/SPEC-identity.md`, contrato de acesso; S.
+- [x] **Depende:** C01, C02, C05. **Alvos:** `specs/SPEC-identity.md`, contrato de acesso; S. PR #26 integrado em `2edd714`.
 - **Aceite:** admin/cliente/convidado, verificação de e-mail, recuperação e prova de posse definidos; limites de sessão e acesso ao histórico explícitos.
 - **Verificar:** DOC e revisão da spec pelo usuário antes das implementações C15/C76–C81.
 
 ### C15 — `feat(identity): authenticate administrators with protected sessions`
 
-- [ ] **Depende:** C09, C14. **Alvos:** `B/identity`, migration de contas/sessões, `T/identity`; M, dividir persistência/API se o diff exceder uma intenção.
+- [x] **Depende:** C09, C14. **Alvos:** `B/identity`, migration de contas/sessões, `T/identity`; M, dividir persistência/API se o diff exceder uma intenção. PR #27 integrado em `be93aab`.
 - **Aceite:** login/logout/consulta de sessão; CSRF e papel verificados no backend; criação local inicial do admin sem senha publicada.
 - **Verificar:** BI(SessionSecurity); tentativa sem sessão, senha incorreta, sessão encerrada e cliente sem papel admin negados.
 
 ### C16 — `feat(identity-ui): add accessible login and admin navigation`
 
-- [ ] **Depende:** C10, C15. **Alvos:** `F/identity`, rotas/admin shell e teste; M.
+- [x] **Depende:** C10, C15. **Alvos:** `F/identity`, rotas/admin shell e teste; M. PR #28 integrado em `0de79a9`.
 - **Aceite:** entrar/sair e tratar sessão expirada; erro preserva formulário; guarda de rota complementa a autorização backend.
 - **Verificar:** F/E; navegar como visitante e como admin pelo browser.
 
@@ -1607,7 +1626,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C47 — `feat(eventing): publish claimed outbox events to Kafka`
 
-- [ ] **Depende:** C08, C46. **Alvos:** publicador, claim/lease, config Kafka e testes; M.
+- [x] **Depende:** C08, C46. **Alvos:** publicador, claim/lease, config Kafka e testes; M. Commit `493bee3` no main.
 - **Aceite:** marca só após ACK; abandona claim recuperável em queda; múltiplos workers não perdem mensagens.
 - **Verificar:** BI(OutboxPublisher), broker interrompido e V05/V19.
 - **Estado atual:** publicação, recuperação após ACK, ciclo configurado do worker,
@@ -1623,35 +1642,35 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C48 — `feat(eventing): record consumer effects idempotently`
 
-- [ ] **Depende:** C47. **Alvos:** registry de consumo, migration, contrato de handler e teste; M.
+- [x] **Depende:** C47. **Alvos:** registry de consumo, migration, contrato de handler e teste; M. PR #82 integrado em `b3e04da`.
 - **Aceite:** eventId+handler único; efeito e registro no mesmo commit; offset só avança após resultado durável.
 - **Verificar:** BI(IdempotentConsumer), duplicata e V06; handler de teste não vira fluxo fictício da aplicação.
 - **Estado atual:** implementado e verificado localmente na branch `feat/eventing-idempotent-consumer` (ledger V25, serviço transacional, validação do envelope, adapter Kafka com commit manual após o commit PostgreSQL, lote processado em ordem sem commit além de falha); ainda sem PR/merge.
 
 ### C49 — `feat(eventing): schedule retries and quarantine invalid events`
 
-- [ ] **Depende:** C48. **Alvos:** política retry, quarentena/DLT e testes; M.
+- [x] **Depende:** C48. **Alvos:** política retry, quarentena/DLT e testes; M. Commit `fb87f42` no main.
 - **Aceite:** transitório recebe tentativas limitadas; inválido tem diagnóstico seguro; reordenação possível é tratada por versão/estado.
 - **Verificar:** BI(EventRecovery), V14 e limites de retenção; mensagem problemática não impede progresso indefinidamente.
 - **Estado atual:** implementado e verificado localmente sobre a C48 (migration V26 `event_consumer_failure`, `EventRetryPolicy` com backoff 1 s/×2/teto 1 min/full jitter, 8 tentativas transitórias e 1 inválida, `EventFailureService` durável; o consumidor pausa a partição até o retry vencer e segue adiante após quarentena; `last_error` guarda só `KIND:ExceptionClass`, sem mensagem/payload). Pendente: limpeza por retenção de quarentena, API operacional de replay (C79 em diante) e PR/merge. Um evento em quarentena deixa lacuna de `aggregateVersion`: eventos posteriores do mesmo agregado ficam `PENDING_ORDER` até reconciliação (EVT-007).
 
 ### C50 — `docs(orders): specify immutable purchase records and status history`
 
-- [ ] **Depende:** C14, C29, C41, C45. **Alvos:** `specs/SPEC-orders.md`, contrato de pedido; S.
+- [x] **Depende:** C14, C29, C41, C45. **Alvos:** `specs/SPEC-orders.md`, contrato de pedido; S. Commit `840f01e` no main.
 - **Aceite:** snapshot e transições; visibilidade convidado/cliente/admin; eventos emitidos pelo pedido definidos.
 - **Verificar:** DOC/C; desenho não importa entidade de outro módulo.
 - **Estado atual:** `specs/SPEC-orders.md` escrita como proposta para revisão (branch `docs/c50-orders-spec`); pendências ORD-Q01 (retenção de dados) e ORD-Q02 (validade do token de convidado) registradas, sem aprovação implícita.
 
 ### C51 — `feat(orders): persist immutable order snapshots and transitions`
 
-- [ ] **Depende:** C30, C46, C50. **Alvos:** agregado/repository/migration/histórico/testes; M.
+- [x] **Depende:** C30, C46, C50. **Alvos:** agregado/repository/migration/histórico/testes; M. Commit `8f49722` no main.
 - **Aceite:** itens/preços/endereço preservados; transições inválidas rejeitadas; mudança comercial grava evento na outbox.
 - **Verificar:** BI(OrderLifecycle), catálogo alterado após snapshot e rollback de transição.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c51-order-persistence`, empilhada na C50): migration V28 (`purchase_order`, itens, história) com triggers de imutabilidade, `OrderTransitions` (tabela da SPEC-orders §7.2 com ator/modalidade/motivo), `OrderService` (criação idempotente por chave de checkout; transição atômica com história e evento de outbox). Sem API de consulta (C52) e sem integração ao checkout (C58a). A SPEC-orders ainda aguarda revisão.
 
 ### C52 — `feat(orders): authorize customer and guest order queries`
 
-- [ ] **Depende:** C15, C51. **Alvos:** consulta/API de pedidos, controle de acesso e testes; M.
+- [x] **Depende:** C15, C51. **Alvos:** consulta/API de pedidos, controle de acesso e testes; M. Commit `0942aa6` no main.
 - **Aceite:** dono acessa seus pedidos; convidado usa sessão/prova controlada; admin tem histórico autorizado.
 - **Verificar:** BI(OrderAccess), C e V17. Link por e-mail será conectado em C75/C78.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c52-order-queries`, empilhada na C51): V29 `purchase_order_access_token` (só hash SHA-256, imutável), `OrderAccessTokens` (emite token de 256 bits, valida por pedido), `OrderQueryService` e `OrderController` (`GET /orders/{id}` por `X-Order-Token` ou sessão dona; `GET /orders`; `GET /admin/orders[/{id}]`), erros ORDER_001/003/004, `Cache-Control: private, no-store`. Token sem expiração enquanto ORD-Q02 estiver aberta. O token ainda não é emitido no checkout (C58a) nem enviado por e-mail (C75/C78).
@@ -1660,76 +1679,76 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C53 — `docs(payments): specify payment intents and uncertain outcomes`
 
-- [ ] **Depende:** C04, C45, C50. **Alvos:** `specs/SPEC-payments.md`, contratos/eventos de pagamento; M.
+- [x] **Depende:** C04, C45, C50. **Alvos:** `specs/SPEC-payments.md`, contratos/eventos de pagamento; M. Commit `98859b3` no main.
 - **Aceite:** Pix/cartão hospedado; correlação checkout/pagamento e valor; resultado desconhecido, consulta e reembolso definidos.
 - **Verificar:** DOC/C; contrato não depende de classes de pedido; limitações observadas no Asaas incorporadas.
 - **Estado atual:** proposta escrita (branch `docs/c53-payments-spec`): `specs/SPEC-payments.md` com intent/operação externa, tabela de transições, pagamento tardio (D13), eventos e exemplos validados pelo envelope. PAY-Q01 (validade do link), PAY-Q02 (espera de `UNKNOWN`) e PAY-Q03 (`EXPIRED`) aguardam revisão; unicidade de `externalReference` segue não provada (C04).
 
 ### C54 — `feat(payments): persist payment intents before external effects`
 
-- [ ] **Depende:** C46, C53. **Alvos:** intent/operação externa, migration, aplicação e testes; M.
+- [x] **Depende:** C46, C53. **Alvos:** intent/operação externa, migration, aplicação e testes; M. Commit `d1d0bcd` no main.
 - **Aceite:** referência e valor imutáveis; solicitação gera outbox; cada tentativa externa possui identidade e estado duráveis.
 - **Verificar:** BI(PaymentIntent), concorrência e rollback; nenhuma chamada HTTP dentro da transação.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c54-payment-intents`): V30 (`payment_intent` com referência/valor imutáveis por trigger, `payment_external_operation` com uma operação de checkout e um reembolso por intent), transições da SPEC-payments §7.2 com evento por destino e versão contígua, claim `SKIP LOCKED` com lease de 60 s, chamada ao provedor fora de transação, timeout → `UNKNOWN` sem nova cobrança, lease vencido → `UNKNOWN`. Sem adapter Asaas (C59).
 
 ### C55 — `test(payments): model provider success failure and ambiguity`
 
-- [ ] **Depende:** C53, C54. **Alvos:** fixtures/simulador WireMock e suíte de contrato do adapter; M.
+- [x] **Depende:** C53, C54. **Alvos:** fixtures/simulador WireMock e suíte de contrato do adapter; M. Commit `0ff7710` no main.
 - **Aceite:** cenários aprovado/recusado/pendente, timeout depois de efeito e evento repetido; modo simulado explícito.
 - **Verificar:** suíte de contrato controlada; não usar resultado como homologação Asaas.
 - **Estado atual:** implementado e verificado localmente (branch `test/c55-provider-simulator`): suíte abstrata `PaymentProviderContract` (aprovado/pendente, recusa, timeout antes/depois do efeito, evento repetido) aplicada ao `SimulatedPaymentProvider`, ativado só com `payments.provider=simulated`. Desvio registrado: sem WireMock nesta fatia porque ainda não há adapter HTTP; C59 adiciona o adapter Asaas com fixtures WireMock e roda a mesma suíte.
 
 ### C56 — `docs(checkout): specify purchase and compensation state machines`
 
-- [ ] **Depende:** C25, C29, C38, C41, C45, C50, C53. **Alvos:** `specs/SPEC-checkout.md`, transições e critérios CHK; M.
+- [x] **Depende:** C25, C29, C38, C41, C45, C50, C53. **Alvos:** `specs/SPEC-checkout.md`, transições e critérios CHK; M. Commit `433042d` no main.
 - **Aceite:** chave+hash+sujeito e resumo versionado; reserva de 15 minutos; cancelamento/reembolso/pagamento tardio ligados às regras aprovadas.
 - **Verificar:** DOC/C; enumerar corridas V01–V12/V16 antes do código coordenador.
 - **Estado atual:** proposta escrita (branch `docs/c56-checkout-state-machines`) em `specs/SPEC-checkout.md` §§A1–A9. Perguntas abertas: CHK-Q01 (retenção da chave), CHK-Q02 (replay sem token de convidado), CHK-Q03 (devolução de estoque no cancelamento pago), CHK-Q04 (saída de `UNDER_REVIEW` após reembolso).
 
 ### C57 — `feat(inventory): reserve eligible stock atomically`
 
-- [ ] **Depende:** C26, C43, C56. **Alvos:** serviço de reserva, linhas/versionamento/migration e testes; M.
+- [x] **Depende:** C26, C43, C56. **Alvos:** serviço de reserva, linhas/versionamento/migration e testes; M. Commit `1a9cf1b` no main.
 - **Aceite:** lote elegível para chegada; reserva atômica em ordem estável; confirmar/liberar repetidamente não repete movimento.
 - **Verificar:** BI(StockReservation), V01/V13 com PostgreSQL real e relógio controlado.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c57-stock-reservation`): V31 (`inventory_reservation` com 15 min por constraint, linhas por lote), `StockReservationService` com locks em ordem (SKU, lote), FEFO (D69), reserva tudo-ou-nada, confirmação e liberação idempotentes com movimento único por passo; bloqueio preserva reservas (D70).
 
 ### C58 — `feat(checkout): claim purchase intentions with durable idempotency`
 
-- [ ] **Depende:** C56. **Alvos:** idempotency store, migration, regra de hash e testes; M.
+- [x] **Depende:** C56. **Alvos:** idempotency store, migration, regra de hash e testes; M. Commit `2743342` no main.
 - **Aceite:** claim por sujeito/operação/chave; payload alterado é conflito; resultado pendente/concluído tem replay definido.
 - **Verificar:** BI(CheckoutIdempotency), V02/V03 e disputa simultânea pela mesma chave.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c58-checkout-idempotency`): V32 `checkout_idempotency` (PK sujeito+operação+chave, forma do resultado por CHECK), `CheckoutIdempotency` (claim na transação do aceite, replay `COMPLETED`, hash diferente → conflito, `PENDING` visível → em curso, chave 16–160 visíveis) e hash canônico SHA-256 da intenção.
 
 ### C58a — `feat(checkout): accept purchases in one database transaction`
 
-- [ ] **Depende:** C31, C39a, C43, C51, C54, C57, C58. **Alvos:** coordenador, API/DTOs e testes transacionais; M.
+- [x] **Depende:** C31, C39a, C43, C51, C54, C57, C58. **Alvos:** coordenador, API/DTOs e testes transacionais; M. Commit `747fbbb` no main.
 - **Aceite:** uma transação cria pedido/reserva/cupom/intenção; versão/preço/dados externos revalidados; itens novos do carrinho não são apagados.
 - **Verificar:** BI(CheckoutAcceptance), C e V01–V04/V11/V12; rollback de qualquer etapa preserva todos os invariantes.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c58a-purchase-acceptance`): `PurchaseSummaryService` + `GET /checkout/{id}/summary` (`summaryVersion` SHA-256), `PurchaseAcceptanceService` + `POST /checkout/{id}/purchase` (claim, resumo revalidado, pedido, reserva FEFO, cupom só com conta de e-mail verificado, token de convidado, intenção de pagamento, consumo só das quantidades compradas, fechamento da chave, tudo em uma transação). Corrigido o mapeamento JSONB de `checkout_snapshots.items`, que fazia `POST /checkout/snapshots` falhar contra PostgreSQL real. Convidado não usa cupom até existir verificação de e-mail de convidado (D33).
 
 ### C59 — `feat(payments): process checkout requests with durable claims`
 
-- [ ] **Depende:** C48, C49, C54, C55, C58a. **Alvos:** worker/claim/aplicação de pagamento e testes; M.
+- [x] **Depende:** C48, C49, C54, C55, C58a. **Alvos:** worker/claim/aplicação de pagamento e testes; M. Commit `308631a` no main.
 - **Aceite:** chamada externa fora de transação; confirmação persiste antes do offset; queda com efeito incerto mantém UNKNOWN.
 - **Verificar:** BI(PaymentWorker), V06/V07/V19; lease expirado não autoriza reenviar operação ambígua.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c59-payment-worker`): `PaymentWorker` agendado no perfil `worker`, ligado só com `PAYMENTS_WORKER_ENABLED=true` e provedor explícito (`PAYMENTS_PROVIDER`). A cada ciclo marca leases vencidos como `UNKNOWN` e roda um lote de operações pelo claim durável. Decisão de desenho: quem chama o provedor é o claim no banco, não o offset Kafka de `payment.checkout_requested`; assim uma reentrega não gera segunda cobrança. A confirmação antes do offset fica na C61 (handler transacional).
 
 ### C60 — `feat(payments): durably ingest authenticated Asaas webhooks`
 
-- [ ] **Depende:** C04, C48, C53, C54. **Alvos:** endpoint/parser, inbox/migration, autenticação e testes; M.
+- [x] **Depende:** C04, C48, C53, C54. **Alvos:** endpoint/parser, inbox/migration, autenticação e testes; M. Commit `8a541a0` no main.
 - **Aceite:** token próprio validado; evento persistido antes de 2xx; duplicatas identificadas, payload inválido rejeitado.
 - **Verificar:** BI(AsaasWebhookIngress), V08/V09; falha de banco não produz ACK de recebimento durável.
 - **Estado atual:** implementado e verificado localmente (branch `feat/c60-asaas-webhooks`): V33 `payment_provider_event` (inbox por provedor+`id`, só identificadores/estados, sem dados do cliente), `POST /api/v1/webhooks/asaas` sem sessão/CSRF, token `asaas-access-token` comparado em tempo constante (32–255 caracteres; sem token configurado tudo é 401), limite de 64 KiB, `200` só depois do commit, reentrega reconhecida sem duplicar, tipos não tratados `IGNORED`. Payload revalidado na documentação oficial (evento de checkout traz `id`, `event`, `dateCreated`, `checkout.id/status`, sem valor na raiz): o valor é confirmado por consulta ao provedor na C61. Sem homologação real (C04).
 
 ### C61 — `feat(checkout): apply confirmed payment outcomes transactionally`
 
-- [ ] **Depende:** C48, C51, C57, C58a, C59, C60. **Alvos:** handler/coordenador de confirmação e testes; M.
+- [x] **Depende:** C48, C51, C57, C58a, C59, C60. **Alvos:** handler/coordenador de confirmação e testes; M. Commit `31effbe` no main.
 - **Aceite:** evento confirmado valida referência/valor/estado; pedido/estoque/cupom avançam juntos; evento velho não regride o pedido.
 - **Verificar:** BI(PaymentOutcome), V06/V08/V09/V11 com simulador do provedor.
 
 ### C62 — `feat(checkout-ui): follow asynchronous payment and order progress`
 
-- [ ] **Depende:** C44, C52, C58a, C61. **Alvos:** confirmação/retorno/status do checkout Angular e testes; M.
+- [x] **Depende:** C44, C52, C58a, C61. **Alvos:** confirmação/retorno/status do checkout Angular e testes; M. PR #111 integrado em `e1cbcd7`.
 - **Aceite:** manter chave por intenção; apresentar pendência, link hospedado, erro e sucesso reais; reload retoma estado do pedido.
 - **Verificar:** F/E; redirecionamento de sucesso isolado não mostra pedido pago.
 
@@ -1739,43 +1758,47 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C63 — `feat(payments): integrate hosted Asaas sandbox checkout`
 
-- [ ] **Depende:** C04, C53, C59, C62. **Alvos:** adapter Asaas, config e testes de contrato; M.
+- [ ] **Depende:** C04, C53, C59, C62. **Alvos:** adapter Asaas, config e testes de contrato; M. Adapter e HTTP gravado integrados no PR #130 (2026-10-05); permanece aberta até a evidência SB de C04.
 - **Aceite:** Pix/cartão hospedado; total externo coincide com o snapshot, inclusive frete/desconto; expiração e host de redirecionamento validados.
 - **Verificar:** testes HTTP determinísticos + SB para ambos os meios. Link recebido após prazo insuficiente não prolonga reserva silenciosamente.
+- **Estado atual (2026-10-03):** **parcial.** Adapter `AsaasPaymentProvider`, config opt-in (`PAYMENTS_PROVIDER=asaas`) e `AsaasPaymentProviderTest` (17 cenários HTTP gravados: total exato, Pix+cartão, host/HTTPS do link, recusa × UNKNOWN, link encurtado até o fim da reserva e recusa sem chamada quando o prazo restante é insuficiente) entregues em `claude/c63-asaas-hosted-checkout`. Falta a evidência SB dos dois meios, que depende de C04 (conta sandbox); manter aberta até lá.
 
 ### C64 — `feat(payments): reconcile webhook facts against provider state`
 
-- [ ] **Depende:** C60, C63. **Alvos:** consulta/correlação de pagamento, normalização e testes; M.
+- [x] **Depende:** C60, C63. **Alvos:** consulta/correlação de pagamento, normalização e testes; M. PR #132 merged em 2026-10-05 (CI 7/7).
 - **Aceite:** confirmação financeira consulta/valida o recurso correto; referencia checkout↔pagamento; webhook fora de ordem não regrede estado.
 - **Verificar:** BI(PaymentReconciliation), SB e V08/V09.
+- **Estado atual (2026-10-03):** **parcial.** `PaymentReconciliationIT` cobre a parte BI e V08/V09 na branch `claude/c64-payment-reconciliation`: consulta sem prova reconsultada com backoff até `REVIEW`, checkout↔pagamento conferido, fora de ordem sem regressão. Também liga o processador ao worker (bean ausente no `main`). Falta SB (C04).
 
 ### C65 — `feat(payments): retain and reconcile unknown external operations`
 
-- [ ] **Depende:** C59, C63, C64. **Alvos:** conciliador de UNKNOWN, política de consulta e testes; M.
+- [x] **Depende:** C59, C63, C64. **Alvos:** conciliador de UNKNOWN, política de consulta e testes; M. PR #139 merged em 2026-10-05 (CI 7/7); limite de consultas segue proposta PAY-Q02.
 - **Aceite:** timeout pós-efeito não duplica criação; resultado não conclusivo continua pendente/análise; operador terá informação auditável.
 - **Verificar:** BI(UnknownPaymentRecovery), V07/V19 e regras observadas em C04; consulta negativa eventual não vira prova imediata de ausência.
+- **Estado atual (2026-10-03):** **parcial.** `UnknownPaymentRecoveryIT` (BI, V07/V19) na branch `claude/c65-unknown-payment-recovery`. Limite de 3 consultas segue a proposta PAY-Q02, ainda não aprovada; faltam as regras observadas no sandbox (C04).
 
 ### C66 — `feat(checkout): expire reservations without losing late payments`
 
-- [ ] **Depende:** C57, C58a, C61, C65. **Alvos:** expiração/claim, relógio e testes; M.
+- [x] **Depende:** C57, C58a, C61, C65. **Alvos:** expiração/claim, relógio e testes; M. PR #140 merged em 2026-10-05 (CI 7/7); `CheckoutExpirationIT` 6/6.
 - **Aceite:** aos 15 minutos libera reserva/cupom uma vez; confirmação concorrente produz transição válida; pagamento tardio é registrado para compensação.
 - **Verificar:** BI(CheckoutExpiration), V10 com tempo controlado e concorrência real no banco.
+- **Estado atual (2026-10-03):** `CheckoutExpirationIT` na branch `claude/c66-checkout-expiration`; o worker de expiração é opt-in (`CHECKOUT_EXPIRATION_ENABLED`). CHK-Q03 (estoque de pedido pago cancelado) continua aberta e pertence ao cancelamento (C68).
 
 ### C67 — `feat(payments): issue and reconcile full sandbox refunds`
 
-- [ ] **Depende:** C53, C63, C64, C65. **Alvos:** refund intent/adapter, migration quando necessária e testes; M.
+- [x] **Depende:** C53, C63, C64, C65. **Alvos:** refund intent/adapter, migration quando necessária e testes; M. Implementado em 2026-10-05 sem migration nova (V30 já tinha a operação `REFUND` única); `RefundLifecycleIT` 7/7 e `AsaasRefundTest` 7/7. SB de Pix/cartão segue pendente em C04/C89.
 - **Aceite:** reembolso integral tem operação durável; reexecução segura conforme contrato; resultado incerto permanece em conciliação.
 - **Verificar:** BI(RefundLifecycle), SB de Pix/cartão conforme capacidade observada e falha depois do efeito externo.
 
 ### C68 — `feat(checkout): coordinate cancellation and late-payment refunds`
 
-- [ ] **Depende:** C41, C56, C66, C67. **Alvos:** coordenador de cancelamento/compensação e testes; M.
+- [x] **Depende:** C41, C56, C66, C67. **Alvos:** coordenador de cancelamento/compensação e testes; M. Implementado em 2026-10-05: Q05 resolvida por D29–D31; devolução de estoque segue a proposta CHK-Q03 como padrão até aprovação. `OrderCancellationIT` 7/7 e `CancellationApiIT` 5/5.
 - **Aceite:** cancelamento respeita fronteira de expedição/retirada; reembolso confirma antes de marcar reembolsado; pagamento tardio inicia compensação sem consumir novo estoque.
 - **Verificar:** BI(CancellationCompensation), V10/V16 e replay; regra Q05 precisa estar decidida.
 
 ### C69 — `feat(orders-ui): explain cancellation and refund progress`
 
-- [ ] **Depende:** C62, C68. **Alvos:** ações/status no acompanhamento e testes; M.
+- [x] **Depende:** C62, C68. **Alvos:** ações/status no acompanhamento e testes; M. Implementado em 2026-10-05 em `/orders/:id`: cancelamento elegível com confirmação na página, aviso de análise para pedido com a transportadora, reembolso solicitado/concluído/em análise e recarga que preserva o resultado; Playwright `checkout.spec.ts` 5/5 com API interceptada.
 - **Aceite:** cliente solicita cancelamento elegível; vê reembolso solicitado/confirmado/análise; tentativa duplicada preserva a operação.
 - **Verificar:** F/E; cancelar durante confirmação e recuperar após reload.
 
@@ -1789,6 +1812,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - **Aceite:** usa snapshot dos pacotes do pedido pago; criação/compra/geração têm estado e correlação; falha parcial preserva resultados já concluídos.
 - **Verificar:** testes de contrato, BI(ShippingLabelRecovery), SB e V15/V22; recuperar um pacote não compra novamente etiquetas concluídas nem repete operação desconhecida.
 - **Estado atual (2026-10-05):** `ShippingLabelOperation` e persistência local por pedido/unidade/etapa guardam sequências de pacotes, correlação, IDs conhecidos e resultado `UNKNOWN`; repetição de criação devolve estado persistido para mapeamento idêntico e conflito se os pacotes mudaram. Operações novas só iniciam para pedido `DELIVERY` em `PAID`/`PREPARING`, sob lock via `OrderFulfillmentPort`; escrita duplicada por etapa é barrada, concorrência usa versão otimista e `PURCHASE`/`GENERATE` exigem ID conhecido e etapa anterior bem-sucedida. `MelhorEnvioLabelClient` envia snapshot aceito ao carrinho sandbox e IDs conhecidos para compra/geração, sem retry, limitado ao host fixo de sandbox e opt-in; respostas ambíguas não viram sucesso. Testes de domínio, HTTP mock e PostgreSQL cobrem estados, cabeçalhos, payloads, round-trip, unicidade, corrida entre workers, idempotência e pré-condições do pedido. Gate backend executou 139 unitários e 166 integrações: 165 integrações passaram; `EventingWorkerProcessRestartIT.processRestartRecoversClaimedEventAfterLeaseExpiry` falhou por timeout após 30 s, fora de shipping. JaCoCo, Spotless e Checkstyle concluíram sem violações; portanto o gate total não ficou verde. `origin/main` (`ec02daa`) ainda não persiste nem expõe o manifesto imutável dos pacotes, serviço e cotação necessários; C70 não pode reconstruí-los do catálogo. Claude expõe esse seam conforme coordenação combinada. O spike C04 precisa provar composição↔IDs e resultado parcial por ID. C04 segue sem credenciais/homologação real; orquestração administrativa e C70 permanecem abertas.
+- **Atualização (2026-10-07):** `SPEC-shipping.md` agora detalha o contrato semântico do manifesto imutável requerido de `orders`; a proposta não fixa shape Java nem mapeamento pacote↔etiqueta (C04). A branch sincronizada com `main@d60c743`; a migration de shipping foi renumerada para `V39` porque `V35`–`V38` já estão ocupadas no main. PR #134 permanece draft até a lacuna de implementação e os limites C04 serem resolvidos.
 
 ### C71 — `feat(shipping): persist sandbox tracking progress`
 
@@ -1796,6 +1820,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - **Aceite:** sincroniza estados por pacote conforme suporte do sandbox; consulta não regride progresso; entrega parcial não aparece como entrega total.
 - **Verificar:** BI(ShipmentTracking), SB conforme tempos do sandbox e payload fora de ordem.
 - **Estado atual (2026-10-05):** branch draft `codex/c71-shipment-tracking` (PR #135) empilhada sobre C70 #134. Persistência de eventos idempotentes e estado monotônico por ID, HMAC do webhook e parser da consulta REST com validação da chave/ID implementados; testes locais cobrem domínio, resposta do provedor, migration PostgreSQL, reentrega, ordem fora de sequência e rota anônima assinada. OpenAPI oficial publicado pelo provedor confirma resposta indexada por ID e status; amostra de datas não tem fuso, então consulta usa instante local de observação. CI no head `ff9c8f0` passou 7/7. Ainda faltam orquestração de consulta em fluxo operacional, prova C04 da relação ID↔volumes e transições parciais por manifesto; nenhuma chamada sandbox ocorreu. C71 continua aberta.
+- **Atualização (2026-10-07):** sincronização local com o C70 atualizado, preservando os commits publicados via merge; migration de tracking renumerada de `V36` para `V40` após as migrations `V35`–`V39` já presentes na base. Verificação local limpa: `DatabaseUpgradeAndRestoreIT` 3/3, `ShippingLabelOperationRepositoryIT` 10/10 e `ShipmentTrackingServiceIT` 7/7; restore aplicou todas as 31 migrations até V40. CI da nova cabeça ainda depende do push. O estado funcional permanece parcial: sem consulta orquestrada no fluxo operacional, prova C04 da relação ID↔volumes ou chamadas sandbox.
 
 ### C72 — `feat(shipping): prepare and confirm local pickup`
 
@@ -1853,12 +1878,14 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 ### C79 — `feat(observability): trace checkout events and recovery metrics`
 
 - [ ] **Depende:** C12, C47, C61, C65, C68, C70, C75. **Alvos:** instrumentação de eventos/efeitos e testes; M.
+- **Estado atual (2026-10-05):** parcial. Gauges de recuperação de pagamentos (intents `UNKNOWN`/`UNDER_REVIEW`/`REFUND_REQUESTED` e idade, chamadas em voo, notificações pendentes) e de falhas do consumidor (`RETRYING`/`QUARANTINED`, tentativas), rotulados só por estado; correlação do evento no MDC durante o efeito. `RecoveryMetricsIT` 2/2 e `KafkaEventConsumerIT` 7/7. Traces OpenTelemetry HTTP→outbox→Kafka→efeito adicionados (V38, `TracePropagationIT` 2/2) e recursos medidos na C79a. Falta só a instrumentação de C70/C75 (dependências abertas); permanece aberta.
 - **Aceite:** correlação HTTP→outbox→Kafka→efeito; métricas de backlog/idade/retries/UNKNOWN/quarentena; recursos da stack medidos.
 - **Verificar:** executar V04/V07 e acompanhar trace; scan de logs/traces sem dados sensíveis. Sem número de pedido como label de alta cardinalidade em métricas.
 
 ### C79a — `chore(observability): provision local recovery dashboards`
 
 - [ ] **Depende:** C79. **Alvos:** profile Collector/Prometheus/Grafana/traces e dashboards; M.
+- **Estado atual (2026-10-05):** parcial. Profile `observability` com Prometheus e Grafana em versões fixas, painel de recuperação provisionado e scrape do worker validados localmente (alvo `up`, fluxo `UNKNOWN` → `UNDER_REVIEW` visível, consumo medido em `docs/observability.md`). Jaeger (OTLP) adicionado ao profile; visualização com compra real ainda não exercitada e instrumentação de C70/C75 pendente; permanece aberta.
 - **Aceite:** painel de backlog/idade/retries/UNKNOWN/quarentena provisionado; versões fixas; consumo da stack medido em modo opcional.
 - **Verificar:** subir profile, executar V04/V07 e localizar métricas/traces correlacionados pelo fluxo real.
 
@@ -1892,13 +1919,13 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C82 — `feat(eventing): authorize and audit quarantined event replay`
 
-- [ ] **Depende:** C15, C49, C79. **Alvos:** API operacional de eventing, auditoria e testes; M.
+- [x] **Depende:** C15, C49, C79. **Alvos:** API operacional de eventing, auditoria e testes; M. Implementado em 2026-10-05 sobre a C79 parcial (gauge de quarentena já exposto): replay auditado reconsome o envelope original da outbox pelo serviço de consumo; `EventReplayIT` 3/3. UI na C83.
 - **Aceite:** admin consulta quarentena e solicita replay elegível com motivo; identidade do evento preservada; nenhum override de regra comercial.
 - **Verificar:** BI(OperationalReplay), V14/V19, papel insuficiente e replay duplicado.
 
 ### C82a — `feat(payments): authorize reconciliation of uncertain financial effects`
 
-- [ ] **Depende:** C15, C65, C67, C79. **Alvos:** API de operações financeiras, auditoria e testes; M.
+- [x] **Depende:** C15, C65, C67, C79. **Alvos:** API de operações financeiras, auditoria e testes; M. Implementado em 2026-10-05 sobre a C79 parcial (gauges de intents já expostos): consulta auditada e enfileirada para o worker, sem recriar cobrança/reembolso; `AdminPaymentOperationsIT` 5/5. UI na C83.
 - **Aceite:** admin consulta UNKNOWN e solicita nova consulta elegível; conciliação não recria cobrança/reembolso; resultado conflitante exige análise.
 - **Verificar:** BI(PaymentOperations), V07, permissões e comandos repetidos.
 
@@ -1911,6 +1938,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 ### C83 — `feat(operations-ui): inspect and recover failed purchase flows`
 
 - [ ] **Depende:** C16, C79a, C82, C82a, C82b. **Alvos:** `F/admin/operations`, detalhe do incidente e testes; M.
+- **Estado atual (2026-10-05):** parcial. `/admin/operations` mostra pagamentos incertos com trilha completa (estado, motivo, resultado, quem pediu) e eventos em quarentena com correlação; nova consulta e replay exigem motivo e explicam o efeito antes de confirmar. Playwright `admin-operations.spec.ts` 2/2. Falta a recuperação de etiquetas (C82b, lane do Codex); permanece aberta.
 - **Aceite:** estado/motivo/correlação visíveis; confirmação de ação informa o efeito; auditoria mostra quem solicitou a recuperação.
 - **Verificar:** F/E; usuário admin resolve um incidente do roteiro sem manipular SQL.
 
@@ -1985,7 +2013,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C93 — `test(database): verify upgrades backups and isolated restores`
 
-- [ ] **Depende:** C92. **Alvos:** testes de migration, procedimento backup/restore e fixture; M.
+- [x] **Depende:** C92. **Alvos:** testes de migration, procedimento backup/restore e fixture; M. `DatabaseUpgradeAndRestoreIT` 3/3 e `docs/backup-restore.md`; restauração sobre o banco principal fica para C94.
 - **Aceite:** banco vazio sobe; snapshot da versão anterior migra; restore em banco separado preserva dados e constraints.
 - **Verificar:** B + restauração isolada; não sobrescrever dados do ambiente principal para demonstrar recuperação.
 

@@ -74,6 +74,19 @@ management:
       enabled: false
     db:
       enabled: true
+  # C79: spans de HTTP, outbox→Kafka e consumo. Export OTLP é opt-in (profile `observability`).
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      export:
+        enabled: ${OTLP_TRACING_EXPORT_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://127.0.0.1:14318/v1/traces}
 
 ---
 
@@ -96,18 +109,44 @@ app:
       enabled: ${APP_EVENTING_CONSUMER_ENABLED:false}
       poll-delay: ${APP_EVENTING_CONSUMER_POLL_DELAY:PT0.5S}
 
+eventing:
+  replay:
+    # Replays pedidos por administrador (C82); ligar no worker.
+    enabled: ${EVENTING_REPLAY_ENABLED:false}
+    batch-size: ${EVENTING_REPLAY_BATCH_SIZE:10}
+    poll-delay: ${EVENTING_REPLAY_POLL_DELAY:PT5S}
+
+checkout:
+  expiration:
+    # Expira pedidos não pagos ao fim da reserva de 15 min (C66); ligar no worker.
+    enabled: ${CHECKOUT_EXPIRATION_ENABLED:false}
+    batch-size: ${CHECKOUT_EXPIRATION_BATCH_SIZE:20}
+    poll-delay: ${CHECKOUT_EXPIRATION_POLL_DELAY:PT5S}
+
 payments:
   provider: ${PAYMENTS_PROVIDER:}
+  asaas:
+    # Lido só com PAYMENTS_PROVIDER=asaas (homologação opt-in, C63/C89).
+    base-url: ${ASAAS_BASE_URL:https://api-sandbox.asaas.com}
+    api-key: ${ASAAS_API_KEY:}
+    store-url: ${ASAAS_STORE_URL:http://localhost:4200}
+    minutes-to-expire: ${ASAAS_MINUTES_TO_EXPIRE:10}
+    timeout: ${ASAAS_TIMEOUT:PT10S}
+    checkout-hosts: ${ASAAS_CHECKOUT_HOSTS:sandbox.asaas.com}
   worker:
     enabled: ${PAYMENTS_WORKER_ENABLED:false}
     batch-size: ${PAYMENTS_WORKER_BATCH_SIZE:10}
     poll-delay: ${PAYMENTS_WORKER_POLL_DELAY:PT1S}
+  reconciliation:
+    # Consultas inconclusivas antes de uma intent UNKNOWN ir para análise (proposta PAY-Q02, pendente).
+    max-lookups: ${PAYMENTS_RECONCILIATION_MAX_LOOKUPS:3}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,metrics
+        # prometheus: lido pelo profile `observability` do compose (C79a), só local.
+        include: health,metrics,prometheus
 
 ---
 

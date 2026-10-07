@@ -149,6 +149,27 @@ ou reembolso parcial automático.
   as sequências dos pacotes. A expedição não pode reconstruir isso do catálogo
   atual. O aceite precisa gravar e expor o manifesto imutável ao módulo
   `shipping` antes de C70 poder cumprir o aceite acima.
+- Contrato semântico necessário para o seam `orders` → `shipping` (proposta
+  técnica; shape Java fica com o módulo `orders`): uma leitura de expedição deve
+  ocorrer sob o mesmo lock que valida o estado elegível do pedido e retornar a
+  projeção capturada no aceite, nunca dados recebidos do navegador. Ela deve
+  identificar pedido, snapshot e versão, cotação aceita e fingerprint, serviço
+  e valores/prazo aceitos, destino de entrega e cada pacote com identidade
+  estável, sequência, fingerprint, medidas externas, peso protegido e alocação
+  de linhas/quantidades/valores declarados. Assim o adapter consegue gerar
+  `products` e `volumes` sem consultar SKU, preço, embalagem ou endereço
+  editável atual. O contrato não presume que um pacote equivale a uma etiqueta
+  ou unidade de expedição: qualquer agrupamento precisa ser o que foi aceito na
+  cotação e comprovado no C04; sem prova, a operação deve falhar antes de fazer
+  escrita externa. Se faltar qualquer campo obrigatório ao provedor, falhar
+  fechado antes do `POST /cart`, sem preencher com dado de demonstração.
+- O seam expõe destino e conteúdo somente ao caso administrativo autorizado que
+  inicia a expedição; não os inclui em respostas de consulta geral, logs,
+  métricas, eventos ou mensagens de erro. A origem e documentos fiscais vêm de
+  configuração local opt-in autorizada, fora do manifesto do comprador. O
+  `shipping` persiste a identidade/fingerprint da manifestação usada em cada
+  operação e rejeita retomada quando o manifesto não coincide com o persistido.
+  Nenhum módulo lê diretamente tabelas privadas de outro módulo.
 - O spike C04 ainda precisa demonstrar quais serviços aceitam a composição,
   se a resposta por unidade já identifica o ID de forma parseável, como a
   composição cotada mapeia às chamadas individuais de carrinho/IDs e como
