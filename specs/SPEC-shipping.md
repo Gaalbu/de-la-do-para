@@ -143,12 +143,14 @@ ou reembolso parcial automático.
   origem precisam vir de configuração autorizada, e os campos pessoais
   ausentes do pedido precisam ser resolvidos na jornada de compra antes da
   homologação.
-- Pré-requisito de implementação: em `origin/main` (`ec02daa`), o aceite guarda
-  itens/preço no pedido, mas não associa o pedido ao `snapshotId`/`quoteId` nem
-  persiste geometria e conteúdo de cada pacote; `shipping_quotes` guarda somente
-  as sequências dos pacotes. A expedição não pode reconstruir isso do catálogo
-  atual. O aceite precisa gravar e expor o manifesto imutável ao módulo
-  `shipping` antes de C70 poder cumprir o aceite acima.
+- Pré-requisito de implementação: o aceite agora persiste no pedido uma
+  projeção imutável da cotação escolhida (`snapshotId`/versão, `quoteId`,
+  fingerprint, serviço, valor, prazos e sequências) e o port de `orders` a
+  entrega sob lock. Ainda faltam geometria, fingerprint e alocação de linhas de
+  cada pacote; `shipping_quotes` conserva somente as sequências. A expedição
+  não pode reconstruir esses dados do catálogo atual nem inferir o mapeamento
+  pacote↔etiqueta. O aceite precisa gravar e expor o manifesto completo ao
+  módulo `shipping` antes de C70 poder cumprir o aceite acima.
 - Contrato semântico necessário para o seam `orders` → `shipping` (proposta
   técnica; shape Java fica com o módulo `orders`): uma leitura de expedição deve
   ocorrer sob o mesmo lock que valida o estado elegível do pedido e retornar a

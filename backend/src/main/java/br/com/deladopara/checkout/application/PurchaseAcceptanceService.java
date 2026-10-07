@@ -101,7 +101,8 @@ public class PurchaseAcceptanceService {
         }
 
         var snapshot = summaries.ownedSnapshot(command.sessionId(), command.snapshotId(), command.snapshotVersion());
-        var summary = summaries.summarize(snapshot, command.selection());
+        var summaryResult = summaries.summarizeForAcceptance(snapshot, command.selection());
+        var summary = summaryResult.summary();
         if (!summary.summaryVersion().equals(command.summaryVersion())) {
             throw new SummaryChangedException(summary);
         }
@@ -109,7 +110,8 @@ public class PurchaseAcceptanceService {
             throw new ZeroTotalException();
         }
         var correlationId = UUID.randomUUID();
-        var created = orders.create(orderCommand(subject, command, buyer, email, summary, correlationId));
+        var created = orders.create(
+                orderCommand(subject, command, buyer, email, summary, summaryResult.shippingQuote(), correlationId));
         var orderId = created.id();
         var reference = "order:" + orderId;
         var reservation = stock.reserve(
@@ -160,6 +162,7 @@ public class PurchaseAcceptanceService {
             AccountService.Buyer buyer,
             String email,
             PurchaseSummary summary,
+            br.com.deladopara.shipping.application.ShippingQuote shippingQuote,
             UUID correlationId) {
         var fulfillment = summary.fulfillment();
         var destination = objectMapper.createObjectNode();
@@ -206,7 +209,20 @@ public class PurchaseAcceptanceService {
                                 line.unitPriceCents(),
                                 line.lineTotalCents()))
                         .toList(),
-                correlationId);
+                correlationId,
+                shippingQuote == null
+                        ? null
+                        : new br.com.deladopara.orders.application.AcceptedShippingQuote(
+                                shippingQuote.snapshotId(),
+                                shippingQuote.snapshotVersion(),
+                                shippingQuote.id(),
+                                shippingQuote.inputFingerprint(),
+                                shippingQuote.serviceId(),
+                                shippingQuote.serviceName(),
+                                shippingQuote.priceCents(),
+                                shippingQuote.preparationDays(),
+                                shippingQuote.deliveryDays(),
+                                shippingQuote.packageSequences()));
     }
 
     private LocalDate arrivalDate(PurchaseSummary summary) {
