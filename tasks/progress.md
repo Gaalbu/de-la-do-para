@@ -1141,3 +1141,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | C70 continua parcial: o checkout em `origin/main@ec02daa` não guarda nem expõe manifesto imutável dos pacotes/serviço/cotação; cliente não é invocado por fluxo administrativo. Sem credenciais, remetente/documentos fiscais ou semântica demonstrada por C04; nenhuma chamada real foi feita. C70 não pode ser marcada concluída. |
 | Remoto | Commits `467f10f` (implementação/testes/configuração) e `532b391` (spec/integração/progresso) enviados em `codex/c70-shipping-label-lifecycle`. PR #134 aberta em draft. CI no SHA `532b391`: backend, frontend, contracts, docs, security, commit-policy e quality-gate passaram (7/7). |
 | Próximo passo | Manter C70 aberta e o PR em draft; ligar ao manifesto imutável do seam `orders` quando estiver disponível, implementar orquestração/UI e executar C04 antes da homologação. |
+
+## Continuação 2026-10-07 — C70: contrato do manifesto imutável
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Tornar verificável o contrato semântico que `orders` precisa expor para a expedição, sem editar a implementação de `orders` ou decidir a semântica pacote↔etiqueta ainda pendente de C04. |
+| Mudanças | `SPEC-shipping.md` agora exige que o manifesto venha do aceite imutável e seja lido junto ao lock/estado do pedido; define os dados mínimos de cotação, destino, linhas e pacotes para gerar `products`/`volumes`; proíbe reconstrução por catálogo/endereço atual, agrupamento não aceito, preenchimento com dados de demonstração e vazamento de PII. O shape Java fica sob responsabilidade de `orders`. |
+| Verificação | `npm --prefix frontend run docs:check`: 26 Markdown sem links quebrados; revisão manual do diff confirmou que a proposta não fixa shape Java nem equivalência pacote↔etiqueta. `aislop` não está instalado no ambiente atual. |
+| Limite | Especificação proposta; ainda requer implementação coordenada no seam compartilhado de `orders`. Não fecha C70/C04 nem habilita chamadas externas. |
+| Próximo passo | Revisar a proposta do contrato e, após coordenação entre lanes, expor o manifesto no módulo `orders`; então implementar a orquestração administrativa em `shipping` usando a mesma projeção. |
