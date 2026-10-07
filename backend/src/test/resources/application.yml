@@ -1,6 +1,19 @@
 app:
   identity:
     bcrypt-strength: 10
+    verification-token-ttl: PT30M
+    verification-url: https://localhost/verify-email
+    mail-from: no-reply@deladopara.local
+
+spring:
+  mail:
+    host: localhost
+    port: 11025
+
+management:
+  health:
+    mail:
+      enabled: false
 
 shipping:
   pickup-code-encryption-key: dGVzdC1vbmx5LWtleS0zMi1ieXRlcy1leGFjdGx5ISE=

@@ -40,13 +40,19 @@ spring:
     port: 11025
     properties:
       mail.smtp.auth: false
+      mail.smtp.connectiontimeout: 5000
       mail.smtp.starttls.enable: false
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 
 app:
   media:
     directory: ${APP_MEDIA_DIRECTORY:./data/media}
   identity:
     bcrypt-strength: 12
+    verification-token-ttl: PT30M
+    verification-url: ${APP_IDENTITY_VERIFICATION_URL:https://localhost/verify-email}
+    mail-from: ${APP_IDENTITY_MAIL_FROM:no-reply@deladopara.local}
 
 shipping:
   pickup-code-encryption-key: ${SHIPPING_PICKUP_ENCRYPTION_KEY}

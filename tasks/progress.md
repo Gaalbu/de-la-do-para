@@ -3,6 +3,18 @@
 Documento operacional previsto no plano mestre (§1 “Registro para continuidade”).
 Atualizar ao final de cada sessão, somente após evidência verificada.
 
+## Sessão 2026-10-05 — C76 registro e verificação de e-mail
+
+| Campo | Conteúdo |
+|---|---|
+| Base | worktree isolado `/home/gaalbu/codigos/de-la-do-para-wt/c76-account-verification`, branch `codex/c76-account-verification`, baseado em `origin/main@ec02daa` |
+| Tarefa | C76 — `feat(identity): register and verify optional customer accounts`; implementação backend em andamento, PR ainda não aberto |
+| Mudanças | `AccountVerificationService` cria apenas CUSTOMER, gera token aleatório 256-bit URL-safe, armazena SHA-256 e envia link somente por fragmento HTTPS; verificação pessimista, single-use e expirada. `SmtpIdentityMailAdapter` usa SMTP; conta/token sofrem rollback em falha de envio. Contrato OpenAPI e `SPEC-identity.md` atualizados. Adicionada ativação Jakarta que Boot 4 exige para auto-configurar `JavaMailSender`, além das propriedades SMTP no YAML de teste sobrescritor. |
+| Verificação | Temurin 25.0.4: `scripts/verify.sh backend` BUILD SUCCESS após incluir cenário concorrente (Surefire 128/128; Failsafe 161/161; Spotless e Checkstyle 0). `IdentityMailIT` 4/4 (inclui cadastro concorrente do mesmo e-mail: 201+409, uma conta/token), `IdentitySmtpIT` 1/1 (Mailpit real), `IdentityPropertiesTest` 2/2. `scripts/verify.sh contracts` passou (Redocly válido com 8 avisos gerais existentes; exemplos de eventos, geração e `tsc` passaram). `docs:check` 26 arquivos OK; `check-secrets.sh` OK; `git diff --check` OK; `aislop` 100/100 sem achados. GitHub Actions passou 7/7 no SHA `887f94c` (backend, frontend, contracts, docs, security, commit-policy, quality-gate). Gate local executado com `GOMAXPROCS=1` e `MAVEN_OPTS=-Xint` após quedas nativas intermitentes da JVM. |
+| Limites | PR #136 permanece OPEN/draft; sem merge. C08/C14/C15 constam como dependências no plano (PRs #8/#26/#27 merged); recuperação C77 e consumidor frontend C81 ficam em slices próprias. Configuração HTTPS precisa ser provida pelo ambiente consumidor. |
+| Próximo passo | Aguardar revisão/integração do PR; depois reconciliar C76 no plano e seguir com tarefas independentes do plano mestre. |
+| Perguntas | Nenhuma para este slice. |
+
 ## Sessão 2026-09-20 — bootstrap C00a/C00b
 
 | Campo | Conteúdo |
