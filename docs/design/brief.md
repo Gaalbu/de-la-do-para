@@ -1,8 +1,10 @@
 # Brief de design — De Lá do Pará (proposta C03 para revisão)
 
-Preserva D43–D48 e o nome D45. Tons, fontes, assets e protótipo são **proposta
-concreta**: Q01 segue aberta e nada aqui fecha decisão sem revisão do usuário.
-Nenhuma disponibilidade de marca, domínio ou rede é alegada.
+Preserva D43–D48 e o nome D45. Em 2026-10-03, o usuário aprovou o protótipo,
+as fotos sugeridas e o storyboard atuais (D75). As fotos são ilustrativas:
+não comprovam origem, produtor, técnica, autoria ou teor de produto fictício;
+use com crédito/licença registrados e sem associá-las à história de produtores
+fictícios. Nenhuma disponibilidade de marca, domínio ou rede é alegada.
 
 ## Direção
 
@@ -11,7 +13,7 @@ marcante, cores paraenses nos detalhes; produto e história do produtor em
 primeiro plano. Tom acolhedor e direto, regionalismos pontuais (D48);
 compra, pagamento e erro sempre claros e objetivos.
 
-## Paleta proposta (D46 + contraste medido localmente, WCAG)
+## Paleta aprovada (D46 + contraste medido localmente, WCAG)
 
 | Uso | Cor | Hex | Contraste medido | Regra |
 |---|---|---|---|---|
@@ -25,7 +27,7 @@ Limite honesto: terracota **não** passa em texto pequeno (exige 4,5:1);
 o uso acima respeita 3:1 para grandes elementos e mantém leitura AAA no
 restante. Foco visível de teclado usa contorno terracota 2 px + offset.
 
-## Tipografia proposta (D47)
+## Tipografia aprovada (D47)
 
 - **Títulos (serifa): Fraunces** — SIL OFL 1.1 verificada
   ([licença](https://github.com/google/fonts/raw/main/ofl/fraunces/OFL.txt),
@@ -38,7 +40,7 @@ restante. Foco visível de teclado usa contorno terracota 2 px + offset.
 - Escala mobile-first: título de vitrine 28–32 px, produto 24 px, corpo
   16 px mínimo, preço 20 px bold. Fallbacks: `Georgia, serif` / `system-ui`.
 
-## Fluxos (protótipo a validar com usuário antes do frontend final)
+## Fluxos (protótipo aprovado em 2026-10-03; implementação no frontend final)
 
 1. **Catálogo:** grade com foto, nome, origem, preço e disponibilidade;
    filtros (produtor, preço, tipo) na URL; estados vazio/erro/carregando.
@@ -71,8 +73,13 @@ condição: não parecer "visual vibecodado"/AIslop. Regras concretas:
 - Todo componente novo passa pela pergunta: "isso poderia estar em qualquer
   template?" — se sim, redesenhar com conteúdo real da loja.
 
-## Aberto para sua revisão (Q01) — respondido em 20/09/2026
+## Revisão de Q01 concluída em 2026-10-03 (D75)
 
 1. Paleta aprovada + condição anti-genérica acima. ✅
 2. Fraunces + Inter aprovadas; teste de acentos no bootstrap (C07). ✅
-3. Fotos: editorial fundo claro. ✅ (curadoria em `assets.md`)
+3. Fotos sugeridas na [shortlist de assets](assets.md) e no protótipo aprovadas
+   como ilustrações dos itens fictícios, respeitando os limites de atribuição
+   e contexto acima. ✅
+4. Protótipo estático dos cinco fluxos e storyboard/roteiro técnico atuais
+   aprovados. ✅ A distribuição dos tempos permanece uma proposta de gravação,
+   a adaptar à execução real do vídeo dentro do limite D49.
