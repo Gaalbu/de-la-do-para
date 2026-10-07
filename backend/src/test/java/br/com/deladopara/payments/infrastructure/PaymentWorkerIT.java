@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import br.com.deladopara.payments.adapter.simulated.SimulatedPaymentProvider;
 import br.com.deladopara.payments.adapter.simulated.SimulatedPaymentProvider.Outcome;
+import br.com.deladopara.payments.application.AdminPaymentLookups;
 import br.com.deladopara.payments.application.CheckoutOperations;
 import br.com.deladopara.payments.application.PaymentIntentService;
 import br.com.deladopara.payments.application.PaymentProvider;
 import br.com.deladopara.payments.application.ProviderEventProcessor;
+import br.com.deladopara.payments.application.RefundOperations;
+import br.com.deladopara.payments.application.UnknownPaymentLookups;
 import br.com.deladopara.support.PostgresTestContainer;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -34,13 +37,25 @@ class PaymentWorkerIT {
     private final CheckoutOperations operations;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
+    private final UnknownPaymentLookups lookups;
+    private final RefundOperations refunds;
+    private final AdminPaymentLookups adminLookups;
     private final SimulatedPaymentProvider simulator = new SimulatedPaymentProvider(Clock.systemUTC());
     private final ConcurrentHashMap<UUID, AtomicInteger> calls = new ConcurrentHashMap<>();
 
     @Autowired
     PaymentWorkerIT(
-            PaymentIntentService intents, CheckoutOperations operations, JdbcTemplate jdbc, TransactionTemplate tx) {
+            PaymentIntentService intents,
+            CheckoutOperations operations,
+            JdbcTemplate jdbc,
+            TransactionTemplate tx,
+            UnknownPaymentLookups lookups,
+            RefundOperations refunds,
+            AdminPaymentLookups adminLookups) {
         this.intents = intents;
+        this.adminLookups = adminLookups;
+        this.refunds = refunds;
+        this.lookups = lookups;
         this.operations = operations;
         this.jdbc = jdbc;
         this.tx = tx;
@@ -76,6 +91,10 @@ class PaymentWorkerIT {
                 operations,
                 provider,
                 new ProviderEventProcessor(jdbc, tx, intents, provider, Clock.systemUTC()),
+                lookups,
+                refunds,
+                simulator,
+                adminLookups,
                 batchSize);
     }
 

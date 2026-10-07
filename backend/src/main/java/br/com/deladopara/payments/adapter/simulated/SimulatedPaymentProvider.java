@@ -2,6 +2,7 @@ package br.com.deladopara.payments.adapter.simulated;
 
 import br.com.deladopara.payments.application.PaymentProvider;
 import br.com.deladopara.payments.application.ProviderEvent;
+import br.com.deladopara.payments.application.RefundProvider;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnProperty(name = "payments.provider", havingValue = "simulated")
-public class SimulatedPaymentProvider implements PaymentProvider {
+public class SimulatedPaymentProvider implements PaymentProvider, RefundProvider {
 
     static final Duration LINK_VALIDITY = Duration.ofMinutes(15);
 
@@ -30,6 +31,8 @@ public class SimulatedPaymentProvider implements PaymentProvider {
     private final Map<String, UUID> intentByCheckout = new ConcurrentHashMap<>();
     private final List<ProviderEvent> delivered = new ArrayList<>();
     private final AtomicReference<Outcome> nextCreate = new AtomicReference<>(Outcome.CREATED);
+    private final Map<UUID, RefundState> refunds = new ConcurrentHashMap<>();
+    private final AtomicReference<RefundOutcome> nextRefund = new AtomicReference<>(RefundOutcome.SETTLED);
 
     public SimulatedPaymentProvider(Clock clock) {
         this.clock = clock;
@@ -40,6 +43,52 @@ public class SimulatedPaymentProvider implements PaymentProvider {
         REJECTED,
         TIMEOUT_AFTER_EFFECT,
         TIMEOUT_BEFORE_EFFECT
+    }
+
+    public enum RefundOutcome {
+        SETTLED,
+        ACCEPTED,
+        REJECTED,
+        TIMEOUT_AFTER_EFFECT,
+        TIMEOUT_BEFORE_EFFECT
+    }
+
+    /** Applies to the next refund only; later refunds settle at once. */
+    public void failNextRefund(RefundOutcome outcome) {
+        nextRefund.set(outcome);
+    }
+
+    /**
+     * Only a paid checkout can be refunded, once; an accepted refund settles later through {@link #settleRefund}.
+     */
+    @Override
+    public RefundState refund(RefundRequest request) {
+        var outcome = nextRefund.getAndSet(RefundOutcome.SETTLED);
+        var checkout = byIntent.get(request.paymentIntentId());
+        if (outcome == RefundOutcome.REJECTED || checkout == null || checkout.status() != CheckoutStatus.PAID) {
+            throw new ProviderRejectedException("HTTP_400");
+        }
+        if (outcome == RefundOutcome.TIMEOUT_BEFORE_EFFECT) {
+            throw new SimulatedTimeoutException();
+        }
+        var state = outcome == RefundOutcome.ACCEPTED ? RefundState.PENDING : RefundState.DONE;
+        if (refunds.putIfAbsent(request.paymentIntentId(), state) != null) {
+            throw new ProviderRejectedException("ALREADY_REFUNDED");
+        }
+        if (outcome == RefundOutcome.TIMEOUT_AFTER_EFFECT) {
+            throw new SimulatedTimeoutException();
+        }
+        return state;
+    }
+
+    @Override
+    public Optional<RefundState> findRefund(UUID paymentIntentId) {
+        return Optional.ofNullable(refunds.get(paymentIntentId));
+    }
+
+    /** Simulates the provider settling an accepted refund. */
+    public void settleRefund(UUID paymentIntentId) {
+        refunds.replace(paymentIntentId, RefundState.PENDING, RefundState.DONE);
     }
 
     /** Applies to the next creation only; later creations go back to {@link Outcome#CREATED}. */

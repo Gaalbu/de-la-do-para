@@ -1151,3 +1151,54 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Verificação | `npm --prefix frontend run docs:check`: 26 Markdown sem links quebrados; revisão manual do diff confirmou que a proposta não fixa shape Java nem equivalência pacote↔etiqueta. `aislop` não está instalado no ambiente atual. |
 | Limite | Especificação proposta; ainda requer implementação coordenada no seam compartilhado de `orders`. Não fecha C70/C04 nem habilita chamadas externas. |
 | Próximo passo | Revisar a proposta do contrato e, após coordenação entre lanes, expor o manifesto no módulo `orders`; então implementar a orquestração administrativa em `shipping` usando a mesma projeção. |
+
+## Sessão 2026-10-03 — C64: conciliação de notificações contra o provedor
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Garantir que notificação de pagamento só confirme com o recurso correto no provedor, sem perder notificação por consulta inconclusiva |
+| Mudanças | `ProviderEventProcessor`: consulta que falha ou ainda não mostra o pagamento mantém a notificação `RECEIVED` com backoff (sem bloquear as seguintes); após 8 tentativas fica `REVIEW`. Pagamento de outro checkout → `REVIEW`/intent `UNDER_REVIEW`. Migration V35 (tentativas, próxima tentativa, último erro, estado `REVIEW`). `PaymentWorkerConfig` liga o processador ao worker, que não subia com `payments.worker.enabled=true` |
+| Verificação | `PaymentReconciliationIT` 7/7, `PaymentOutcomeIT` 7/7, `PaymentWorkerIT` 4/4, `AsaasWebhookIT` 7/7, `PaymentWorkerConfigTest` 2/2. `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS`, 128 unitários e 163 IT sem falhas; Spotless e Checkstyle limpos |
+| Limite | Provedor simulado/stub; SB depende de C04. V35 pode precisar de renumeração se outra trilha mesclar migration antes |
+| Próximo passo | C65 (conciliação de `UNKNOWN`) |
+
+## Sessão 2026-10-03 — C63: adapter de checkout hospedado Asaas
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Implementar o adapter Asaas (Pix + cartão hospedado) contra a referência oficial, sem credenciais reais |
+| Mudanças | `AsaasPaymentProvider`/`AsaasConfig`/`AsaasProperties` em `payments/adapter/asaas`, ativos só com `PAYMENTS_PROVIDER=asaas`. Criação via `POST /v3/checkouts` com o total do snapshot; link aceito só em HTTPS e host permitido; 4xx (exceto 408/409) = recusa, demais falhas = `UNKNOWN` sem nova tentativa. Consulta por `GET /v3/payments?externalReference=`. `CheckoutRequest.payBy` (criação da intent + 15 min da reserva) faz o link nunca durar mais que a reserva; com menos de 10 min restantes, recusa sem chamar a API (`RESERVATION_TOO_SHORT`) |
+| Verificação | `AsaasPaymentProviderTest` 17/17, contrato do simulador 6/6, `CheckoutOperationRunnerTest` 3/3. `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: 143 unitários ok, 155/156 IT ok, Spotless e Checkstyle limpos; a falha foi `EventingWorkerProcessRestartIT` (espera fixa de 30 s pelo JVM filho), que passou ao rodar isolado em seguida. `docs:check` ok (26 arquivos) |
+| Limite | Respostas HTTP gravadas a partir da doc, não evidência de sandbox. Herança de `externalReference` pela cobrança e host do link precisam do spike C04. C63 segue parcial |
+| Próximo passo | C64 (reconciliação de webhook contra o estado no provedor) |
+
+## Sessão 2026-10-03 — C93: upgrade com dados e restauração isolada
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Provar migrations em banco vazio e com dados de versão anterior, e restauração em banco separado |
+| Mudanças | `DatabaseUpgradeAndRestoreIT` (banco vazio até a última versão; snapshot V30 com cadeia de compra migra sem perder chaves/valores; dump restaurado em banco separado preserva dados e constraints) com seed `db/snapshots/v30-seed.sql`; procedimento em `docs/backup-restore.md` |
+| Verificação | `GOMAXPROCS=1 ./backend/mvnw -B -f backend/pom.xml -DargLine=-Xint verify`: `BUILD SUCCESS` em 15min44s; 126 unitários e 159 IT sem falhas; Spotless e Checkstyle limpos. Uma execução anterior travou no encerramento do fork do Failsafe e foi interrompida |
+| Limite | Cada cenário usa banco próprio em PostgreSQL de teste; o banco do ambiente local não é tocado. Restauração sobre o banco principal e recuperação após restore antigo ficam para C94 |
+| Próximo passo | C94 após C63–C68 |
+
+## Sessão 2026-10-05 — lane do Claude: C63–C69, C79/C79a, C82, C82a, C83 (parcial)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Avançar a lane do Claude definida no PR #129 com commits atômicos, PR por fatia e merge após CI verde |
+| Integrado no main | #129 (lanes), #131 C93, #130 C63, #132 C64, #139 C65, #140 C66, #142 alerta GHSA-68fv-2mgg-jv7q (`source-map-js` 1.2.2), #141 C67, #144 C68, #145 C69, #146 corrida no claim de consultas (C65/C67), #147 reconciliação do plano (38 tarefas com SHA), #148 C79 parcial, #149 C82a, #150 C82, #151 C79a parcial, #152 C83 parcial. Todos com CI 7/7 no SHA mesclado. |
+| Verificação | ITs por fatia com PostgreSQL real (Testcontainers): `RefundLifecycleIT` 8/8, `OrderCancellationIT` 7/7, `CancellationApiIT` 5/5, `AdminPaymentOperationsIT` 5/5, `EventReplayIT` 3/3, `RecoveryMetricsIT` 2/2, `EventingWorkerConfigIT` 6/6, entre outros; Playwright `checkout.spec.ts` 5/5 e `admin-operations.spec.ts` 2/2 (suíte E2E 10/10). C79a validada localmente com worker real, Prometheus e Grafana (detalhes em `docs/observability.md`). |
+| Decisões aplicadas como padrão sinalizado | CHK-Q03 (devolução de estoque ao lote no cancelamento pago) e PAY-Q02 (3 consultas) seguem propostas; implementadas como padrão e registradas nas specs, sem marcá-las aprovadas. |
+| Bloqueios | C70/C71/C73/C73a/C82b (lane do Codex, drafts #134/#135); C75/C78/C81b (A13/ORD-Q02); C03 (revisão visual); C04/C45/C63/C89 (credenciais de sandbox); C31/C32/C84 (política de cupom, PR #125 em draft); C24a/C25/C29 (revisão das specs). Daí dependem C79 (traces e instrumentação de frete/notificações), C79a (traces), C83 (etiquetas), C85–C88, C90–C98. |
+| Migrations | V36 (`payment_admin_lookup_request`) e V37 (`event_replay_request`) no main; os drafts #134/#135 usam V35/V36 e precisam renumerar ao mesclar. |
+| Próximo passo | Destravar as dependências externas acima; em seguida C94 (após C70 e C82b) e o fechamento da C79. |
+
+## Continuação 2026-10-07 — C70 sincronizada com main e migration V39
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | Merge commit de sincronização trouxe `main@d60c743` à branch C70 sem reescrever commits publicados; conflito do apêndice de `tasks/progress.md` foi resolvido preservando ambos os históricos, e `.env.example` reteve as configurações atuais das duas trilhas. A migration de shipping foi renumerada de V35 para V39 (V35–V38 já ocupadas); removido um índice parcial ainda sem consulta consumidora, que produzia definição textual diferente após `pg_restore`. |
+| Verificação | Após limpar apenas `backend/target`, `DatabaseUpgradeAndRestoreIT` 3/3 e `ShippingLabelOperationRepositoryIT` 10/10 passaram (13/13); Flyway validou e aplicou 30 migrations até V39. Spotless e Checkstyle ficaram sem violações no gate completo. Execução completa anterior ao ajuste do índice: 224 ITs, 223 passaram e uma falhou apenas pela representação `pg_get_indexdef` equivalente após restore. Ainda falta um gate completo verde após o ajuste. |
+| Limite | #134 permanece draft; o contrato do manifesto ainda não está implementado em `orders`, C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 ainda precisa sincronizar sua migration e base C70. |
+| Próximo passo | Rodar gates documental/contratos, concluir revisão do merge e publicar o merge commit da branch C70; acompanhar CI. Depois sincronizar a PR C71 com a nova base e renumerar sua migration para V40. |

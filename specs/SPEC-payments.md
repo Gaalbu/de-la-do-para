@@ -25,7 +25,8 @@ C56) e homologação real no sandbox (C04, dependente de conta do usuário).
 Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 
 - `./backend/mvnw -f backend/pom.xml -Dtest='PaymentTransitionsTest' test`
-- `./backend/mvnw -f backend/pom.xml -Dit.test='PaymentIntentIT,AsaasCheckoutContractIT' verify`
+- `./backend/mvnw -f backend/pom.xml -Dtest='AsaasPaymentProviderTest' test`
+- `./backend/mvnw -f backend/pom.xml -Dit.test='PaymentIntentIT' verify`
 - `npm --prefix frontend run contracts:check`
 
 ## 3. Estrutura ◆
@@ -51,11 +52,13 @@ Alvos futuros (só valem depois de C54/C55 existirem e serem executados):
 | PAY-003 operação registrada antes do HTTP | `PaymentIntentIT.operationIsDurableBeforeProviderCall` (provedor falso que lê o banco na chamada) | Testcontainers |
 | PAY-004 nada de HTTP dentro de transação | `PaymentIntentIT.providerCallRunsWithoutActiveTransaction` | Testcontainers |
 | PAY-005 transições | `PaymentTransitionsTest` (tabela origem×destino completa) | unitário |
-| PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `AsaasCheckoutContractIT.timeoutAfterEffectKeepsUnknown` | WireMock (C55) |
+| PAY-006 timeout depois do efeito → `UNKNOWN` sem nova cobrança | `PaymentProviderContract.timeoutAfterEffectIsNotARejectionAndTheCheckoutExists` (simulador); `AsaasPaymentProviderTest.readTimeoutIsUnknownNotARejection`, `serverErrorAfterSendingIsUnknownNotARejection` | unitário, HTTP gravado (C63) |
 | PAY-007 retorno de navegação não confirma | `AsaasCheckoutContractIT.callbackDoesNotConfirm` | WireMock (C55) |
-| PAY-008 evento de provedor repetido/fora de ordem | `PaymentResultIT.duplicateAndStaleEventsDoNotRegress` | Testcontainers |
+| PAY-008 evento de provedor repetido/fora de ordem | `PaymentReconciliationIT.lateOrRepeatedNotificationsNeverRegressAConfirmedPayment`; `PaymentOutcomeIT.duplicatedWebhookIsProcessedOnce` | Testcontainers |
+| PAY-008a consulta sem prova não descarta a notificação (C64) | `PaymentReconciliationIT` (pagamento ainda não visível, falha de consulta, esgotamento → `REVIEW`, checkout divergente, fila não bloqueada) | Testcontainers |
+| PAY-006a `UNKNOWN` resolvido só por consulta (C65, V07/V19) | `UnknownPaymentRecoveryIT` (8: pago confirmado sem nova criação, nada antes do backoff, vazio não é prova e só a última consulta manda à análise, checkout pendente ligado e confirmado pelo webhook, falha auditada, valor divergente, lease de consulta abandonado, três workers → uma consulta) | Testcontainers |
 | PAY-009 valor divergente | `PaymentResultIT.amountMismatchGoesToReview` | Testcontainers |
-| PAY-010 reembolso integral único | `RefundIT.secondRefundRequestIsNoOp` | Testcontainers + WireMock |
+| PAY-010 reembolso integral único (C67) | `RefundLifecycleIT` (7: operação durável antes da chamada, liquidado uma vez, aceito e seguido por consultas, resposta perdida resolvida por consulta sem reenvio, vazio/falha não provam nada, recusa fica para o operador, três workers → uma chamada); `AsaasRefundTest` (7, HTTP gravado) | Testcontainers, unitário |
 
 Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado como homologação Asaas.
 
@@ -63,7 +66,7 @@ Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado co
 
 - A unicidade de `externalReference` no Asaas e a existência de chave de idempotência na criação **não estão provadas** (C04). Esta spec assume o pior caso: não há repetição segura; timeout vira `UNKNOWN` e conciliação.
 - **PAY-Q01 (aberta):** `minutesToExpire` do link. Proposta: 15 min menos o tempo já decorrido da reserva, com mínimo aceito pelo provedor; se não houver tempo útil, a compra expira de forma controlada sem criar link. Momento: C59, depois de revalidar o intervalo no spike.
-- **PAY-Q02 (aberta):** quanto tempo uma operação `UNKNOWN` sem conclusão aguarda antes de ir para análise administrativa. Proposta: 3 consultas de conciliação espaçadas pelo backoff aprovado da C45, depois análise. Momento: C64.
+- **PAY-Q02 (aberta):** quanto tempo uma operação `UNKNOWN` sem conclusão aguarda antes de ir para análise administrativa. Proposta: 3 consultas de conciliação espaçadas pelo backoff aprovado da C45, depois análise. Momento: C64. C65 implementa a proposta como padrão configurável (`PAYMENTS_RECONCILIATION_MAX_LOOKUPS`); o valor final segue pendente de aprovação.
 - **PAY-Q03 (aberta):** estado `EXPIRED` do pagamento para `CHECKOUT_EXPIRED`. Proposta: estado próprio terminal, sem efeito no pedido além do que a reserva já determina. Momento: C58.
 - Silêncio não é aprovação: as propostas acima só valem após revisão.
 
@@ -75,10 +78,14 @@ Relógio controlado; sem `sleep`; resultado do simulador nunca é apresentado co
 - R02: cada chamada ao provedor é precedida por uma `payment_external_operation` com identidade própria, tipo (`CREATE_CHECKOUT`, `REFUND`, `QUERY`), estado `PENDING` e instante de início, gravada e **commitada** antes do HTTP.
 - R03: o worker reclama a operação (lease da C45), commita, chama o provedor fora de transação e grava o resultado em outra transação. Lease vencido não autoriza repetir uma operação `IN_FLIGHT`: ela vira `UNKNOWN`.
 - R04: resposta perdida, timeout ou 5xx após envio → operação `UNKNOWN`; nunca se cria outra cobrança para destravar. Só `QUERY`/conciliação decide.
+- R04a (C65): intent `UNKNOWN` só se resolve por consulta, registrada como operação `QUERY` (lease, início, fim e diagnóstico `FOUND:<estado>`, `NOT_FOUND` ou `LOOKUP_FAILED:<tipo>`), que é a trilha de auditoria do operador. Consultas espaçadas por 1 s ×2 até 1 min; uma por vez por intent, mesmo com vários workers. Pago com valor exato → `CONFIRMED`; valor divergente → `UNDER_REVIEW` (`AMOUNT_MISMATCH`); checkout encontrado e não pago → só liga `provider_checkout_id`, para o webhook poder confirmar depois. Resposta vazia ou falha não prova ausência; após `payments.reconciliation.max-lookups` (padrão 3, proposta PAY-Q02) a intent vai para `UNDER_REVIEW` (`UNKNOWN_UNRESOLVED`), nunca `DECLINED`. Consulta com lease vencido conta como inconclusiva sem mexer na intent.
 - R05: 4xx de validação antes de efeito → operação `FAILED` e intent `DECLINED` com motivo `PROVIDER_REJECTED`.
 - R06: retorno do navegador (`callback`) só leva a tela a consultar o backend; confirmação vem de webhook autenticado e validado por consulta ao provedor (C60/C61).
 - R07: valor confirmado diferente de `amount_cents` → intent `UNDER_REVIEW`, sem confirmar o pedido.
+- R07a (C64): notificação de pagamento só confirma se a consulta ao provedor mostrar a cobrança paga **do mesmo checkout**. Consulta que falha ou ainda não mostra o pagamento não prova nada: a notificação continua `RECEIVED` e é reconsultada com backoff (1 s ×2, teto 1 min, atraso entre metade e o passo inteiro), sem bloquear as seguintes. Após 8 tentativas fica `REVIEW` com `last_error` para o operador; a intent não muda. Pagamento pago em outro checkout da mesma intent → notificação `REVIEW` (`CHECKOUT_MISMATCH`) e intent `UNDER_REVIEW`. Notificação atrasada ou repetida nunca tira a intent de um estado já decidido.
 - R08: reembolso é sempre integral (D12), no máximo um por intent (constraint), e só a partir de `CONFIRMED` ou `UNDER_REVIEW` com pagamento recebido.
+- R08a (C67): a transição para `REFUND_REQUESTED` grava a operação `REFUND` na mesma transação. O worker a reclama (lease), chama o provedor fora de transação (Asaas: `POST /v3/payments/{id}/refund` sem `value`, na cobrança paga com a referência da intent e valor igual ao da intent) e grava o resultado. A intent só vira `REFUNDED` quando o provedor mostra o reembolso liquidado. Reembolso aceito e ainda não liquidado, ou com resposta perdida (`UNKNOWN`), nunca é reenviado: consultas `QUERY` (`REFUND:DONE`, `REFUND:PENDING`, `REFUND:NOT_FOUND`, `LOOKUP_FAILED:<tipo>`) com o backoff da C45 o acompanham sem limite, e vazio ou falha não provam nada. Recusa antes de efeito (`REJECTED:<motivo>`, inclusive `NO_PAID_PAYMENT` e `AMOUNT_MISMATCH`) deixa a intent `REFUND_REQUESTED` para o operador (C82a).
+- R09 (C82a): o administrador vê as intents `UNKNOWN`, `UNDER_REVIEW` e `REFUND_REQUESTED` com toda a trilha de operações (`GET /admin/payments/attention`) e pode pedir uma nova consulta com motivo (`POST /admin/payments/{intentId}/lookups`). O pedido fica auditado em `payment_admin_lookup_request` (imutável) e só enfileira uma operação `QUERY` `PENDING`, no máximo uma por intent: repetir o comando reaproveita a que ainda não foi iniciada. O worker a executa fora de transação; consulta não cria cobrança nem reembolso. Pagamento visto pago com valor exato → `CONFIRMED` (o checkout decide se é a tempo ou tardio); valor divergente → `UNDER_REVIEW`; reembolso visto liquidado → `REFUNDED`; vazio ou falha não mudam nada.
 
 ### 7.2 Estados da intent
 
