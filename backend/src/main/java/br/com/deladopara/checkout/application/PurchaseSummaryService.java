@@ -63,7 +63,8 @@ public class PurchaseSummaryService {
 
     @Transactional(readOnly = true)
     public PurchaseSummary summarize(String sessionId, UUID snapshotId, long snapshotVersion, Selection selection) {
-        return summarize(ownedSnapshot(sessionId, snapshotId, snapshotVersion), selection);
+        return summarizeResult(ownedSnapshot(sessionId, snapshotId, snapshotVersion), selection)
+                .summary();
     }
 
     CheckoutSnapshotEntity ownedSnapshot(String sessionId, UUID snapshotId, long snapshotVersion) {
@@ -76,7 +77,11 @@ public class PurchaseSummaryService {
         return snapshot;
     }
 
-    PurchaseSummary summarize(CheckoutSnapshotEntity snapshot, Selection selection) {
+    SummaryResult summarizeForAcceptance(CheckoutSnapshotEntity snapshot, Selection selection) {
+        return summarizeResult(snapshot, selection);
+    }
+
+    private SummaryResult summarizeResult(CheckoutSnapshotEntity snapshot, Selection selection) {
         var items = items(snapshot.getItems()).stream()
                 .sorted(Comparator.comparing(CheckoutSnapshotService.Item::skuId))
                 .toList();
@@ -101,17 +106,18 @@ public class PurchaseSummaryService {
                     Math.multiplyExact(unit, item.quantity())));
         }
         Fulfillment fulfillment;
+        br.com.deladopara.shipping.application.ShippingQuote selectedQuote = null;
         if (selection.mode() == Mode.DELIVERY) {
-            var quote = deliveryOptions.select(
+            selectedQuote = deliveryOptions.select(
                     snapshot.getId(), snapshot.getCartVersion(), selection.quoteId(), selection.inputFingerprint());
             fulfillment = new Fulfillment(
                     Mode.DELIVERY,
-                    quote.id().toString(),
-                    quote.serviceName(),
-                    quote.destinationPostalCode(),
-                    quote.priceCents(),
-                    quote.preparationDays(),
-                    quote.deliveryDays());
+                    selectedQuote.id().toString(),
+                    selectedQuote.serviceName(),
+                    selectedQuote.destinationPostalCode(),
+                    selectedQuote.priceCents(),
+                    selectedQuote.preparationDays(),
+                    selectedQuote.deliveryDays());
         } else {
             var option = pickupOptions.select(snapshot.getItems(), selection.pickupOptionId());
             fulfillment = new Fulfillment(
@@ -142,7 +148,7 @@ public class PurchaseSummaryService {
                 total.discountCents(),
                 total.totalCents(),
                 null);
-        return summary.withVersion(version(summary));
+        return new SummaryResult(summary.withVersion(version(summary)), selectedQuote);
     }
 
     private List<CheckoutSnapshotService.Item> items(String json) {
@@ -248,6 +254,8 @@ public class PurchaseSummaryService {
                     version);
         }
     }
+
+    record SummaryResult(PurchaseSummary summary, br.com.deladopara.shipping.application.ShippingQuote shippingQuote) {}
 
     public static class SnapshotNotFoundException extends RuntimeException {}
 

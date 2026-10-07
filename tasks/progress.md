@@ -1200,5 +1200,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 |---|---|
 | Mudanças | Merge commit de sincronização trouxe `main@d60c743` à branch C70 sem reescrever commits publicados; conflito do apêndice de `tasks/progress.md` foi resolvido preservando ambos os históricos, e `.env.example` reteve as configurações atuais das duas trilhas. A migration de shipping foi renumerada de V35 para V39 (V35–V38 já ocupadas); removido um índice parcial ainda sem consulta consumidora, que produzia definição textual diferente após `pg_restore`. |
 | Verificação | Após limpar apenas `backend/target`, `DatabaseUpgradeAndRestoreIT` 3/3 e `ShippingLabelOperationRepositoryIT` 10/10 passaram (13/13); Flyway validou e aplicou 30 migrations até V39. Spotless e Checkstyle ficaram sem violações no gate completo. Execução completa anterior ao ajuste do índice: 224 ITs, 223 passaram e uma falhou apenas pela representação `pg_get_indexdef` equivalente após restore. Ainda falta um gate completo verde após o ajuste. |
-| Limite | #134 permanece draft; o contrato do manifesto ainda não está implementado em `orders`, C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 ainda precisa sincronizar sua migration e base C70. |
-| Próximo passo | Rodar gates documental/contratos, concluir revisão do merge e publicar o merge commit da branch C70; acompanhar CI. Depois sincronizar a PR C71 com a nova base e renumerar sua migration para V40. |
+| Limite | #134 permanece draft; o manifesto de pacotes completo ainda falta em `orders`, C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 foi sincronizada e seu CI está verde; a migration de tracking é V40 nessa cabeça. |
+| Próximo passo | Publicar a fatia de associação quote→order e, após a nova base C70, renumerar a migration C71 para não colidir. |
+
+## Atualização 2026-10-07 — associação imutável da cotação aceita
+
+| Item | Registro |
+|---|---|
+| Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. `PurchaseAcceptanceService` transporta a cotação já validada sem incluí-la no DTO público de resumo. O banco rejeita alteração posterior e restringe o campo a pedidos de entrega. |
+| Verificação | Red reproduzida em `OrderLifecycleIT` (campo era `null`); depois, `PurchaseAcceptanceIT` 8/8 e `OrderLifecycleIT` 8/8 passaram. Gate backend completo está em execução; ainda sem resultado final. |
+| Contrato | `SPEC-shipping.md` e C70 do plano esclarecem o que foi capturado e o que falta: geometria/fingerprint/alocação dos pacotes, manifesto completo e evidência C04. Sem isso, não inferir pacote↔etiqueta nem enviar escrita externa. |

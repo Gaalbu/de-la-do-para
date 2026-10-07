@@ -80,7 +80,8 @@ public class OrderService implements OrderFulfillmentPort {
                 order.sequence(),
                 order.totalCents(),
                 order.couponCode(),
-                order.destination());
+                order.destination(),
+                order.acceptedShippingQuote());
     }
 
     @Transactional
