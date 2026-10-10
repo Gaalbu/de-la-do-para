@@ -98,6 +98,7 @@ class OrderLifecycleIT {
     @Test
     @Transactional
     void exposesTheAcceptedShippingQuoteFromTheLockedOrder() {
+        var command = command("chk-shipping-quote", FulfillmentMode.DELIVERY);
         var quote = new AcceptedShippingQuote(
                 UUID.randomUUID(),
                 7,
@@ -108,8 +109,32 @@ class OrderLifecycleIT {
                 2_590,
                 2,
                 5,
-                List.of(1, 2));
-        var command = command("chk-shipping-quote", FulfillmentMode.DELIVERY);
+                List.of(1, 2),
+                List.of(
+                        new AcceptedShippingQuote.PackageManifest(
+                                1,
+                                "fp1",
+                                "P",
+                                "FOOD",
+                                false,
+                                100,
+                                90,
+                                60,
+                                650,
+                                List.of(new AcceptedShippingQuote.ProductLine(
+                                        command.items().get(0).skuId(), "Farinha", "500 g", 2, 1800, 3600))),
+                        new AcceptedShippingQuote.PackageManifest(
+                                2,
+                                "fp2",
+                                "P",
+                                "CRAFT",
+                                false,
+                                100,
+                                90,
+                                60,
+                                650,
+                                List.of(new AcceptedShippingQuote.ProductLine(
+                                        command.items().get(1).skuId(), "Castanha", "200 g", 1, 900, 900)))));
         var accepted = new CreateOrderCommand(
                 command.checkoutKey(),
                 command.accountId(),

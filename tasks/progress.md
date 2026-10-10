@@ -1230,3 +1230,12 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. O manifesto imutável da cotação foi adicionado em V41 pelo C70; tracking C71 usa V42. |
 | Verificação | Red reproduzida em `OrderLifecycleIT` (campo era `null`); depois, `PurchaseAcceptanceIT` 8/8 e `OrderLifecycleIT` 8/8 passaram. Gate backend completo está em execução; ainda sem resultado final. |
 | Contrato | `SPEC-shipping.md` e C70 do plano esclarecem o que foi capturado e o que falta: geometria/fingerprint/alocação dos pacotes, manifesto completo e evidência C04. Sem isso, não inferir pacote↔etiqueta nem enviar escrita externa. |
+
+## Continuação 2026-10-08 — C70: manifesto imutável da cotação e do pedido
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | `shipping_quotes` agora persiste `package_manifest` (V41) com caixa, dimensões protegidas, peso com tara e alocação de SKU/quantidade. A cotação valida cobertura exata do provedor. No aceite, `AcceptedShippingQuote` copia a composição, adiciona nome/unidade/preço/valor declarado das linhas aceitas e fingerprint por pacote; `OrderFulfillmentPort.lock()` já devolvia esse objeto sob o lock. A resposta pública das opções usa DTO sem manifesto. Cotações antigas sem manifesto falham fechadas. |
+| Verificação | Suíte backend completa: 167 testes unitários e 227 testes de integração, todos sem falhas; `ShippingQuoteRepositoryIT` comprovou round-trip JSONB e Flyway aplicou as migrations até V41. A primeira execução de `verify` chegou ao fim dos testes e falhou apenas no Spotless por ordem de imports; após `spotless:apply`, `verify -DskipTests` passou com Checkstyle e Spotless limpos. `aislop scan --changes --json`: score 100, zero achados. |
+| Limite | Sem produtor de cotações conectado à jornada, a nova persistência ainda não é exercitada pelo fluxo de cotação real. C04, campos de contato/fiscais exigidos pelo provedor, mapeamento pacote↔etiqueta e orquestração administrativa seguem pendentes. PR #134 permanece draft e C70 aberta. |
+| Próximo passo | Validar a cadeia combinada até V42 na branch C71; seguir com produtor real de cotações e integração operacional sob os gates de C04. |

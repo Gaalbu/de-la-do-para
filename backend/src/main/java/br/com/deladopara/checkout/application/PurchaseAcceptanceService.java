@@ -7,6 +7,7 @@ import br.com.deladopara.checkout.application.PurchaseSummaryService.PurchaseSum
 import br.com.deladopara.checkout.application.PurchaseSummaryService.Selection;
 import br.com.deladopara.identity.application.AccountService;
 import br.com.deladopara.inventory.application.StockReservationService;
+import br.com.deladopara.orders.application.AcceptedShippingQuote;
 import br.com.deladopara.orders.application.CreateOrderCommand;
 import br.com.deladopara.orders.application.OrderAccessTokens;
 import br.com.deladopara.orders.application.OrderQueryService;
@@ -22,7 +23,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -210,19 +213,82 @@ public class PurchaseAcceptanceService {
                                 line.lineTotalCents()))
                         .toList(),
                 correlationId,
-                shippingQuote == null
-                        ? null
-                        : new br.com.deladopara.orders.application.AcceptedShippingQuote(
-                                shippingQuote.snapshotId(),
-                                shippingQuote.snapshotVersion(),
-                                shippingQuote.id(),
-                                shippingQuote.inputFingerprint(),
-                                shippingQuote.serviceId(),
-                                shippingQuote.serviceName(),
-                                shippingQuote.priceCents(),
-                                shippingQuote.preparationDays(),
-                                shippingQuote.deliveryDays(),
-                                shippingQuote.packageSequences()));
+                shippingQuote == null ? null : acceptedShippingQuote(shippingQuote, summary.lines()));
+    }
+
+    private AcceptedShippingQuote acceptedShippingQuote(
+            br.com.deladopara.shipping.application.ShippingQuote quote,
+            java.util.List<PurchaseSummaryService.Line> lines) {
+        var purchaseLines = lines.stream().collect(Collectors.toMap(PurchaseSummaryService.Line::skuId, line -> line));
+        var allocated = new HashMap<UUID, Integer>();
+        var packages = quote.packages().stream()
+                .map(packageManifest -> {
+                    var packageQuantities = packageManifest.lines().stream()
+                            .collect(Collectors.groupingBy(
+                                    br.com.deladopara.shipping.application.ShippingQuote.PackageLine::skuId,
+                                    LinkedHashMap::new,
+                                    Collectors.summingInt(
+                                            br.com.deladopara.shipping.application.ShippingQuote.PackageLine
+                                                    ::quantity)));
+                    var products = packageQuantities.entrySet().stream()
+                            .map(packageAllocation -> {
+                                var purchaseLine = purchaseLines.get(packageAllocation.getKey());
+                                if (purchaseLine == null) {
+                                    throw new PurchaseSummaryService.InvalidSelectionException();
+                                }
+                                var quantity = packageAllocation.getValue();
+                                allocated.merge(packageAllocation.getKey(), quantity, Math::addExact);
+                                return new AcceptedShippingQuote.ProductLine(
+                                        packageAllocation.getKey(),
+                                        purchaseLine.productName(),
+                                        purchaseLine.salesUnit(),
+                                        quantity,
+                                        purchaseLine.unitPriceCents(),
+                                        Math.multiplyExact(purchaseLine.unitPriceCents(), quantity));
+                            })
+                            .toList();
+                    var fingerprint = sha256(packageManifest.sequence() + "|" + packageManifest.boxCode() + "|"
+                            + packageManifest.category() + "|" + packageManifest.fragile() + "|"
+                            + packageManifest.lengthMm() + "|" + packageManifest.widthMm() + "|"
+                            + packageManifest.heightMm() + "|" + packageManifest.totalWeightGrams() + "|"
+                            + products.stream()
+                                    .map(line ->
+                                            line.skuId() + ":" + line.quantity() + ":" + line.unitPriceCents() + ":"
+                                                    + line.declaredValueCents() + ":"
+                                                    + line.productName().length() + ":"
+                                                    + line.productName() + ":"
+                                                    + line.salesUnit().length() + ":" + line.salesUnit())
+                                    .collect(Collectors.joining(";")));
+                    return new AcceptedShippingQuote.PackageManifest(
+                            packageManifest.sequence(),
+                            fingerprint,
+                            packageManifest.boxCode(),
+                            packageManifest.category().name(),
+                            packageManifest.fragile(),
+                            packageManifest.lengthMm(),
+                            packageManifest.widthMm(),
+                            packageManifest.heightMm(),
+                            packageManifest.totalWeightGrams(),
+                            products);
+                })
+                .toList();
+        var expected = lines.stream()
+                .collect(Collectors.toMap(PurchaseSummaryService.Line::skuId, PurchaseSummaryService.Line::quantity));
+        if (!allocated.equals(expected)) {
+            throw new PurchaseSummaryService.InvalidSelectionException();
+        }
+        return new AcceptedShippingQuote(
+                quote.snapshotId(),
+                quote.snapshotVersion(),
+                quote.id(),
+                quote.inputFingerprint(),
+                quote.serviceId(),
+                quote.serviceName(),
+                quote.priceCents(),
+                quote.preparationDays(),
+                quote.deliveryDays(),
+                quote.packageSequences(),
+                packages);
     }
 
     private LocalDate arrivalDate(PurchaseSummary summary) {

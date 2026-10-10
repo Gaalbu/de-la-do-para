@@ -143,14 +143,16 @@ ou reembolso parcial automático.
   origem precisam vir de configuração autorizada, e os campos pessoais
   ausentes do pedido precisam ser resolvidos na jornada de compra antes da
   homologação.
-- Pré-requisito de implementação: o aceite agora persiste no pedido uma
-  projeção imutável da cotação escolhida (`snapshotId`/versão, `quoteId`,
-  fingerprint, serviço, valor, prazos e sequências) e o port de `orders` a
-  entrega sob lock. Ainda faltam geometria, fingerprint e alocação de linhas de
-  cada pacote; `shipping_quotes` conserva somente as sequências. A expedição
-  não pode reconstruir esses dados do catálogo atual nem inferir o mapeamento
-  pacote↔etiqueta. O aceite precisa gravar e expor o manifesto completo ao
-  módulo `shipping` antes de C70 poder cumprir o aceite acima.
+- Pré-requisito de implementação: o aceite persiste no pedido uma projeção
+  imutável da cotação escolhida (`snapshotId`/versão, `quoteId`, fingerprint,
+  serviço, valor, prazos e manifesto de pacotes), e o port de `orders` a entrega
+  sob lock. A cotação conserva caixa, dimensões protegidas, peso com tara e
+  alocação de SKU/quantidade; no aceite, `orders` acrescenta descrição, unidade,
+  preço e valor declarado congelados. A rota pública de opções expõe apenas a
+  projeção comercial, sem o manifesto. Ainda não há fluxo de produção que gere
+  e persista cotações: sem esse produtor, e sem C04, C70 não está concluída.
+  Também é proibido reconstruir dados do catálogo atual ou inferir o mapeamento
+  pacote↔etiqueta.
 - Contrato semântico necessário para o seam `orders` → `shipping` (proposta
   técnica; shape Java fica com o módulo `orders`): uma leitura de expedição deve
   ocorrer sob o mesmo lock que valida o estado elegível do pedido e retornar a
