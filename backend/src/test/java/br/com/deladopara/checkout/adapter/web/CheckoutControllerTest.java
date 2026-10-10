@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import br.com.deladopara.checkout.adapter.persistence.CheckoutSnapshotEntity;
 import br.com.deladopara.checkout.application.CheckoutSnapshotService;
 import br.com.deladopara.shipping.application.ShippingQuote;
+import br.com.deladopara.shipping.domain.PackageComposer;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -49,6 +50,7 @@ class CheckoutControllerTest {
                 5,
                 1,
                 List.of(1),
+                manifest(1),
                 Instant.parse("2026-09-22T12:00:00Z"),
                 Instant.parse("2026-09-22T13:00:00Z"));
         when(service.findDeliveryOptions("session-id", snapshotId, 4, "66053-000"))
@@ -59,7 +61,13 @@ class CheckoutControllerTest {
 
         var response = controller.deliveryOptions(snapshotId, 4, "66053-000", request);
 
-        assertThat(response.options()).containsExactly(quote);
+        assertThat(response.options()).hasSize(1);
+        assertThat(response.options().get(0).id()).isEqualTo(quote.id());
+        assertThat(response.options().get(0).packageSequences()).containsExactly(1);
+        assertThat(new com.fasterxml.jackson.databind.ObjectMapper()
+                        .valueToTree(response)
+                        .toString())
+                .doesNotContain("packages", "skuId", "lengthMm");
         assertThat(response.inputFingerprint()).isEqualTo("fingerprint");
     }
 
@@ -80,6 +88,7 @@ class CheckoutControllerTest {
                 5,
                 1,
                 List.of(1),
+                manifest(1),
                 Instant.parse("2026-09-22T12:00:00Z"),
                 Instant.parse("2026-09-22T13:00:00Z"));
         when(service.selectDeliveryOption("session-id", snapshotId, 4, quoteId, "fingerprint"))
@@ -93,5 +102,12 @@ class CheckoutControllerTest {
 
         assertThat(response.quoteId()).isEqualTo(quoteId);
         assertThat(response.inputFingerprint()).isEqualTo("fingerprint");
+    }
+
+    private static List<ShippingQuote.PackageManifest> manifest(int quantity) {
+        var plan = PackageComposer.compose(List.of(new PackageComposer.Line(
+                        UUID.randomUUID(), PackageComposer.Category.CRAFT, false, quantity, 100, 80, 50, 500)))
+                .get(0);
+        return List.of(ShippingQuote.PackageManifest.from(plan));
     }
 }

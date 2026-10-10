@@ -63,6 +63,7 @@ class PurchaseAcceptanceIT {
                 + " coupon_usage, coupon, checkout_snapshots, event_outbox CASCADE");
         jdbc.execute("DELETE FROM cart_items");
         jdbc.execute("DELETE FROM carts");
+        jdbc.execute("DELETE FROM shipping_quotes");
         for (var trigger : new String[][] {
             {"purchase_order_item", "purchase_order_item_immutable"},
             {"purchase_order_status_history", "purchase_order_history_immutable"},
@@ -239,6 +240,87 @@ class PurchaseAcceptanceIT {
                 .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
                 .andExpect(jsonPath("$.payment.status").value("REQUESTED"))
                 .andExpect(jsonPath("$.payment.checkoutUrl").isEmpty());
+    }
+
+    @Test
+    void deliveryPurchaseCopiesTheSelectedQuoteIntoTheImmutableOrderSnapshot() throws Exception {
+        var farinha = sku(1_800, 5);
+        cart(0, line(farinha, 2));
+        var snapshot = snapshot();
+        var quoteId = UUID.randomUUID();
+        var fingerprint = "shipping-input-fingerprint";
+        jdbc.update(
+                "INSERT INTO shipping_quotes (id, snapshot_id, snapshot_version, destination_postal_code,"
+                        + " input_fingerprint, service_id, service_name, price_cents, delivery_days,"
+                        + " preparation_days, package_sequences, package_manifest, created_at, expires_at)"
+                        + " VALUES (?, ?::uuid, ?::bigint, '66053000', ?, 'sandbox-pac', 'Sandbox PAC', 2590,"
+                        + " 5, 2, '[1]'::jsonb, ?::jsonb, now(), now() + interval '1 hour')",
+                quoteId,
+                snapshot[0],
+                snapshot[1],
+                fingerprint,
+                "[{\"sequence\":1,\"boxCode\":\"P\",\"category\":\"FOOD\",\"fragile\":false,"
+                        + "\"lengthMm\":110,\"widthMm\":90,\"heightMm\":60,\"totalWeightGrams\":1150,\"lines\":["
+                        + "{\"skuId\":\"%s\",\"quantity\":1},{\"skuId\":\"%s\",\"quantity\":1}]}]"
+                                .formatted(farinha, farinha));
+        var summary = perform(get("/api/v1/checkout/" + snapshot[0] + "/summary")
+                        .param("snapshotVersion", snapshot[1])
+                        .param("mode", "DELIVERY")
+                        .param("quoteId", quoteId.toString())
+                        .param("inputFingerprint", fingerprint))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        var summaryVersion = JsonPath.read(summary, "$.summaryVersion");
+        var body = perform(post("/api/v1/checkout/" + snapshot[0] + "/purchase")
+                        .with(csrf())
+                        .header("Idempotency-Key", KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "snapshotVersion": %s,
+                                  "mode": "DELIVERY",
+                                  "quoteId": "%s",
+                                  "inputFingerprint": "%s",
+                                  "email": "ana@example.com",
+                                  "address": {
+                                    "recipientName": "Ana",
+                                    "street": "Rua do Norte",
+                                    "number": "10",
+                                    "district": "Centro",
+                                    "city": "Belém",
+                                    "state": "PA"
+                                  },
+                                  "summaryVersion": "%s"
+                                }
+                                """.formatted(snapshot[1], quoteId, fingerprint, summaryVersion)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        var orderId = JsonPath.read(body, "$.orderId");
+
+        var acceptedQuote = jdbc.queryForObject(
+                "SELECT accepted_shipping_quote::text FROM purchase_order WHERE id = ?::uuid", String.class, orderId);
+        assertThat(acceptedQuote)
+                .contains(snapshot[0])
+                .contains(quoteId.toString())
+                .contains(fingerprint)
+                .contains("sandbox-pac")
+                .contains("[1]");
+        assertThat((String) JsonPath.read(acceptedQuote, "$.packages[0].fingerprint"))
+                .isNotBlank();
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].lengthMm"))
+                .isEqualTo(110);
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].totalWeightGrams"))
+                .isEqualTo(1150);
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].lines[0].quantity"))
+                .isEqualTo(2);
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].lines[0].declaredValueCents"))
+                .isEqualTo(3600);
+        assertThat((String) JsonPath.read(acceptedQuote, "$.packages[0].lines[0].productName"))
+                .isEqualTo("Farinha d'água");
     }
 
     @Test

@@ -46,7 +46,11 @@ public class CheckoutController {
                 .map(ShippingQuote::inputFingerprint)
                 .findFirst()
                 .orElse(null);
-        return new DeliveryOptionsResponse(snapshotId, snapshotVersion, inputFingerprint, options);
+        return new DeliveryOptionsResponse(
+                snapshotId,
+                snapshotVersion,
+                inputFingerprint,
+                options.stream().map(DeliveryOptionResponse::from).toList());
     }
 
     @PostMapping("/{snapshotId}/delivery-selection")
@@ -80,7 +84,38 @@ public class CheckoutController {
     public record SnapshotResponse(UUID snapshotId, long snapshotVersion) {}
 
     public record DeliveryOptionsResponse(
-            UUID snapshotId, long snapshotVersion, String inputFingerprint, java.util.List<ShippingQuote> options) {}
+            UUID snapshotId,
+            long snapshotVersion,
+            String inputFingerprint,
+            java.util.List<DeliveryOptionResponse> options) {}
+
+    public record DeliveryOptionResponse(
+            UUID id,
+            UUID snapshotId,
+            long snapshotVersion,
+            String destinationPostalCode,
+            String inputFingerprint,
+            String serviceId,
+            String serviceName,
+            long priceCents,
+            int deliveryDays,
+            int preparationDays,
+            java.util.List<Integer> packageSequences) {
+        private static DeliveryOptionResponse from(ShippingQuote quote) {
+            return new DeliveryOptionResponse(
+                    quote.id(),
+                    quote.snapshotId(),
+                    quote.snapshotVersion(),
+                    quote.destinationPostalCode(),
+                    quote.inputFingerprint(),
+                    quote.serviceId(),
+                    quote.serviceName(),
+                    quote.priceCents(),
+                    quote.deliveryDays(),
+                    quote.preparationDays(),
+                    quote.packageSequences());
+        }
+    }
 
     public record SelectionRequest(UUID quoteId, String inputFingerprint) {}
 

@@ -50,6 +50,10 @@ app:
 
 shipping:
   pickup-code-encryption-key: ${SHIPPING_PICKUP_ENCRYPTION_KEY}
+  melhor-envio:
+    enabled: ${SHIPPING_MELHOR_ENVIO_ENABLED:false}
+    credential: ${SHIPPING_MELHOR_ENVIO_TOKEN:}
+    user-agent: ${SHIPPING_MELHOR_ENVIO_USER_AGENT:}
 
 management:
   endpoints:

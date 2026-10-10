@@ -8,6 +8,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.ColumnTransformer;
 
 @Entity
 @Table(name = "shipping_quotes")
@@ -44,7 +45,12 @@ public class ShippingQuoteEntity {
     private int preparationDays;
 
     @Column(nullable = false, columnDefinition = "jsonb")
+    @ColumnTransformer(write = "?::jsonb")
     private String packageSequences;
+
+    @Column(nullable = false, columnDefinition = "jsonb")
+    @ColumnTransformer(write = "?::jsonb")
+    private String packageManifest;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -54,7 +60,7 @@ public class ShippingQuoteEntity {
 
     protected ShippingQuoteEntity() {}
 
-    public ShippingQuoteEntity(ShippingQuote quote, String packageSequences) {
+    public ShippingQuoteEntity(ShippingQuote quote, String packageSequences, String packageManifest) {
         this.id = quote.id();
         this.snapshotId = quote.snapshotId();
         this.snapshotVersion = quote.snapshotVersion();
@@ -66,11 +72,12 @@ public class ShippingQuoteEntity {
         this.deliveryDays = quote.deliveryDays();
         this.preparationDays = quote.preparationDays();
         this.packageSequences = packageSequences;
+        this.packageManifest = packageManifest;
         this.createdAt = quote.createdAt();
         this.expiresAt = quote.expiresAt();
     }
 
-    public ShippingQuote toDomain(List<Integer> sequences) {
+    public ShippingQuote toDomain(List<Integer> sequences, List<ShippingQuote.PackageManifest> packages) {
         return new ShippingQuote(
                 id,
                 snapshotId,
@@ -83,6 +90,7 @@ public class ShippingQuoteEntity {
                 deliveryDays,
                 preparationDays,
                 sequences,
+                packages,
                 createdAt,
                 expiresAt);
     }
@@ -97,5 +105,9 @@ public class ShippingQuoteEntity {
 
     public String getPackageSequences() {
         return packageSequences;
+    }
+
+    public String getPackageManifest() {
+        return packageManifest;
     }
 }

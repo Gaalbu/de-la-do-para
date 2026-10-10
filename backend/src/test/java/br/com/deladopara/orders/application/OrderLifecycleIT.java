@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Import(PostgresTestContainer.class)
@@ -92,6 +93,73 @@ class OrderLifecycleIT {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM purchase_order_status_history", Integer.class))
                 .isEqualTo(1);
         assertThat(outbox("order.created")).isEqualTo(1);
+    }
+
+    @Test
+    @Transactional
+    void exposesTheAcceptedShippingQuoteFromTheLockedOrder() {
+        var command = command("chk-shipping-quote", FulfillmentMode.DELIVERY);
+        var quote = new AcceptedShippingQuote(
+                UUID.randomUUID(),
+                7,
+                UUID.randomUUID(),
+                "quote-fingerprint",
+                "sandbox-pac",
+                "Sandbox PAC",
+                2_590,
+                2,
+                5,
+                List.of(1, 2),
+                List.of(
+                        new AcceptedShippingQuote.PackageManifest(
+                                1,
+                                "fp1",
+                                "P",
+                                "FOOD",
+                                false,
+                                100,
+                                90,
+                                60,
+                                650,
+                                List.of(new AcceptedShippingQuote.ProductLine(
+                                        command.items().get(0).skuId(), "Farinha", "500 g", 2, 1800, 3600))),
+                        new AcceptedShippingQuote.PackageManifest(
+                                2,
+                                "fp2",
+                                "P",
+                                "CRAFT",
+                                false,
+                                100,
+                                90,
+                                60,
+                                650,
+                                List.of(new AcceptedShippingQuote.ProductLine(
+                                        command.items().get(1).skuId(), "Castanha", "200 g", 1, 900, 900)))));
+        var accepted = new CreateOrderCommand(
+                command.checkoutKey(),
+                command.accountId(),
+                command.contactEmail(),
+                command.mode(),
+                command.subtotalCents(),
+                command.shippingCents(),
+                command.discountType(),
+                command.discountValue(),
+                command.discountCents(),
+                command.couponCode(),
+                command.totalCents(),
+                command.preparationDays(),
+                command.deliveryDays(),
+                command.pricingRuleVersion(),
+                command.destination(),
+                command.items(),
+                command.correlationId(),
+                quote);
+        var orderId = service.create(accepted).id();
+
+        assertThat(service.lock(orderId).acceptedShippingQuote()).isEqualTo(quote);
+        assertThatThrownBy(() -> jdbc.update(
+                        "UPDATE purchase_order SET accepted_shipping_quote = '{}'::jsonb WHERE id = ?", orderId))
+                .isInstanceOf(DataAccessException.class);
     }
 
     @Test

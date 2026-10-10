@@ -77,6 +77,111 @@ ou reembolso parcial automático.
 - Pedido pronto fica guardado por três dias úteis; depois abre análise, sem
   cancelar, descartar ou reembolsar automaticamente, mantendo o estoque.
 
+### Compra e geração de etiquetas (C70)
+
+- Iniciar somente para pedido pago na modalidade `DELIVERY`, por ação
+  administrativa autenticada. Cada unidade de expedição mantém operação e
+  identidade local estáveis, associadas às sequências do snapshot; repetir o
+  comando devolve o estado persistido sem reenviar uma chamada externa iniciada.
+  A unicidade local é pedido + unidade de expedição + etapa; a versão otimista
+  rejeita gravações concorrentes obsoletas.
+  Cada POST de carrinho cria uma etiqueta e retorna um ID. A relação
+  unidade↔pacotes/IDs do provedor deve seguir o serviço e a composição
+  confirmados na cotação e em C04; não recalcular ou dividir pacotes depois do
+  aceite. Correios (serviços 1, 2, 17), J&T, Loggi e serviço 27 não aceitam
+  vários volumes por etiqueta; criar uma chamada separada por pacote somente
+  quando isso corresponder à composição e ao preço cotados.
+- O envio usa um snapshot imutável capturado no aceite da compra: composição e
+  sequência dos pacotes, dimensões/peso protegidos, linhas/quantidades/valores
+  declarados, serviço cotado e endereço de destino. Não reconstruir pacotes nem
+  consultar catálogo/endereço editável durante a expedição.
+- Cada operação `PURCHASE` ou `GENERATE` é criada com o ID conhecido da etapa
+  anterior; sem esse ID, não pode sair de `READY`. O mesmo ID permanece na
+  operação mesmo quando a resposta de checkout/geração não repete o valor.
+- Fluxo Melhor Envio: inserir envio no carrinho
+  ([`POST /api/v2/me/cart`](https://docs.melhorenvio.com.br/reference/inserir-fretes-no-carrinho)),
+  comprar o ID retornado
+  ([`POST /api/v2/me/shipment/checkout`](https://docs.melhorenvio.com.br/reference/compra-de-fretes-1))
+  e gerar a etiqueta para o mesmo ID
+  ([`POST /api/v2/me/shipment/generate`](https://docs.melhorenvio.com.br/reference/geracao-de-etiquetas)).
+  Persistir cada resposta antes de iniciar a próxima etapa; chamada externa
+  nunca ocorre dentro da transação PostgreSQL. A configuração aceita somente a
+  base sandbox e a UI/API identifica a etiqueta como teste.
+- A documentação do provedor não promete idempotência para essas operações.
+  Timeout, conexão interrompida após o envio ou resposta ilegível em uma
+  operação de escrita deixam a etapa `UNKNOWN`; não reenviar automaticamente,
+  nem iniciar outra compra para o mesmo pacote. A consulta por ID pode atualizar
+  um envio conhecido
+  ([`POST /api/v2/me/shipment/tracking`](https://docs.melhorenvio.com.br/reference/rastreio-de-envios));
+  uma etapa sem ID recuperável fica em análise para a operação administrativa
+  futura C82b. Erro determinístico de validação pode ficar `FAILED` sem apagar
+  evidência anterior.
+- Uma falha em uma unidade de expedição não reverte nem compra novamente
+  etiquetas concluídas nas outras unidades. O resultado da ordem mostra o
+  vínculo unidade↔pacotes, etapa, IDs do provedor quando conhecidos, correlação
+  e erro sanitizado. Credenciais, corpo
+  integral da requisição/resposta, documentos e endereço não entram em logs,
+  métricas ou mensagens de erro.
+- A chamada ao sandbox requer campos obrigatórios de remetente, destinatário e
+  produtos declarados. Para envios comerciais, a referência exige chave da
+  nota fiscal e inscrição estadual do remetente; o fluxo não comercial usa
+  declaração de conteúdo e inscrição vazia/`ISENTO`. Desde 06/04/2026, a API
+  requer `products` corretos para a integração DC-e. A política fiscal e a
+  disponibilidade das respectivas chaves/documentos são pré-requisitos para
+  envio real ao sandbox. C70 não cria esses dados: remetente/documentos de
+  origem precisam vir de configuração autorizada, e os campos pessoais
+  ausentes do pedido precisam ser resolvidos na jornada de compra antes da
+  homologação.
+- Pré-requisito de implementação: o aceite persiste no pedido uma projeção
+  imutável da cotação escolhida (`snapshotId`/versão, `quoteId`, fingerprint,
+  serviço, valor, prazos e manifesto de pacotes), e o port de `orders` a entrega
+  sob lock. A cotação conserva caixa, dimensões protegidas, peso com tara e
+  alocação de SKU/quantidade; no aceite, `orders` acrescenta descrição, unidade,
+  preço e valor declarado congelados. A rota pública de opções expõe apenas a
+  projeção comercial, sem o manifesto. Ainda não há fluxo de produção que gere
+  e persista cotações: sem esse produtor, e sem C04, C70 não está concluída.
+  Também é proibido reconstruir dados do catálogo atual ou inferir o mapeamento
+  pacote↔etiqueta.
+- Contrato semântico necessário para o seam `orders` → `shipping` (proposta
+  técnica; shape Java fica com o módulo `orders`): uma leitura de expedição deve
+  ocorrer sob o mesmo lock que valida o estado elegível do pedido e retornar a
+  projeção capturada no aceite, nunca dados recebidos do navegador. Ela deve
+  identificar pedido, snapshot e versão, cotação aceita e fingerprint, serviço
+  e valores/prazo aceitos, destino de entrega e cada pacote com identidade
+  estável, sequência, fingerprint, medidas externas, peso protegido e alocação
+  de linhas/quantidades/valores declarados. Assim o adapter consegue gerar
+  `products` e `volumes` sem consultar SKU, preço, embalagem ou endereço
+  editável atual. O contrato não presume que um pacote equivale a uma etiqueta
+  ou unidade de expedição: qualquer agrupamento precisa ser o que foi aceito na
+  cotação e comprovado no C04; sem prova, a operação deve falhar antes de fazer
+  escrita externa. Se faltar qualquer campo obrigatório ao provedor, falhar
+  fechado antes do `POST /cart`, sem preencher com dado de demonstração.
+- O seam expõe destino e conteúdo somente ao caso administrativo autorizado que
+  inicia a expedição; não os inclui em respostas de consulta geral, logs,
+  métricas, eventos ou mensagens de erro. A origem e documentos fiscais vêm de
+  configuração local opt-in autorizada, fora do manifesto do comprador. O
+  `shipping` persiste a identidade/fingerprint da manifestação usada em cada
+  operação e rejeita retomada quando o manifesto não coincide com o persistido.
+  Nenhum módulo lê diretamente tabelas privadas de outro módulo.
+- O spike C04 ainda precisa demonstrar quais serviços aceitam a composição,
+  se a resposta por unidade já identifica o ID de forma parseável, como a
+  composição cotada mapeia às chamadas individuais de carrinho/IDs e como
+  reconciliar uma resposta perdida. Checkout e geração aceitam arrays de IDs,
+  mas não documentam atomicidade nem resultado parcial por ID; enviar cada ID
+  separadamente até a homologação demonstrar semântica segura de lote. O
+  contrato local deve preservar o resultado por unidade sem presumir
+  atomicidade do provedor.
+- O cliente HTTP da C70 é opt-in (`SHIPPING_MELHOR_ENVIO_ENABLED`) e envia
+  somente para `https://sandbox.melhorenvio.com.br`; exige token e `User-Agent`
+  com contato técnico. Limita conexão/leitura a 3/10 segundos. Só a resposta
+  HTTP 422 documentada é rejeição definitiva; demais falhas HTTP, transporte,
+  resposta ilegível ou sucesso sem ID parseável mantêm `UNKNOWN`. O adapter não
+  interpreta sucesso agregado de compra/geração como sucesso de cada ID e não
+  persiste nem registra corpos de resposta.
+- Até C04 confirmar segurança de lote, cada requisição de compra/geração contém
+  exatamente um ID conhecido em `orders`; a API aceita arrays, mas isso não
+  prova atomicidade nem resposta individual.
+
 ### Confirmação de retirada (C72, D71)
 
 - Ao passar um pedido `PICKUP` para `READY_FOR_PICKUP`, gerar um código aleatório

@@ -1,5 +1,6 @@
 package br.com.deladopara.orders.adapter.persistence;
 
+import br.com.deladopara.orders.application.AcceptedShippingQuote;
 import br.com.deladopara.orders.application.CreateOrderCommand;
 import br.com.deladopara.orders.application.OrderView;
 import br.com.deladopara.orders.domain.FulfillmentMode;
@@ -197,14 +198,18 @@ public class OrderRepository {
     /** Returns false when the checkout key already exists (idempotent creation). */
     @Transactional(propagation = Propagation.MANDATORY)
     public boolean insert(UUID id, CreateOrderCommand c, String destinationJson, Instant now) {
+        var quoteJson = c.acceptedShippingQuote() == null
+                ? null
+                : writeJson(c.acceptedShippingQuote(), "accepted shipping quote serialization failed");
         var inserted = jdbc.update(
                 """
                 INSERT INTO purchase_order
                     (id, checkout_key, account_id, contact_email, fulfillment_mode, currency, subtotal_cents,
                      shipping_cents, discount_type, discount_value, discount_cents, coupon_code, total_cents,
-                     preparation_days, delivery_days, pricing_rule_version, destination, status, status_sequence,
-                     created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, 'BRL', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), 'PENDING_PAYMENT', 0, ?, ?)
+                     preparation_days, delivery_days, pricing_rule_version, destination, accepted_shipping_quote,
+                     status, status_sequence, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, 'BRL', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), CAST(? AS jsonb),
+                        'PENDING_PAYMENT', 0, ?, ?)
                 ON CONFLICT (checkout_key) DO NOTHING
                 """,
                 id,
@@ -223,6 +228,7 @@ public class OrderRepository {
                 c.deliveryDays(),
                 c.pricingRuleVersion(),
                 destinationJson,
+                quoteJson,
                 Timestamp.from(now),
                 Timestamp.from(now));
         if (inserted == 0) {
@@ -287,7 +293,27 @@ public class OrderRepository {
                 rs.getInt("status_sequence"),
                 rs.getLong("total_cents"),
                 rs.getString("coupon_code"),
-                jsonMap(rs.getString("destination")));
+                jsonMap(rs.getString("destination")),
+                acceptedShippingQuote(rs.getString("accepted_shipping_quote")));
+    }
+
+    private String writeJson(Object value, String message) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException(message, exception);
+        }
+    }
+
+    private AcceptedShippingQuote acceptedShippingQuote(String value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, AcceptedShippingQuote.class);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Stored accepted shipping quote is invalid", exception);
+        }
     }
 
     private Map<String, Object> jsonMap(String value) {
@@ -306,7 +332,8 @@ public class OrderRepository {
             int sequence,
             long totalCents,
             String couponCode,
-            Map<String, Object> destination) {}
+            Map<String, Object> destination,
+            AcceptedShippingQuote acceptedShippingQuote) {}
 
     public record HistoryRow(
             int sequence, OrderStatus from, OrderStatus to, OrderActor actor, String reason, Instant occurredAt) {}

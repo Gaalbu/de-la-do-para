@@ -7,6 +7,7 @@ import br.com.deladopara.checkout.application.PurchaseSummaryService.PurchaseSum
 import br.com.deladopara.checkout.application.PurchaseSummaryService.Selection;
 import br.com.deladopara.identity.application.AccountService;
 import br.com.deladopara.inventory.application.StockReservationService;
+import br.com.deladopara.orders.application.AcceptedShippingQuote;
 import br.com.deladopara.orders.application.CreateOrderCommand;
 import br.com.deladopara.orders.application.OrderAccessTokens;
 import br.com.deladopara.orders.application.OrderQueryService;
@@ -22,7 +23,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -101,7 +104,8 @@ public class PurchaseAcceptanceService {
         }
 
         var snapshot = summaries.ownedSnapshot(command.sessionId(), command.snapshotId(), command.snapshotVersion());
-        var summary = summaries.summarize(snapshot, command.selection());
+        var summaryResult = summaries.summarizeForAcceptance(snapshot, command.selection());
+        var summary = summaryResult.summary();
         if (!summary.summaryVersion().equals(command.summaryVersion())) {
             throw new SummaryChangedException(summary);
         }
@@ -109,7 +113,8 @@ public class PurchaseAcceptanceService {
             throw new ZeroTotalException();
         }
         var correlationId = UUID.randomUUID();
-        var created = orders.create(orderCommand(subject, command, buyer, email, summary, correlationId));
+        var created = orders.create(
+                orderCommand(subject, command, buyer, email, summary, summaryResult.shippingQuote(), correlationId));
         var orderId = created.id();
         var reference = "order:" + orderId;
         var reservation = stock.reserve(
@@ -160,6 +165,7 @@ public class PurchaseAcceptanceService {
             AccountService.Buyer buyer,
             String email,
             PurchaseSummary summary,
+            br.com.deladopara.shipping.application.ShippingQuote shippingQuote,
             UUID correlationId) {
         var fulfillment = summary.fulfillment();
         var destination = objectMapper.createObjectNode();
@@ -206,7 +212,83 @@ public class PurchaseAcceptanceService {
                                 line.unitPriceCents(),
                                 line.lineTotalCents()))
                         .toList(),
-                correlationId);
+                correlationId,
+                shippingQuote == null ? null : acceptedShippingQuote(shippingQuote, summary.lines()));
+    }
+
+    private AcceptedShippingQuote acceptedShippingQuote(
+            br.com.deladopara.shipping.application.ShippingQuote quote,
+            java.util.List<PurchaseSummaryService.Line> lines) {
+        var purchaseLines = lines.stream().collect(Collectors.toMap(PurchaseSummaryService.Line::skuId, line -> line));
+        var allocated = new HashMap<UUID, Integer>();
+        var packages = quote.packages().stream()
+                .map(packageManifest -> {
+                    var packageQuantities = packageManifest.lines().stream()
+                            .collect(Collectors.groupingBy(
+                                    br.com.deladopara.shipping.application.ShippingQuote.PackageLine::skuId,
+                                    LinkedHashMap::new,
+                                    Collectors.summingInt(
+                                            br.com.deladopara.shipping.application.ShippingQuote.PackageLine
+                                                    ::quantity)));
+                    var products = packageQuantities.entrySet().stream()
+                            .map(packageAllocation -> {
+                                var purchaseLine = purchaseLines.get(packageAllocation.getKey());
+                                if (purchaseLine == null) {
+                                    throw new PurchaseSummaryService.InvalidSelectionException();
+                                }
+                                var quantity = packageAllocation.getValue();
+                                allocated.merge(packageAllocation.getKey(), quantity, Math::addExact);
+                                return new AcceptedShippingQuote.ProductLine(
+                                        packageAllocation.getKey(),
+                                        purchaseLine.productName(),
+                                        purchaseLine.salesUnit(),
+                                        quantity,
+                                        purchaseLine.unitPriceCents(),
+                                        Math.multiplyExact(purchaseLine.unitPriceCents(), quantity));
+                            })
+                            .toList();
+                    var fingerprint = sha256(packageManifest.sequence() + "|" + packageManifest.boxCode() + "|"
+                            + packageManifest.category() + "|" + packageManifest.fragile() + "|"
+                            + packageManifest.lengthMm() + "|" + packageManifest.widthMm() + "|"
+                            + packageManifest.heightMm() + "|" + packageManifest.totalWeightGrams() + "|"
+                            + products.stream()
+                                    .map(line ->
+                                            line.skuId() + ":" + line.quantity() + ":" + line.unitPriceCents() + ":"
+                                                    + line.declaredValueCents() + ":"
+                                                    + line.productName().length() + ":"
+                                                    + line.productName() + ":"
+                                                    + line.salesUnit().length() + ":" + line.salesUnit())
+                                    .collect(Collectors.joining(";")));
+                    return new AcceptedShippingQuote.PackageManifest(
+                            packageManifest.sequence(),
+                            fingerprint,
+                            packageManifest.boxCode(),
+                            packageManifest.category().name(),
+                            packageManifest.fragile(),
+                            packageManifest.lengthMm(),
+                            packageManifest.widthMm(),
+                            packageManifest.heightMm(),
+                            packageManifest.totalWeightGrams(),
+                            products);
+                })
+                .toList();
+        var expected = lines.stream()
+                .collect(Collectors.toMap(PurchaseSummaryService.Line::skuId, PurchaseSummaryService.Line::quantity));
+        if (!allocated.equals(expected)) {
+            throw new PurchaseSummaryService.InvalidSelectionException();
+        }
+        return new AcceptedShippingQuote(
+                quote.snapshotId(),
+                quote.snapshotVersion(),
+                quote.id(),
+                quote.inputFingerprint(),
+                quote.serviceId(),
+                quote.serviceName(),
+                quote.priceCents(),
+                quote.preparationDays(),
+                quote.deliveryDays(),
+                quote.packageSequences(),
+                packages);
     }
 
     private LocalDate arrivalDate(PurchaseSummary summary) {

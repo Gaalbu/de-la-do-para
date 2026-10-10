@@ -19,5 +19,6 @@ public interface OrderFulfillmentPort {
             int sequence,
             long totalCents,
             String couponCode,
-            Map<String, Object> destination) {}
+            Map<String, Object> destination,
+            AcceptedShippingQuote acceptedShippingQuote) {}
 }

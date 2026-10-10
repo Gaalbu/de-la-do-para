@@ -1091,6 +1091,66 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Ainda não publicado. C72 #117 permanece OPEN; sua CI do SHA documental `6788499` está em andamento. |
 | Limite | Remetente/domínio e retenção dependem de C04; Mailpit prova somente captura local. Matriz intermediária e repetição em resultado SMTP ambíguo continuam propostas, não decisões aprovadas. |
 | Próximo passo | Validar documentos e diff; publicar este slice atômico em PR própria empilhada sobre C72, e solicitar revisão das perguntas da spec antes de implementar C75. |
+## Sessão 2026-10-03 — C70: contrato de expedição e lacuna do snapshot
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Avançar o domínio de ciclo de vida de etiquetas de C70 sem sobrepor a trilha de checkout do Claude |
+| Mudanças | Criado worktree/branch `codex/c70-shipping-label-lifecycle` a partir de `origin/main@ec02daa`. `SPEC-shipping.md` define pré-condições, snapshot imutável, operações de carrinho/compra/geração por IDs do provedor, resultado `UNKNOWN` sem repetição automática, falha parcial isolada, privacidade e uso exclusivo do sandbox, com links à documentação oficial. Adicionada `ShippingLabelOperation`, máquina de estados por unidade de expedição associada às sequências de pacotes: aceita transição explícita de reconciliação após `UNKNOWN`, registra ID/correlação e limita códigos de falha a tokens sanitizados. `ShippingLabelOperationService` executa transições duráveis em transações separadas, sem chamadas externas; migration `V35__shipping_label_operations.sql`, entidade JSONB e repository persistem etapas; unicidade pedido/unidade/etapa impede duplicata e `@Version` protege escrita concorrente. Cinco testes unitários e quatro testes de integração PostgreSQL cobrem transições, bloqueio de repetição ambígua, reconciliação após reload, sanitização, sequências inválidas, round-trip, unicidade e corrida entre dois workers. Confirmado em `origin/main` que `purchase_order` recebe itens/preços, `CheckoutSnapshot` contém apenas SKU/quantidade e `shipping_quotes` persiste somente sequências de pacote; não existe associação pedido→snapshot/cotação ou manifesto para expedir. Registrada a lacuna em `PLANO-MESTRE.md`; C70 fica aberta. |
+| Verificação | Os testes focados em Temurin 25 passaram: 9 testes, 0 falhas/erros; migration v35 aplicada em PostgreSQL 18.6 via Testcontainers. O Temurin foi necessário porque o GraalVM do `java/current` caiu com `SIGSEGV` em JVMCI na primeira tentativa. Gate completo rerodado após incluir a prova concorrente: 131 testes unitários passaram; Failsafe reportou falha em `EventingWorkerProcessRestartIT.processRestartRecoversClaimedEventAfterLeaseExpiry` (não em shipping), esperando publicação pelo segundo processo; JaCoCo, Spotless e Checkstyle terminaram (0 violações), mas `verify.sh backend` saiu 1. A repetição isolada também falhou, desta vez antes do restart, aguardando a primeira tentativa do worker por 30 s; evidencia bloqueio reproduzível no cenário de worker/Kafka neste ambiente, fora da trilha shipping. O gate completo anterior havia passado com 131 unitários + 159 integrações. `npm --prefix frontend run docs:check`: 26 Markdown, sem links quebrados; `git diff --check` limpo; `aislop`: 100/100, 0 achados em 247 arquivos. Docs oficiais Melhor Envio revalidadas para inserir envio, comprar, gerar e consultar status. |
+| Limite | Ainda sem orquestração das chamadas externas, adapter/API/admin UI; nenhuma alteração em checkout; nenhuma chamada ao sandbox. A migration está numerada V35 neste ramo; reconciliar/renumerar ao combinar migrations concorrentes. Endpoints documentados não provam comportamento em conta real. Pela fronteira combinada, Claude expõe o snapshot imutável; shipping consumirá esse seam sem reconstruir do catálogo. Credenciais e dados de remetente/destinatário para sandbox indisponíveis. Sem commit/PR/push/merge. |
+| Próximo passo | Integrar shipping ao seam de snapshot que Claude expuser; completar a orquestração e adapter das etapas seguras com tratamento parcial após evidência C04; executar roteiro sandbox quando habilitado. |
+
+## Continuação 2026-10-03 — C70: revisão do contrato oficial do provedor
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Refinar as fronteiras de criação de etiquetas e os critérios de C04 com base nas referências oficiais atuais, sem tocar checkout |
+| Mudanças | Confirmado nas referências Melhor Envio: um POST ao carrinho gera um ID/etiqueta; Correios (1, 2, 17), J&T, Loggi e serviço 27 não aceitam multi volume; compra e geração aceitam arrays de IDs sem documentar atomicidade/resultado parcial; `products` é obrigatório para declaração/DC-e e envio comercial requer os campos fiscais descritos na referência. Atualizados `SPEC-shipping.md` e `docs/integrations/melhor-envio.md` para exigir composição idêntica à cotação, correlação individual até homologação e dados fiscais/documentos autorizados. Acrescentado teste PostgreSQL concorrente: dois workers tentam abrir a mesma escrita e exatamente um vence. |
+| Verificação | Referências primárias abertas nesta sessão: inserção no carrinho, compra, geração, tracking e manual Melhor Envio. `npm --prefix frontend run docs:check`: 26 Markdown sem links quebrados; `git diff --check` limpo; `aislop`: 100/100, 0 achados em 247 arquivos. Teste concorrente PostgreSQL 18.6 passou. Gate completo atual não verde. `EventingWorkerProcessRestartIT` falhou no gate esperando a publicação do segundo processo e, isolado, falhou esperando a primeira tentativa do worker (30 s); registrar para a trilha eventing, sem alteração aqui. |
+| Limite | Nenhuma chamada externa nem mudança de produção/checkout nesta continuação. O seam de snapshot segue ausente nos worktrees ativos; fiscalidade/declaração e resposta real por ID precisam decisão/evidência C04. PR #129 segue aberta e branches do Claude continuam em outros módulos. |
+| Próximo passo | Quando o seam `orders` for exposto e as decisões/documentos C04 estiverem disponíveis, implementar a integração shipping usando a composição e preço aceitos sem remontar pacotes. |
+
+## Continuação 2026-10-03 — C70: cliente de escrita somente sandbox
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Implementar fronteira HTTP do Melhor Envio para carrinho/compra/geração sem sobrepor checkout ou habilitar chamadas reais |
+| Mudanças | Criado `MelhorEnvioLabelClient`: URL sandbox fixa, Bearer, `User-Agent` exigido, payload JSON do snapshot recebido, carrinho exige status 201 e ID textual; compra/geração enviam exatamente um ID explícito em `orders` por chamada e exigem status 200; lote é recusado até evidência C04. Só 422 vira rejeição definitiva; outros erros HTTP/transporte, JSON ilegível, status não esperado e carrinho sem ID ficam `UNKNOWN`. Sem retries, persistência de corpo ou logs. Bean condicional `SHIPPING_MELHOR_ENVIO_ENABLED=false` e limites HTTP 3 s conexão/10 s leitura; `.env.example` documenta o opt-in. Não houve alteração em checkout. |
+| Verificação | `MelhorEnvioLabelClientTest` passou 7/7 com `MockRestServiceServer`, sem tráfego de rede; o gate completo atual (`scripts/verify.sh backend`) passou com 138 testes unitários + 160 integrações, JaCoCo, Spotless e Checkstyle (0 violações). Testes shipping no gate: `ShippingLabelOperationTest` 5/5, `MelhorEnvioLabelClientTest` 7/7 e `ShippingLabelOperationRepositoryIT` 4/4. `EventingWorkerProcessRestartIT` passou em 56,78 s nesta execução; tinha falhado duas vezes em execuções isoladas e passado no gate anterior em 72,33 s. `docs:check` passou (26 Markdown, sem links quebrados), `git diff --check` limpo. `aislop`: 100/100, 0 erros e 1 aviso não corrigível `hardcoded-url`, falso positivo intencional porque o host sandbox fixo impede configurar endpoint de produção. |
+| Limite | Cliente ainda não é invocado por fluxo administrativo; precisa do seam do manifesto aceito que Claude exporá, decisão/dados fiscais e C04 para mapear resultados por pacote/ID e validar comportamento real. Nenhum token nem chamada ao sandbox. O teste de restart de eventing falhou duas vezes em execuções anteriores, depois passou em dois gates completos consecutivos (72,33 s e 56,78 s); nenhuma alteração em eventing. O alerta do `aislop` corresponde ao host sandbox fixo e foi mantido como restrição de segurança. |
+| Próximo passo | Integrar ao snapshot aceito quando o seam aparecer; completar persistência e orquestração por operação/unidade apenas com semântica C04 demonstrada; depois executar homologação conforme credenciais/política autorizadas. |
+
+## Continuação 2026-10-03 — C70: encadeamento seguro de IDs de envio
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Impedir compra/geração sem resultado bem-sucedido da etapa anterior e sem correspondência exata de pacotes/ID |
+| Mudanças | `ShippingLabelOperation.ready` agora aceita ID conhecido para `PURCHASE`/`GENERATE`; o domínio e V35 exigem esse ID. `ShippingLabelOperationService.create` confirma que a etapa anterior da mesma ordem/unidade terminou `SUCCEEDED` com ID e sequências de pacote iguais. A spec e C70 registram a garantia. Três casos PostgreSQL novos cobrem caminho ADD_TO_CART→PURCHASE→GENERATE, retenção do ID quando a resposta não o repete, divergência de ID/pacotes e tentativa de gerar antes de concluir a compra. |
+| Verificação | `ShippingLabelOperationTest` e `ShippingLabelOperationRepositoryIT` passaram em execução focada: 11 testes, 0 falhas/erros; PostgreSQL 18.6 aplicou migrations até V35. `git diff --check` passou. O gate completo não foi concluído: uma execução passou por 139 unitários e integrações mas terminou no Spotless (corrigido em seguida); a repetição sofreu `SIGSEGV` nativo em `libjvm.so` da GraalVM 25 durante `HealthEndpointTest`; terceira tentativa e goals Maven locais ficaram sem output sob contenção de outros Maven ativos. `docs:check` igualmente não concluiu. O binário local `aislop` não está instalado, e a skill proíbe instalar dependência remota fora do fluxo do projeto. |
+| Limite | Não contar os testes/reportes preservados de execuções anteriores como prova do gate atual. O bloqueio observado é infraestrutura/VM concorrente, não falha dos testes de shipping; formatter foi aplicado e precisa revalidação no ambiente estável. Sem commit/PR/push/merge. |
+| Próximo passo | Reexecutar `scripts/verify.sh backend`, `npm --prefix frontend run docs:check` e `aislop` quando a carga concorrente terminar; manter C70 aberta até o seam imutável de checkout exposto por Claude, C04 e fluxo administrativo/homologação. |
+
+## Continuação 2026-10-05 — C70: pré-condições do pedido e repetição idempotente
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Fechar duas lacunas da operação persistida de etiquetas sem atravessar a trilha de checkout do Claude |
+| Mudanças | `ShippingLabelOperationService.create` agora bloqueia a linha pelo contrato application `OrderFulfillmentPort` e só cria etapa nova para pedido `DELIVERY` em `PAID` ou `PREPARING`. A chave pedido/unidade/etapa retorna a operação existente e seu estado para mesma lista de pacotes; alteração do mapeamento é rejeitada. Foram adicionados cenários PostgreSQL para retirada, pagamento pendente e repetição durante `REQUESTED`; ordem de imports aplicada pelo Spotless. Nenhuma mudança em `orders.adapter` nem checkout. |
+| Verificação | RED: os dois cenários novos falharam antes da guarda; a repetição falhou antes da busca idempotente. GREEN: `ShippingLabelOperationRepositoryIT` passou 10/10 em PostgreSQL 18.6, `ArchitectureRulesTest` passou 4/4, `ShippingLabelOperationTest` 6/6 e `MelhorEnvioLabelClientTest` 7/7. `npm --prefix frontend run docs:check` passou (26 Markdown), `git diff --check` passou. `aislop` 0.17.0 marcou 100/100, sem erros e com um aviso `hardcoded-url`; falso positivo intencional porque o endpoint fixo sandbox impede chamadas de escrita em produção. `GOMAXPROCS=1 JAVA_TOOL_OPTIONS=-Xint scripts/verify.sh backend`: 139 unitários passaram; 166 integrações, 165 passaram e `EventingWorkerProcessRestartIT.processRestartRecoversClaimedEventAfterLeaseExpiry` falhou aguardando a tentativa após restart; JaCoCo, Spotless e Checkstyle concluíram, 0 violações. O gate completo saiu com falha somente nesse IT de eventing, fora do escopo shipping. |
+| Limite | C70 continua parcial: o checkout em `origin/main@ec02daa` não guarda nem expõe manifesto imutável dos pacotes/serviço/cotação; cliente não é invocado por fluxo administrativo. Sem credenciais, remetente/documentos fiscais ou semântica demonstrada por C04; nenhuma chamada real foi feita. C70 não pode ser marcada concluída. |
+| Remoto | Commits `467f10f` (implementação/testes/configuração) e `532b391` (spec/integração/progresso) enviados em `codex/c70-shipping-label-lifecycle`. PR #134 aberta em draft. CI no SHA `532b391`: backend, frontend, contracts, docs, security, commit-policy e quality-gate passaram (7/7). |
+| Próximo passo | Manter C70 aberta e o PR em draft; ligar ao manifesto imutável do seam `orders` quando estiver disponível, implementar orquestração/UI e executar C04 antes da homologação. |
+
+## Continuação 2026-10-07 — C70: contrato do manifesto imutável
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Tornar verificável o contrato semântico que `orders` precisa expor para a expedição, sem editar a implementação de `orders` ou decidir a semântica pacote↔etiqueta ainda pendente de C04. |
+| Mudanças | `SPEC-shipping.md` agora exige que o manifesto venha do aceite imutável e seja lido junto ao lock/estado do pedido; define os dados mínimos de cotação, destino, linhas e pacotes para gerar `products`/`volumes`; proíbe reconstrução por catálogo/endereço atual, agrupamento não aceito, preenchimento com dados de demonstração e vazamento de PII. O shape Java fica sob responsabilidade de `orders`. |
+| Verificação | `npm --prefix frontend run docs:check`: 26 Markdown sem links quebrados; revisão manual do diff confirmou que a proposta não fixa shape Java nem equivalência pacote↔etiqueta. `aislop` não está instalado no ambiente atual. |
+| Limite | Especificação proposta; ainda requer implementação coordenada no seam compartilhado de `orders`. Não fecha C70/C04 nem habilita chamadas externas. |
+| Próximo passo | Revisar a proposta do contrato e, após coordenação entre lanes, expor o manifesto no módulo `orders`; então implementar a orquestração administrativa em `shipping` usando a mesma projeção. |
 
 ## Sessão 2026-10-03 — C64: conciliação de notificações contra o provedor
 
@@ -1133,3 +1193,29 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Bloqueios | C70/C71/C73/C73a/C82b (lane do Codex, drafts #134/#135); C75/C78/C81b (A13/ORD-Q02); C03 (revisão visual); C04/C45/C63/C89 (credenciais de sandbox); C31/C32/C84 (política de cupom, PR #125 em draft); C24a/C25/C29 (revisão das specs). Daí dependem C79 (traces e instrumentação de frete/notificações), C79a (traces), C83 (etiquetas), C85–C88, C90–C98. |
 | Migrations | V36 (`payment_admin_lookup_request`) e V37 (`event_replay_request`) no main; os drafts #134/#135 usam V35/V36 e precisam renumerar ao mesclar. |
 | Próximo passo | Destravar as dependências externas acima; em seguida C94 (após C70 e C82b) e o fechamento da C79. |
+
+## Continuação 2026-10-07 — C70 sincronizada com main e migration V39
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | Merge commit de sincronização trouxe `main@d60c743` à branch C70 sem reescrever commits publicados; conflito do apêndice de `tasks/progress.md` foi resolvido preservando ambos os históricos, e `.env.example` reteve as configurações atuais das duas trilhas. A migration de shipping foi renumerada de V35 para V39 (V35–V38 já ocupadas); removido um índice parcial ainda sem consulta consumidora, que produzia definição textual diferente após `pg_restore`. |
+| Verificação | Após limpar apenas `backend/target`, `DatabaseUpgradeAndRestoreIT` 3/3 e `ShippingLabelOperationRepositoryIT` 10/10 passaram (13/13); Flyway validou e aplicou 30 migrations até V39. Spotless e Checkstyle ficaram sem violações no gate completo. Execução completa anterior ao ajuste do índice: 224 ITs, 223 passaram e uma falhou apenas pela representação `pg_get_indexdef` equivalente após restore. Ainda falta um gate completo verde após o ajuste. |
+| Limite | #134 permanece draft; o manifesto de pacotes completo ainda falta em `orders`, C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 foi sincronizada e seu CI está verde; a migration de tracking é V40 nessa cabeça. |
+| Próximo passo | Publicar a fatia de associação quote→order e, após a nova base C70, renumerar a migration C71 para não colidir. |
+
+## Atualização 2026-10-07 — associação imutável da cotação aceita
+
+| Item | Registro |
+|---|---|
+| Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. `PurchaseAcceptanceService` transporta a cotação já validada sem incluí-la no DTO público de resumo. O banco rejeita alteração posterior e restringe o campo a pedidos de entrega. |
+| Verificação | Red reproduzida em `OrderLifecycleIT` (campo era `null`); depois, `PurchaseAcceptanceIT` 8/8 e `OrderLifecycleIT` 8/8 passaram. Gate backend completo está em execução; ainda sem resultado final. |
+| Contrato | `SPEC-shipping.md` e C70 do plano esclarecem o que foi capturado e o que falta: geometria/fingerprint/alocação dos pacotes, manifesto completo e evidência C04. Sem isso, não inferir pacote↔etiqueta nem enviar escrita externa. |
+
+## Continuação 2026-10-08 — C70: manifesto imutável da cotação e do pedido
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | `shipping_quotes` agora persiste `package_manifest` (V41) com caixa, dimensões protegidas, peso com tara e alocação de SKU/quantidade. A cotação valida cobertura exata do provedor. No aceite, `AcceptedShippingQuote` copia a composição, adiciona nome/unidade/preço/valor declarado das linhas aceitas e fingerprint por pacote; `OrderFulfillmentPort.lock()` já devolvia esse objeto sob o lock. A resposta pública das opções usa DTO sem manifesto. Cotações antigas sem manifesto falham fechadas. |
+| Verificação | Suíte backend completa: 167 testes unitários e 227 testes de integração, todos sem falhas; `ShippingQuoteRepositoryIT` comprovou round-trip JSONB e Flyway aplicou as migrations até V41. A primeira execução de `verify` chegou ao fim dos testes e falhou apenas no Spotless por ordem de imports; após `spotless:apply`, `verify -DskipTests` passou com Checkstyle e Spotless limpos. `aislop scan --changes --json`: score 100, zero achados. |
+| Limite | Sem produtor de cotações conectado à jornada, a nova persistência ainda não é exercitada pelo fluxo de cotação real. C04, campos de contato/fiscais exigidos pelo provedor, mapeamento pacote↔etiqueta e orquestração administrativa seguem pendentes. PR #134 permanece draft e C70 aberta. |
+| Próximo passo | Renumerar a migration de tracking da C71 de V41 para V42 sem incluir outras alterações locais dessa worktree; seguir com produtor real de cotações e integração operacional sob os gates de C04. |

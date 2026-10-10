@@ -53,7 +53,12 @@ public class DeliveryOptionsService {
     private ShippingQuote toDomain(ShippingQuoteEntity entity) {
         try {
             var sequences = objectMapper.readValue(entity.getPackageSequences(), new TypeReference<List<Integer>>() {});
-            return entity.toDomain(sequences);
+            var packages = objectMapper.readValue(
+                    entity.getPackageManifest(), new TypeReference<List<ShippingQuote.PackageManifest>>() {});
+            if (packages == null || packages.isEmpty()) {
+                throw new IllegalStateException("stored shipping package manifest is missing");
+            }
+            return entity.toDomain(sequences, packages);
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("stored shipping package sequence is invalid", exception);
         }
