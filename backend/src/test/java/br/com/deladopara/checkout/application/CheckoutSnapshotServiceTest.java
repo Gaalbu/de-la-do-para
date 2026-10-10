@@ -76,6 +76,7 @@ class CheckoutSnapshotServiceTest {
                 5,
                 1,
                 java.util.List.of(1),
+                manifest(1),
                 Instant.parse("2026-09-22T12:00:00Z"),
                 Instant.parse("2026-09-22T13:00:00Z"));
         Mockito.when(snapshots.findByIdAndGuestSessionKey(snapshotId, sessionKey))
@@ -92,5 +93,20 @@ class CheckoutSnapshotServiceTest {
         assertThat(service.selectDeliveryOption(sessionId, snapshotId, 4, quoteId, "fingerprint"))
                 .isSameAs(quote);
         Mockito.verify(deliveryOptions).select(snapshotId, 4, quoteId, "fingerprint");
+    }
+
+    private static java.util.List<ShippingQuote.PackageManifest> manifest(int quantity) {
+        var plan = br.com.deladopara.shipping.domain.PackageComposer.compose(
+                        java.util.List.of(new br.com.deladopara.shipping.domain.PackageComposer.Line(
+                                UUID.randomUUID(),
+                                br.com.deladopara.shipping.domain.PackageComposer.Category.CRAFT,
+                                false,
+                                quantity,
+                                100,
+                                80,
+                                50,
+                                500)))
+                .get(0);
+        return java.util.List.of(ShippingQuote.PackageManifest.from(plan));
     }
 }

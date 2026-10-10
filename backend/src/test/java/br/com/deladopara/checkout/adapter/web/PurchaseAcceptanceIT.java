@@ -252,13 +252,17 @@ class PurchaseAcceptanceIT {
         jdbc.update(
                 "INSERT INTO shipping_quotes (id, snapshot_id, snapshot_version, destination_postal_code,"
                         + " input_fingerprint, service_id, service_name, price_cents, delivery_days,"
-                        + " preparation_days, package_sequences, created_at, expires_at)"
+                        + " preparation_days, package_sequences, package_manifest, created_at, expires_at)"
                         + " VALUES (?, ?::uuid, ?::bigint, '66053000', ?, 'sandbox-pac', 'Sandbox PAC', 2590,"
-                        + " 5, 2, '[1]'::jsonb, now(), now() + interval '1 hour')",
+                        + " 5, 2, '[1]'::jsonb, ?::jsonb, now(), now() + interval '1 hour')",
                 quoteId,
                 snapshot[0],
                 snapshot[1],
-                fingerprint);
+                fingerprint,
+                "[{\"sequence\":1,\"boxCode\":\"P\",\"category\":\"FOOD\",\"fragile\":false,"
+                        + "\"lengthMm\":110,\"widthMm\":90,\"heightMm\":60,\"totalWeightGrams\":1150,\"lines\":["
+                        + "{\"skuId\":\"%s\",\"quantity\":1},{\"skuId\":\"%s\",\"quantity\":1}]}]"
+                                .formatted(farinha, farinha));
         var summary = perform(get("/api/v1/checkout/" + snapshot[0] + "/summary")
                         .param("snapshotVersion", snapshot[1])
                         .param("mode", "DELIVERY")
@@ -305,6 +309,18 @@ class PurchaseAcceptanceIT {
                 .contains(fingerprint)
                 .contains("sandbox-pac")
                 .contains("[1]");
+        assertThat((String) JsonPath.read(acceptedQuote, "$.packages[0].fingerprint"))
+                .isNotBlank();
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].lengthMm"))
+                .isEqualTo(110);
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].totalWeightGrams"))
+                .isEqualTo(1150);
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].lines[0].quantity"))
+                .isEqualTo(2);
+        assertThat((Integer) JsonPath.read(acceptedQuote, "$.packages[0].lines[0].declaredValueCents"))
+                .isEqualTo(3600);
+        assertThat((String) JsonPath.read(acceptedQuote, "$.packages[0].lines[0].productName"))
+                .isEqualTo("Farinha d'água");
     }
 
     @Test
