@@ -1,0 +1,182 @@
+<main class="admin" aria-labelledby="shipping-title">
+  <p><a routerLink="/admin">← Voltar à administração</a></p>
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Painel administrativo</p>
+      <h1 id="shipping-title">Expedição e retirada</h1>
+      <p>Avance pedidos de retirada conforme o estado registrado no pedido.</p>
+    </div>
+    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Atualizando…' : 'Atualizar pedidos' }}
+    </button>
+  </header>
+
+  <p class="availability-note">
+    Este painel opera retiradas locais. Ações de envio por transportadora ainda não estão
+    disponíveis.
+  </p>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="notice" role="status">{{ notice() }}</p>
+  }
+
+  <section aria-labelledby="pickups-title">
+    <h2 id="pickups-title">Pedidos para retirada</h2>
+    @if (loading() && orders().length === 0) {
+      <p role="status">Carregando pedidos…</p>
+    } @else if (orders().length === 0) {
+      <p>Nenhum pedido de retirada nesta página.</p>
+    } @else {
+      <ul class="order-list">
+        @for (order of orders(); track order.id) {
+          <li>
+            <article class="order-card" [attr.aria-label]="'Pedido ' + order.id">
+              <header class="order-heading">
+                <div>
+                  <h3>
+                    Pedido <code>{{ order.id }}</code>
+                  </h3>
+                  <p>
+                    <strong>{{ statusLabel(order.status) }}</strong>
+                  </p>
+                </div>
+                <p class="total">{{ formatPrice(order.totalCents) }}</p>
+              </header>
+              <p>
+                {{ order.itemCount }} {{ order.itemCount === 1 ? 'item' : 'itens' }} · criado em
+                {{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+              </p>
+              <button
+                type="button"
+                class="secondary"
+                (click)="toggleItems(order)"
+                [attr.aria-expanded]="expandedOrderId() === order.id"
+                [disabled]="loadingDetailsId() !== null"
+              >
+                {{
+                  expandedOrderId() === order.id
+                    ? 'Ocultar itens'
+                    : loadingDetailsId() === order.id
+                      ? 'Carregando itens…'
+                      : 'Ver itens'
+                }}
+              </button>
+              @if (expandedOrderId() === order.id) {
+                <section class="item-details" [attr.aria-label]="'Itens do pedido ' + order.id">
+                  @if (detailsError()) {
+                    <p class="error" role="alert">{{ detailsError() }}</p>
+                    <button type="button" class="secondary" (click)="loadItems(order)">
+                      Tentar carregar itens
+                    </button>
+                  } @else if (loadingDetailsId() === order.id) {
+                    <p role="status">Carregando itens…</p>
+                  } @else if (orderDetails()[order.id]; as details) {
+                    <ul>
+                      @for (item of details.items; track $index) {
+                        <li>{{ item.quantity }} × {{ item.productName }} — {{ item.skuLabel }}</li>
+                      }
+                    </ul>
+                  }
+                </section>
+              }
+
+              @if (order.status === 'PAID') {
+                <button
+                  type="button"
+                  (click)="startPreparation(order)"
+                  [disabled]="busyOrderId() !== null || loading()"
+                >
+                  {{ busyOrderId() === order.id ? 'Registrando…' : 'Iniciar preparação' }}
+                </button>
+              } @else if (order.status === 'PREPARING') {
+                <button
+                  type="button"
+                  (click)="markReady(order)"
+                  [disabled]="busyOrderId() !== null || loading()"
+                >
+                  {{ busyOrderId() === order.id ? 'Registrando…' : 'Marcar pronto para retirada' }}
+                </button>
+              } @else if (order.status === 'READY_FOR_PICKUP') {
+                @if (confirmingOrderId() === order.id) {
+                  <section class="confirm" [attr.aria-labelledby]="'confirm-title-' + order.id">
+                    <h4 [id]="'confirm-title-' + order.id">Confirmar retirada</h4>
+                    <p>
+                      Peça ao cliente o código de retirada e informe-o aqui. A confirmação encerra o
+                      pedido.
+                    </p>
+                    <label [for]="'pickup-code-' + order.id"
+                      >Código de retirada informado pelo cliente</label
+                    >
+                    <input
+                      [id]="'pickup-code-' + order.id"
+                      name="pickupCode"
+                      [(ngModel)]="pickupCode"
+                      required
+                      minlength="10"
+                      maxlength="10"
+                      pattern="[A-Za-z0-9]{10}"
+                      autocomplete="off"
+                      autocapitalize="characters"
+                    />
+                    <div class="actions">
+                      <button
+                        type="button"
+                        (click)="confirmPickup(order)"
+                        [disabled]="
+                          busyOrderId() !== null ||
+                          loading() ||
+                          !/^[A-Za-z0-9]{10}$/.test(pickupCode)
+                        "
+                      >
+                        {{ busyOrderId() === order.id ? 'Registrando…' : 'Registrar retirada' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="secondary"
+                        (click)="cancelConfirmation()"
+                        [disabled]="busyOrderId() !== null || loading()"
+                      >
+                        Voltar
+                      </button>
+                    </div>
+                  </section>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="startConfirmation(order)"
+                    [disabled]="busyOrderId() !== null || loading()"
+                  >
+                    Confirmar retirada
+                  </button>
+                }
+              }
+            </article>
+          </li>
+        }
+      </ul>
+
+      <nav class="pagination" aria-label="Paginação de pedidos">
+        <button
+          type="button"
+          class="secondary"
+          (click)="load(page() - 1)"
+          [disabled]="loading() || page() === 0"
+        >
+          Anterior
+        </button>
+        <span>Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+        <button
+          type="button"
+          class="secondary"
+          (click)="load(page() + 1)"
+          [disabled]="loading() || page() + 1 >= totalPages()"
+        >
+          Próxima
+        </button>
+      </nav>
+    }
+  </section>
+</main>
