@@ -1158,8 +1158,8 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Item | Registro |
 |---|---|
 | Base | PR #135 continua draft e empilhada sobre C70 #134. Branch sincronizada com a cabeça atualizada do C70 por merge commit, sem reescrever commits publicados. |
-| Migration | `V36__shipping_tracking_events.sql` renumerada como `V40__shipping_tracking_events.sql`, após as migrations V35–V39 existentes na nova base. |
-| Verificação | Build limpo; `DatabaseUpgradeAndRestoreIT` 3/3, `ShippingLabelOperationRepositoryIT` 10/10 e `ShipmentTrackingServiceIT` 7/7. Restore aplicou 31 migrations até V40. Gates documental/contratos e CI da nova cabeça ainda pendentes. |
+| Migration | `V36__shipping_tracking_events.sql` renumerada como `V42__shipping_tracking_events.sql`, após V40 (cotação aceita) e V41 (manifesto de pacotes) do C70. |
+| Verificação | Build limpo na base anterior ao manifesto: `DatabaseUpgradeAndRestoreIT` 3/3, `ShippingLabelOperationRepositoryIT` 10/10 e `ShipmentTrackingServiceIT` 7/7; restore aplicou 31 migrations até V40. A nova cabeça com 33 migrations ainda precisa ser validada; gates documental/contratos e CI permanecem pendentes. |
 | Limite | C71 segue parcial até integração operacional, prova C04 ID↔volumes e evidência sandbox. |
 
 ## Continuação 2026-10-07 — C70: contrato do manifesto imutável
@@ -1220,13 +1220,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 |---|---|
 | Mudanças | Merge commit de sincronização trouxe `main@d60c743` à branch C70 sem reescrever commits publicados; conflito do apêndice de `tasks/progress.md` foi resolvido preservando ambos os históricos, e `.env.example` reteve as configurações atuais das duas trilhas. A migration de shipping foi renumerada de V35 para V39 (V35–V38 já ocupadas); removido um índice parcial ainda sem consulta consumidora, que produzia definição textual diferente após `pg_restore`. |
 | Verificação | Após limpar apenas `backend/target`, `DatabaseUpgradeAndRestoreIT` 3/3 e `ShippingLabelOperationRepositoryIT` 10/10 passaram (13/13); Flyway validou e aplicou 30 migrations até V39. Spotless e Checkstyle ficaram sem violações no gate completo. Execução completa anterior ao ajuste do índice: 224 ITs, 223 passaram e uma falhou apenas pela representação `pg_get_indexdef` equivalente após restore. Ainda falta um gate completo verde após o ajuste. |
-| Limite | #134 permanece draft; o manifesto de pacotes completo ainda falta em `orders`, C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 foi sincronizada e seu CI está verde; a migration de tracking é V40 nessa cabeça. |
+| Limite | #134 permanece draft; C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 foi sincronizada e seu CI está verde na cabeça anterior; após o manifesto, tracking usa V42 e precisa de CI atualizado. |
 | Próximo passo | Publicar a fatia de associação quote→order e, após a nova base C70, renumerar a migration C71 para não colidir. |
 
 ## Atualização 2026-10-07 — associação imutável da cotação aceita
 
 | Item | Registro |
 |---|---|
-| Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. `PurchaseAcceptanceService` transporta a cotação já validada sem incluí-la no DTO público de resumo. O banco rejeita alteração posterior e restringe o campo a pedidos de entrega. |
+| Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. O manifesto imutável da cotação foi adicionado em V41 pelo C70; tracking C71 usa V42. |
 | Verificação | Red reproduzida em `OrderLifecycleIT` (campo era `null`); depois, `PurchaseAcceptanceIT` 8/8 e `OrderLifecycleIT` 8/8 passaram. Gate backend completo está em execução; ainda sem resultado final. |
 | Contrato | `SPEC-shipping.md` e C70 do plano esclarecem o que foi capturado e o que falta: geometria/fingerprint/alocação dos pacotes, manifesto completo e evidência C04. Sem isso, não inferir pacote↔etiqueta nem enviar escrita externa. |
