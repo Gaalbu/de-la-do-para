@@ -1159,7 +1159,7 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 |---|---|
 | Base | PR #135 continua draft e empilhada sobre C70 #134. Branch sincronizada com a cabeça atualizada do C70 por merge commit, sem reescrever commits publicados. |
 | Migration | `V36__shipping_tracking_events.sql` renumerada como `V42__shipping_tracking_events.sql`, após V40 (cotação aceita) e V41 (manifesto de pacotes) do C70. |
-| Verificação | Build limpo na base anterior ao manifesto: `DatabaseUpgradeAndRestoreIT` 3/3, `ShippingLabelOperationRepositoryIT` 10/10 e `ShipmentTrackingServiceIT` 7/7; restore aplicou 31 migrations até V40. A nova cabeça com 33 migrations ainda precisa ser validada; gates documental/contratos e CI permanecem pendentes. |
+| Verificação | Na base combinada, `GOMAXPROCS=1 JAVA_TOOL_OPTIONS=-Xint ./backend/mvnw -B -Dmaven.repo.local=/tmp/de-la-do-para-m2 -DargLine=-Xint -f backend/pom.xml -Dtest=DatabaseUpgradeAndRestoreIT,ShippingLabelOperationRepositoryIT,ShipmentTrackingServiceIT -Dit.test=DatabaseUpgradeAndRestoreIT,ShippingLabelOperationRepositoryIT,ShipmentTrackingServiceIT clean verify`: `BUILD SUCCESS`; 20/20 testes de integração (restore 3, persistência de etiqueta 10, tracking 7), Spotless 342 arquivos limpos e Checkstyle 0 violações. Flyway validou 33 migrations e atualizou/restaurou até V42. CI da nova cabeça ainda pendente. |
 | Limite | C71 segue parcial até integração operacional, prova C04 ID↔volumes e evidência sandbox. |
 
 ## Continuação 2026-10-07 — C70: contrato do manifesto imutável
