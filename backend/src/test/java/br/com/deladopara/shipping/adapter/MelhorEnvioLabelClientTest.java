@@ -24,6 +24,7 @@ class MelhorEnvioLabelClientTest {
     private static final String CART_URL = "https://sandbox.melhorenvio.com.br/api/v2/me/cart";
     private static final String CHECKOUT_URL = "https://sandbox.melhorenvio.com.br/api/v2/me/shipment/checkout";
     private static final String GENERATE_URL = "https://sandbox.melhorenvio.com.br/api/v2/me/shipment/generate";
+    private static final String TRACKING_URL = "https://sandbox.melhorenvio.com.br/api/v2/me/shipment/tracking";
     private static final String USER_AGENT = "De La do Pará (suporte@example.com)";
 
     private final RestClient.Builder builder = RestClient.builder();
@@ -86,6 +87,21 @@ class MelhorEnvioLabelClientTest {
                 .isTrue();
         assertThat(client.generate(List.of("label-2")).body().path("result").asBoolean())
                 .isTrue();
+        server.verify();
+    }
+
+    @Test
+    void queriesOneKnownShipmentIdPerTrackingRequest() {
+        server.expect(requestTo(TRACKING_URL))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("{\"orders\":[\"label-3\"]}"))
+                .andRespond(withSuccess("""
+                        {"label-3":{"id":"label-3","status":"posted","tracking":"ME123"}}
+                        """, MediaType.APPLICATION_JSON));
+
+        var response = client.tracking("label-3");
+
+        assertThat(response.body().path("label-3").path("status").asText()).isEqualTo("posted");
         server.verify();
     }
 

@@ -1142,6 +1142,26 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Remoto | Commits `467f10f` (implementação/testes/configuração) e `532b391` (spec/integração/progresso) enviados em `codex/c70-shipping-label-lifecycle`. PR #134 aberta em draft. CI no SHA `532b391`: backend, frontend, contracts, docs, security, commit-policy e quality-gate passaram (7/7). |
 | Próximo passo | Manter C70 aberta e o PR em draft; ligar ao manifesto imutável do seam `orders` quando estiver disponível, implementar orquestração/UI e executar C04 antes da homologação. |
 
+## Continuação 2026-10-05 — C71: ingestão autenticada de eventos
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Worktree isolado `/home/gaalbu/codigos/de-la-do-para-wt/c71-shipment-tracking`, branch `codex/c71-shipment-tracking` empilhada sobre C70 `7647120`. |
+| Tarefa | Persistir andamento de tracking por conjunto estável de sequências associado ao ID de etiqueta, com prevenção de regressão e entrada externa autenticada. |
+| Mudanças | Adicionados domínio `ShipmentTracking`, migration `V36` para eventos deduplicados por hash do corpo e estado mais recente por ID de envio, serviço transacional ligado somente a uma operação `GENERATE/SUCCEEDED`, controller de webhook Melhor Envio com limite de 64 KiB e HMAC-SHA256 de `X-ME-Signature`, cliente de consulta por um ID, validador da chave e ID interno da resposta, e sincronizador opt-in que persiste status conhecido na hora local de observação. Cancelamento fica terminal; uma atualização posterior conflitante preserva o cancelamento e sinaliza exceção. OpenAPI documenta webhook e eventos; `.env.example`, guia e spec documentam segredo, resposta e limites. O corpo bruto/code de tracking não é persistido. |
+| Verificação | Domínio 5/5, sync service 2/2, cliente HTTP Melhor Envio 8/8, controller webhook 4/4, Testcontainers PostgreSQL + MockMvc 7/7; `RouteContractCoverageTest` passou. `clean verify` focado passou com 19 unitários, 7 integrações, JaCoCo, Spotless e Checkstyle sem violações; após tornar cancelamento terminal, `ShipmentTrackingTest` passou 6/6, Spotless e diff-check passaram. `scripts/verify.sh contracts` passou (8 avisos Redocly preexistentes), `docs:check` passou (26 Markdown). `aislop` 100/100 sem diagnósticos nesta revisão; aviso de URL fixa sandbox havia sido verificado como falso positivo em revisão anterior. CI no head `ff9c8f0` passou 7/7: backend, frontend, contracts, docs, security, commit-policy e quality-gate. |
+| Limite | C71 segue parcial: nenhum sandbox chamado. C04 deve provar ID↔volume e granularidade de entregas parciais; fluxos de leitura/ação C73/C73a ainda não consomem esses estados. C70 permanece draft e não merged. Datas sem offset da amostra oficial são usadas apenas para identificar presença; snapshots REST usam `Clock` local como ordenação/observação. |
+| Próximo passo | Com C04, provar associação e status parcial no sandbox; integrar o estado aos fluxos dependentes C73/C73a antes de fechar C71. |
+
+## Atualização 2026-10-07 — sincronização de C71 com C70
+
+| Item | Registro |
+|---|---|
+| Base | PR #135 continua draft e empilhada sobre C70 #134. Branch sincronizada com a cabeça atualizada do C70 por merge commit, sem reescrever commits publicados. |
+| Migration | `V36__shipping_tracking_events.sql` renumerada como `V42__shipping_tracking_events.sql`, após V40 (cotação aceita) e V41 (manifesto de pacotes) do C70. |
+| Verificação | Na base combinada, `GOMAXPROCS=1 JAVA_TOOL_OPTIONS=-Xint ./backend/mvnw -B -Dmaven.repo.local=/tmp/de-la-do-para-m2 -DargLine=-Xint -f backend/pom.xml -Dtest=DatabaseUpgradeAndRestoreIT,ShippingLabelOperationRepositoryIT,ShipmentTrackingServiceIT -Dit.test=DatabaseUpgradeAndRestoreIT,ShippingLabelOperationRepositoryIT,ShipmentTrackingServiceIT clean verify`: `BUILD SUCCESS`; 20/20 testes de integração (restore 3, persistência de etiqueta 10, tracking 7), Spotless 342 arquivos limpos e Checkstyle 0 violações. Flyway validou 33 migrations e atualizou/restaurou até V42. CI da nova cabeça ainda pendente. |
+| Limite | C71 segue parcial até integração operacional, prova C04 ID↔volumes e evidência sandbox. |
+
 ## Continuação 2026-10-07 — C70: contrato do manifesto imutável
 
 | Campo | Conteúdo |
@@ -1200,14 +1220,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 |---|---|
 | Mudanças | Merge commit de sincronização trouxe `main@d60c743` à branch C70 sem reescrever commits publicados; conflito do apêndice de `tasks/progress.md` foi resolvido preservando ambos os históricos, e `.env.example` reteve as configurações atuais das duas trilhas. A migration de shipping foi renumerada de V35 para V39 (V35–V38 já ocupadas); removido um índice parcial ainda sem consulta consumidora, que produzia definição textual diferente após `pg_restore`. |
 | Verificação | Após limpar apenas `backend/target`, `DatabaseUpgradeAndRestoreIT` 3/3 e `ShippingLabelOperationRepositoryIT` 10/10 passaram (13/13); Flyway validou e aplicou 30 migrations até V39. Spotless e Checkstyle ficaram sem violações no gate completo. Execução completa anterior ao ajuste do índice: 224 ITs, 223 passaram e uma falhou apenas pela representação `pg_get_indexdef` equivalente após restore. Ainda falta um gate completo verde após o ajuste. |
-| Limite | #134 permanece draft; o manifesto de pacotes completo ainda falta em `orders`, C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 foi sincronizada e seu CI está verde; a migration de tracking é V40 nessa cabeça. |
+| Limite | #134 permanece draft; C04 não foi exercitado e a orquestração administrativa não existe. A PR #135 foi sincronizada e seu CI está verde na cabeça anterior; após o manifesto, tracking usa V42 e precisa de CI atualizado. |
 | Próximo passo | Publicar a fatia de associação quote→order e, após a nova base C70, renumerar a migration C71 para não colidir. |
 
 ## Atualização 2026-10-07 — associação imutável da cotação aceita
 
 | Item | Registro |
 |---|---|
-| Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. `PurchaseAcceptanceService` transporta a cotação já validada sem incluí-la no DTO público de resumo. O banco rejeita alteração posterior e restringe o campo a pedidos de entrega. |
+| Implementação | `orders` agora tipa `AcceptedShippingQuote`, persiste a projeção em `purchase_order.accepted_shipping_quote` (V40) e a expõe por `OrderFulfillmentPort.lock()` na mesma transação. O manifesto imutável da cotação foi adicionado em V41 pelo C70; tracking C71 usa V42. |
 | Verificação | Red reproduzida em `OrderLifecycleIT` (campo era `null`); depois, `PurchaseAcceptanceIT` 8/8 e `OrderLifecycleIT` 8/8 passaram. Gate backend completo está em execução; ainda sem resultado final. |
 | Contrato | `SPEC-shipping.md` e C70 do plano esclarecem o que foi capturado e o que falta: geometria/fingerprint/alocação dos pacotes, manifesto completo e evidência C04. Sem isso, não inferir pacote↔etiqueta nem enviar escrita externa. |
 
@@ -1218,4 +1238,4 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Mudanças | `shipping_quotes` agora persiste `package_manifest` (V41) com caixa, dimensões protegidas, peso com tara e alocação de SKU/quantidade. A cotação valida cobertura exata do provedor. No aceite, `AcceptedShippingQuote` copia a composição, adiciona nome/unidade/preço/valor declarado das linhas aceitas e fingerprint por pacote; `OrderFulfillmentPort.lock()` já devolvia esse objeto sob o lock. A resposta pública das opções usa DTO sem manifesto. Cotações antigas sem manifesto falham fechadas. |
 | Verificação | Suíte backend completa: 167 testes unitários e 227 testes de integração, todos sem falhas; `ShippingQuoteRepositoryIT` comprovou round-trip JSONB e Flyway aplicou as migrations até V41. A primeira execução de `verify` chegou ao fim dos testes e falhou apenas no Spotless por ordem de imports; após `spotless:apply`, `verify -DskipTests` passou com Checkstyle e Spotless limpos. `aislop scan --changes --json`: score 100, zero achados. |
 | Limite | Sem produtor de cotações conectado à jornada, a nova persistência ainda não é exercitada pelo fluxo de cotação real. C04, campos de contato/fiscais exigidos pelo provedor, mapeamento pacote↔etiqueta e orquestração administrativa seguem pendentes. PR #134 permanece draft e C70 aberta. |
-| Próximo passo | Renumerar a migration de tracking da C71 de V41 para V42 sem incluir outras alterações locais dessa worktree; seguir com produtor real de cotações e integração operacional sob os gates de C04. |
+| Próximo passo | Validar a cadeia combinada até V42 na branch C71; seguir com produtor real de cotações e integração operacional sob os gates de C04. |

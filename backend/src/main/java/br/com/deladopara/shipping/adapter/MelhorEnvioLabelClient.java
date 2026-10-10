@@ -20,6 +20,7 @@ public final class MelhorEnvioLabelClient {
     private static final String CART_PATH = "/cart";
     private static final String CHECKOUT_PATH = "/shipment/checkout";
     private static final String GENERATE_PATH = "/shipment/generate";
+    private static final String TRACKING_PATH = "/shipment/tracking";
     private static final Pattern USER_AGENT_EMAIL =
             Pattern.compile(".*[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}.*", Pattern.CASE_INSENSITIVE);
 
@@ -68,6 +69,10 @@ public final class MelhorEnvioLabelClient {
 
     public ProviderResponse generate(List<String> providerShipmentIds) {
         return post(GENERATE_PATH, ordersBody(providerShipmentIds), 200);
+    }
+
+    public ProviderResponse tracking(String providerShipmentId) {
+        return post(TRACKING_PATH, ordersBody(List.of(providerShipmentId)), 200);
     }
 
     private ProviderResponse post(String path, Object body, int expectedStatus) {
