@@ -77,6 +77,27 @@ ou reembolso parcial automático.
 - Pedido pronto fica guardado por três dias úteis; depois abre análise, sem
   cancelar, descartar ou reembolsar automaticamente, mantendo o estoque.
 
+### Consulta de progresso do comprador (C73a)
+
+- A tela de pedido lê a modalidade e o estado agregado apenas da API de pedidos.
+  Para `DELIVERY`, consulta `/api/v1/orders/{id}/shipping-progress` com a mesma
+  prova de acesso do pedido. A resposta privada e `no-store` contém somente
+  conjuntos de `packageSequences`, status sanitizado, sinal de exceção e hora
+  observada; IDs e corpos do provedor nunca são retornados.
+- Conjuntos de pacotes distintos são exibidos separadamente. Um conjunto
+  entregue não implica que o pedido inteiro foi entregue; somente `orders`,
+  depois que o manifesto imutável inteiro estiver resolvido, pode afirmar esse
+  resultado. Múltiplos IDs para as mesmas sequências permanecem em análise até
+  que a associação seja provada. Uma exceção permanece visível como análise.
+- Para `PICKUP`, a tela consulta `/api/v1/orders/{id}/pickup` somente no estado
+  `READY_FOR_PICKUP`. A rota existente verifica token de convidado ou sessão da
+  conta dona e devolve código, ponto, janela e prazo com `private, no-store`.
+  O código fica apenas no estado transitório da tela e não é persistido pelo
+  frontend.
+- A integração da consulta por IDs distintos e da entrega parcial do provedor
+  continua condicionada à evidência C04; os testes locais provam o contrato e a
+  separação de grupos persistidos, não a semântica do sandbox.
+
 ### Compra e geração de etiquetas (C70)
 
 - Iniciar somente para pedido pago na modalidade `DELIVERY`, por ação
