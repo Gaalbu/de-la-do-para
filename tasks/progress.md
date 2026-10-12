@@ -14,6 +14,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limites | A tela/rotas ainda não foram adicionadas neste slice. Cadastro preserva erro HTTP para a UI traduzir; nenhuma senha/token é gravado em storage ou log. Worktree não possui ainda CI remoto próprio. |
 | Próximo passo | Entregar formulário de cadastro acessível e depois rota `/verify-email` que leia e remova o token do fragmento antes de chamar o backend; então validar jornada browser e publicar PR C81 sobre C80. |
 
+## Continuação 2026-10-12 — C81 formulário de cadastro
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | Adicionada tela `/register` com validação de e-mail e tamanho de senha, confirmação de envio via e-mail, tratamento seguro de duplicidade/indisponibilidade e limpeza da senha após sucesso. Login agora oferece a rota de cadastro; compra continua explicitamente possível sem conta. |
+| Verificação | `npm run test:ci -- --include='src/app/features/identity/pages/register/register.component.spec.ts'`: 3/3 passaram (cadastro/sucesso, e-mail duplicado e senha inválida sem chamada à API). |
+| Limites | Link de verificação ainda aponta para rota a implementar; teste de browser e CI ficam para o fechamento da fatia. |
+| Próximo passo | Implementar `/verify-email` para consumir exclusivamente `#token=…`, limpar o fragmento do histórico e validar token ausente/expirado/sucesso. |
+
 ## Sessão 2026-10-05 — C76 registro e verificação de e-mail
 
 | Campo | Conteúdo |

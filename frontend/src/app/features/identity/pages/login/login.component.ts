@@ -41,6 +41,7 @@ import { IdentityService } from '../../services/identity.service';
           {{ loading() ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
+      <p>Não tem conta? <a routerLink="/register">Criar conta opcional</a></p>
       <p><a routerLink="/">Voltar à vitrine</a></p>
     </section>
   `,
