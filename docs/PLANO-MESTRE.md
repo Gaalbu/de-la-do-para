@@ -1843,6 +1843,7 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [ ] **Depende:** C69, C71, C72. **Alvos:** seção logística do pedido e teste; M.
 - **Aceite:** comprador acompanha modalidade e status por pacote; retirada informa ponto/prazo/código autorizado; falha ou entrega parcial não aparece como entrega total.
 - **Verificar:** F/E; recarregar pedido em preparação e pedido entregue, com identidades distintas.
+- **Estado atual (2026-10-12):** **parcial** nesta branch empilhada sobre C71. Endpoint autenticado e sanitizado por conjunto de pacotes, seção de entrega e consulta do código de retirada em `READY_FOR_PICKUP`, com testes unitários/integração adicionados. C04/sandbox ainda não provou a relação real ID↔volume nem a entrega parcial; UI, OpenAPI e testes ainda precisam dos gates frontend/contratos e CI. Não fechar C73a nem C71.
 
 ## Fase 9 — notificações e conta opcional
 

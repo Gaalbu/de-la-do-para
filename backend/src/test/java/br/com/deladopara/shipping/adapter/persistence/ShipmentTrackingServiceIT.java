@@ -2,9 +2,12 @@ package br.com.deladopara.shipping.adapter.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.deladopara.orders.application.OrderAccessTokens;
 import br.com.deladopara.orders.domain.FulfillmentMode;
 import br.com.deladopara.orders.domain.OrderStatus;
 import br.com.deladopara.shipping.application.ShipmentTrackingService;
@@ -34,12 +37,15 @@ class ShipmentTrackingServiceIT {
     private static final String WEBHOOK_SECRET = "local-test-secret";
     private static final Instant CREATED_AT = Instant.parse("2026-10-05T12:00:00Z");
     private final ShipmentTrackingService tracking;
+    private final OrderAccessTokens accessTokens;
     private final JdbcTemplate jdbc;
     private final MockMvc mockMvc;
 
     @Autowired
-    ShipmentTrackingServiceIT(ShipmentTrackingService tracking, JdbcTemplate jdbc, MockMvc mockMvc) {
+    ShipmentTrackingServiceIT(
+            ShipmentTrackingService tracking, OrderAccessTokens accessTokens, JdbcTemplate jdbc, MockMvc mockMvc) {
         this.tracking = tracking;
+        this.accessTokens = accessTokens;
         this.jdbc = jdbc;
         this.mockMvc = mockMvc;
     }
@@ -110,6 +116,80 @@ class ShipmentTrackingServiceIT {
     }
 
     @Test
+    @Transactional
+    void exposesAuthorizedPackageProgressWithoutProviderIdentifiers() throws Exception {
+        var label = generatedLabel();
+        tracking.record(label.providerId, "order.posted", CREATED_AT, body("posted-with-secret-code"));
+        var token = accessTokens.issue(label.orderId);
+
+        mockMvc.perform(get("/api/v1/orders/{id}/shipping-progress", label.orderId)
+                        .header("X-Order-Token", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fulfillmentMode").value("DELIVERY"))
+                .andExpect(jsonPath("$.shipments[0].packageSequences[0]").value(1))
+                .andExpect(jsonPath("$.shipments[0].packageSequences[1]").value(2))
+                .andExpect(jsonPath("$.shipments[0].status").value("IN_TRANSIT"))
+                .andExpect(jsonPath("$.shipments[0].exception").value(false))
+                .andExpect(jsonPath("$.shipments[0].providerShipmentId").doesNotExist())
+                .andExpect(result -> {
+                    assertThat(result.getResponse().getHeader("Cache-Control")).contains("no-store");
+                    assertThat(result.getResponse().getContentAsString()).doesNotContain(label.providerId);
+                    assertThat(result.getResponse().getContentAsString()).doesNotContain("posted-with-secret-code");
+                });
+    }
+
+    @Test
+    @Transactional
+    void keepsPartialDeliveryVisibleAsSeparatePackageGroups() throws Exception {
+        var first = generatedLabel();
+        var second = generatedLabelForOrder(first.orderId, "[3]");
+        tracking.record(first.providerId, "order.delivered", CREATED_AT, body("first-delivered"));
+        tracking.record(second.providerId, "order.posted", CREATED_AT, body("second-posted"));
+        jdbc.update("UPDATE purchase_order SET status = ? WHERE id = ?", OrderStatus.DELIVERED.name(), first.orderId);
+        var token = accessTokens.issue(first.orderId);
+
+        mockMvc.perform(get("/api/v1/orders/{id}/shipping-progress", first.orderId)
+                        .header("X-Order-Token", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shipments.length()").value(2))
+                .andExpect(jsonPath("$.shipments[0].packageSequences[0]").value(1))
+                .andExpect(jsonPath("$.shipments[0].status").value("DELIVERED"))
+                .andExpect(jsonPath("$.shipments[1].packageSequences[0]").value(3))
+                .andExpect(jsonPath("$.shipments[1].status").value("IN_TRANSIT"));
+    }
+
+    @Test
+    @Transactional
+    void keepsConflictingProviderIdsForOnePackageGroupUnderReview() throws Exception {
+        var delivered = generatedLabel();
+        tracking.record(delivered.providerId, "order.delivered", CREATED_AT, body("delivered-id"));
+        jdbc.update(
+                "INSERT INTO shipping_package_tracking (provider_shipment_id, order_id, shipment_unit_id,"
+                        + " package_sequences, event_type, progress, exception, occurred_at)"
+                        + " VALUES (?, ?, ?, '[1,2]'::jsonb, 'order.posted', 'IN_TRANSIT', false, ?)",
+                "shipment-conflicting-" + UUID.randomUUID(),
+                delivered.orderId,
+                delivered.unitId,
+                Timestamp.from(CREATED_AT.plusSeconds(1)));
+        var token = accessTokens.issue(delivered.orderId);
+
+        mockMvc.perform(get("/api/v1/orders/{id}/shipping-progress", delivered.orderId)
+                        .header("X-Order-Token", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shipments.length()").value(1))
+                .andExpect(jsonPath("$.shipments[0].status").value("UNDER_REVIEW"))
+                .andExpect(jsonPath("$.shipments[0].exception").value(true));
+    }
+
+    @Test
+    void doesNotExposePackageProgressToAnAnonymousCaller() throws Exception {
+        var label = generatedLabel();
+
+        mockMvc.perform(get("/api/v1/orders/{id}/shipping-progress", label.orderId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void rejectsUnknownShipmentIdsAndRollsBackTheEventLedgerInsert() {
         assertThatThrownBy(() -> tracking.record("unmapped-id", "order.posted", CREATED_AT, body("unknown")))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -149,10 +229,36 @@ class ShipmentTrackingServiceIT {
 
     private GeneratedLabel generatedLabel() {
         var orderId = UUID.randomUUID();
-        var unitId = UUID.randomUUID();
+        insertOrder(orderId);
+        return generatedLabelForOrder(orderId, "[1,2]");
+    }
+
+    private GeneratedLabel generatedLabelForOrder(UUID orderId, String packages) {
+        return generatedLabelForOrder(orderId, packages, UUID.randomUUID());
+    }
+
+    private GeneratedLabel generatedLabelForOrder(UUID orderId, String packages, UUID unitId) {
         var providerId = "shipment-" + UUID.randomUUID();
         var operationId = UUID.randomUUID();
         var correlationId = UUID.randomUUID();
+        jdbc.update(
+                "INSERT INTO shipping_label_operation (id, order_id, shipment_unit_id, package_sequences,"
+                        + " step, state, correlation_id, provider_shipment_id, created_at, updated_at, requested_at,"
+                        + " resolved_at) VALUES (?, ?, ?, ?::jsonb, 'GENERATE', 'SUCCEEDED', ?, ?, ?, ?, ?, ?)",
+                operationId,
+                orderId,
+                unitId,
+                packages,
+                correlationId,
+                providerId,
+                Timestamp.from(CREATED_AT),
+                Timestamp.from(CREATED_AT.plusSeconds(3)),
+                Timestamp.from(CREATED_AT.plusSeconds(1)),
+                Timestamp.from(CREATED_AT.plusSeconds(3)));
+        return new GeneratedLabel(orderId, unitId, providerId);
+    }
+
+    private void insertOrder(UUID orderId) {
         jdbc.update(
                 "INSERT INTO purchase_order (id, checkout_key, contact_email, fulfillment_mode, currency,"
                         + " subtotal_cents, shipping_cents, discount_cents, total_cents, preparation_days,"
@@ -165,20 +271,6 @@ class ShipmentTrackingServiceIT {
                 OrderStatus.PAID.name(),
                 Timestamp.from(CREATED_AT),
                 Timestamp.from(CREATED_AT));
-        jdbc.update(
-                "INSERT INTO shipping_label_operation (id, order_id, shipment_unit_id, package_sequences,"
-                        + " step, state, correlation_id, provider_shipment_id, created_at, updated_at, requested_at,"
-                        + " resolved_at) VALUES (?, ?, ?, '[1,2]'::jsonb, 'GENERATE', 'SUCCEEDED', ?, ?, ?, ?, ?, ?)",
-                operationId,
-                orderId,
-                unitId,
-                correlationId,
-                providerId,
-                Timestamp.from(CREATED_AT),
-                Timestamp.from(CREATED_AT.plusSeconds(3)),
-                Timestamp.from(CREATED_AT.plusSeconds(1)),
-                Timestamp.from(CREATED_AT.plusSeconds(3)));
-        return new GeneratedLabel(orderId, unitId, providerId);
     }
 
     private static byte[] body(String value) {

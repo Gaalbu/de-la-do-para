@@ -44,7 +44,11 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/sessions/current")
                         .authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*", "/api/v1/orders/*/pickup")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/orders/*",
+                                "/api/v1/orders/*/pickup",
+                                "/api/v1/orders/*/shipping-progress")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/cancellation")
                         .permitAll()

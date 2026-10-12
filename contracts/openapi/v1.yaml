@@ -654,6 +654,47 @@ paths:
           content:
             application/problem+json:
               schema: {$ref: '#/components/schemas/ProblemDetail'}
+  /api/v1/orders/{id}/shipping-progress:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getOrderShippingProgress
+      summary: Consultar o andamento de envio por conjunto de pacotes
+      description: >
+        Exige sessão da conta dona ou X-Order-Token daquele pedido. Disponível somente para DELIVERY.
+        Cada elemento representa o conjunto de sequências associado a uma operação de etiqueta conhecida;
+        conjuntos diferentes permanecem separados e exceções não significam entrega concluída. Não inclui IDs
+        do provedor nem corpos de eventos. Resposta private, no-store.
+      security:
+        - sessionCookie: []
+        - orderToken: []
+      parameters:
+        - in: header
+          name: X-Order-Token
+          required: false
+          schema: {type: string}
+      responses:
+        '200':
+          description: Estado sanitizado do envio, por conjunto de pacotes
+          headers:
+            Cache-Control:
+              schema: {type: string, example: 'private, no-store'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ShippingProgress'}
+        '401':
+          description: Prova de acesso ausente ou inválida (ORDER_003)
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404':
+          description: Pedido inexistente, de outra conta ou não elegível para este recurso
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
   /api/v1/orders/{id}/cancellation:
     parameters:
       - in: path
@@ -2509,6 +2550,33 @@ components:
         point: {type: string}
         window: {type: string}
         retentionBusinessDays: {type: integer, const: 3, description: Prazo de guarda aprovado; não representa uma data final calculada.}
+    ShippingProgress:
+      type: object
+      additionalProperties: false
+      required: [orderId, fulfillmentMode, shipments]
+      properties:
+        orderId: {type: string, format: uuid}
+        fulfillmentMode: {type: string, const: DELIVERY}
+        shipments:
+          type: array
+          items: {$ref: '#/components/schemas/ShipmentPackageProgress'}
+    ShipmentPackageProgress:
+      type: object
+      additionalProperties: false
+      required: [packageSequences, status, exception, updatedAt]
+      properties:
+        packageSequences:
+          type: array
+          minItems: 1
+          items: {type: integer, minimum: 1}
+        status:
+          type: string
+          enum: [PREPARING_LABEL, LABEL_CREATED, HANDED_TO_CARRIER, IN_TRANSIT, DELIVERED, UNDER_REVIEW, CANCELLED]
+        exception: {type: boolean}
+        updatedAt:
+          oneOf:
+            - {type: string, format: date-time}
+            - {type: 'null'}
     ConfirmPickupRequest:
       type: object
       additionalProperties: false
