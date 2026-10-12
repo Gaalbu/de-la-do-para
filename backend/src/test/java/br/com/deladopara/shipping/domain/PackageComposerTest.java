@@ -32,6 +32,10 @@ class PackageComposerTest {
         var small = PackageComposer.compose(
                 List.of(new PackageComposer.Line(FOOD, PackageComposer.Category.FOOD, false, 1, 100, 100, 100, 100)));
         assertThat(small.getFirst().boxCode()).isEqualTo("P");
+        assertThat(small.getFirst().lengthMm()).isEqualTo(250);
+        assertThat(small.getFirst().widthMm()).isEqualTo(190);
+        assertThat(small.getFirst().heightMm()).isEqualTo(130);
+        assertThat(small.getFirst().totalWeightGrams()).isEqualTo(250);
 
         assertThatThrownBy(() -> PackageComposer.compose(List.of(
                         new PackageComposer.Line(FOOD, PackageComposer.Category.FOOD, false, 1, 500, 100, 100, 100))))
