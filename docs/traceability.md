@@ -4,6 +4,19 @@ Criada em C02; atualizada a cada entrega, somente após evidência verificada.
 Planejamento aprovado não significa teste aprovado. Sem tokens, CPF, senhas
 ou payloads pessoais.
 
+## Auditoria funcional priorizada — 2026-10-12
+
+Escopo desta rodada: trilha de frete do checkout (C42–C44) e dependência imediata de expedição C70. Critério: seguir chamadas de produção do endpoint ao adapter/persistência; testes unitários, fixtures e UI com API interceptada comprovam somente os limites que exercitam.
+
+| Entrega | Estado funcional | Evidência inspecionada | Falta para aceitar |
+|---|---|---|---|
+| C42 — cotar no Melhor Envio Sandbox | Parcial | `MelhorEnvioSandboxAdapter` apenas interpreta um `sandboxPayload` já recebido; não há cliente HTTP de cotação nem chamada externa no caminho de produção. A documentação oficial descreve `POST /api/v2/me/shipment/calculate` no host sandbox, com volumes, origem/destino e `User-Agent`: https://docs.melhorenvio.com.br/reference/calculo-de-fretes-por-produtos | Cliente opt-in no sandbox, tratamento de timeout/HTTP/resposta e uma cotação real sanitizada; não alegar homologação sem conta/credencial C04. |
+| C43 — vincular e persistir cotação ao snapshot | Parcial | `CheckoutController.deliveryOptions` → `CheckoutSnapshotService.findDeliveryOptions` → `DeliveryOptionsService.findAvailable` somente consulta o banco. `ShippingQuoteService.persist` é chamado pelos testes, mas não por produtor de cotações de produção. | Conectar snapshot/composição/valores ao adaptador e persistir a resposta fora da transação de rede; cobrir mudança de snapshot, expiração e aceite sem inserir fixture manual. |
+| C44 — selecionar entrega no checkout | Parcial | A UI e a seleção consomem opções e os testes provam contratos/estados da interface; não encontrei fluxo de backend que abasteça essas opções em produção. | Jornada de navegador contra backend integrado que crie cotações, valide seleção e recalcule resumo; separar E2E interceptado da prova sandbox. |
+| C70 — criar etiquetas por pacote | Parcial / não aceito | PR #134 persiste estados de escrita e restringe o cliente ao sandbox; o seam de manifesto aceito existe na branch #134. Porém faltam chamada de produção que inicie o ciclo, orquestração administrativa e evidência C04; a spec proíbe inferir dados fiscais ou mapeamento pacote↔etiqueta. | Endpoint/orquestrador autenticado baseado no snapshot sob lock, prova de falha parcial/UNKNOWN e homologação com conta/dados autorizados; sem repetir escrita ambígua. |
+
+Esta rodada não revisa todas as entregas do plano. Não extrapolar estes achados para tarefas fora de C42–C44/C70.
+
 | Requisito / tarefa | Spec | Teste / verificação | Commit(s) | Evidência |
 |---|---|---|---|---|
 | C00a — repo e pré-requisitos | Plano §2 | `ls`, `git status`, versões de ferramentas | `7437919` (parte) | `tasks/progress.md` sessão bootstrap |
@@ -21,6 +34,7 @@ ou payloads pessoais.
 | C11 — contratos | `contracts/openapi/v1.yaml` | `contracts:check` generate+tsc | `d7b1afd` | PR #11 merged |
 | C11a — referência API | `docs/api-guide.md` | Redoc 40KB, stub WireMock | `0cac71d` | PR #12 merged |
 | C11b — harness contrato | `RouteContractCoverageTest` | `verify` + fixtures divergentes reprovam | `37f86ec` | PR #13 merged |
+| C42–C44 — cotação e seleção de frete | `SPEC-shipping.md`, `SPEC-checkout.md`, OpenAPI | Inspeção estática do grafo de chamadas: opção pública só lê `shipping_quotes`; adapter recebe payload em string; sem invocação de produção de `ShippingQuoteService.persist()` | reabertas pela auditoria de 2026-10-12 | Interface/persistência/parsing existem, mas a jornada de cotação está desconectada; ver auditoria funcional acima |
 | C14 — spec identity | `specs/SPEC-identity.md` | DOC: `docs:check` 24 OK, `verify docs/security` OK, CI 7/7 | `4b82a3f`, merge `2edd714` | PR #26 merged (`35548577157` success) |
 | C17 — spec catálogo/procedência | `specs/SPEC-catalog.md` | local `docs:check` 24 OK, `contracts:check` exit 0; CI 7/7 success (`35631089081`) | `4c424dc`; PR #30 merged (`87623af`) | Spec aprovada pelo usuário em 2026-09-21; CAT-Q01 respondida (só admin gere produtores, sem conta v1); C18 liberada |
 | C18 — persistência de produtores | `specs/SPEC-catalog.md`, migration V13 | `ProducerPersistenceIT`, `ProducerRepositoryIT`; PostgreSQL 18.6/Testcontainers; Flyway V13 + Hibernate validate | PR #31 merged (`bbd7a0c`) | UUID estável, slug único, origem/descrição, atualização verificados; publicação e CI remoto concluídos |

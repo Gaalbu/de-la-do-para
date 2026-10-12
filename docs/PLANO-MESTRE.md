@@ -1579,25 +1579,25 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C42 — `feat(shipping): quote sandbox freight through an adapter`
 
-- [x] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. Implementado e merged no PR #55 (`66a433c`).
-- Boundary sandbox implementado sem rede: contrato do adapter, configuração com timeout/credencial, parser Jackson com cobertura integral dos pacotes, custo/prazo positivos e validade futura; sem expor credenciais ou alterar carrinho.
+- [ ] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; PR #55 (`66a433c`) implementou somente parte da tarefa.
+- Boundary/parser sandbox foi implementado sem rede: contrato do adapter, configuração com timeout/credencial, parser Jackson com cobertura dos pacotes, custo/prazo positivos e validade futura; sem expor credenciais ou alterar carrinho. A chamada HTTP de cotação não está conectada ao fluxo de checkout.
 - **Aceite:** cotação respeita todos os pacotes/peso/dimensões/destino; parse valida cobertura/custos/prazos; timeout/credencial expirada/serviço ausente tratados.
-- **Verificar:** testes WireMock e uma cotação SB sanitizada; nenhuma chamada externa no teste comum.
+- **Verificar:** além dos testes WireMock, provar a jornada pelo endpoint com uma cotação SB sanitizada; nenhuma chamada externa no teste comum. Reabrir até existir cliente HTTP de cotação e fluxo opt-in funcional.
 
 ### C43 — `feat(shipping): bind delivery quotes to purchase snapshots`
 
-- [x] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; M. Implementado e merged nos PRs #56 (`8cbfbf0`) e #57 (`542ce2c`).
+- [ ] **Depende:** C39a, C42. **Alvos:** quote persistida, migration, aplicação/API e teste; PRs #56 (`8cbfbf0`) e #57 (`542ce2c`) entregaram persistência e leitura, mas não o fluxo completo.
 - Persistidos snapshotId/version, destino normalizado, fingerprint, serviço, custo, prazos, pacotes e validade; a entidade exige identidade do snapshot e rejeita validade inválida.
-- Serviço transacional grava apenas cotações ainda válidas e serializa a cobertura dos pacotes; endpoint de checkout permanece dependente do snapshot e da origem de cotação.
+- Serviço transacional grava apenas cotações ainda válidas e serializa a cobertura dos pacotes. A auditoria no código atual encontrou apenas chamadas de `ShippingQuoteService.persist()` em testes; não há produtor de cotação no caminho de produção que ligue o adapter a essa persistência. O GET de opções apenas lê cotações previamente gravadas.
 - **Aceite:** cotação vinculada a itens/endereço/composição dos pacotes; alteração invalida; custo total e prazos selecionados são verificados no servidor.
-- **Verificar:** BI(ShippingQuote), C e V12.
+- **Verificar:** BI(ShippingQuote), C e V12, incluindo criar cotação pelo fluxo real e aceitar o snapshot sem fixture inserida diretamente. Reabrir até esse caminho existir.
 
 ### C44 — `feat(checkout-ui): collect address and select delivery or pickup`
 
-- [x] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M. Implementado e integrado nos PRs #60–#62; merge final no commit `4551e24`, com CI `35772388503` verde.
+- [ ] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; PRs #60–#62 integraram a interface, mas a jornada de cotação real permanece incompleta por C42/C43.
 - Contrato preliminar criado em `specs/SPEC-checkout.md`: endereço sem inferência, opções persistidas, estado recuperável de cotação indisponível e invalidação por snapshot/endereço/modalidade.
 - **Aceite:** visitante compara modalidades, pacotes, prazos e custo total; cotação indisponível tem recuperação; CEP/endereço são validados sem inventar dados.
-- **Verificar:** F/E/A; troca de endereço/carrinho força nova cotação.
+- **Verificar:** F/E/A com provedor interceptado para UI e uma validação opt-in do sandbox; troca de endereço/carrinho força nova cotação. Testes de UI com API interceptada não comprovam a jornada integrada enquanto o backend não criar opções.
 
 **G3:** visitante monta carrinho, informa destino e compara frete/retirada, com custos claros antes do pagamento. Validar a jornada pelo navegador.
 

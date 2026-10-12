@@ -3,6 +3,19 @@
 Documento operacional previsto no plano mestre (§1 “Registro para continuidade”).
 Atualizar ao final de cada sessão, somente após evidência verificada.
 
+## Auditoria funcional 2026-10-12 — C42–C44 e C70 por prioridade
+
+| Campo | Conteúdo |
+|---|---|
+| Base | branch `codex/shipping-quotes-flow`, criada de `origin/main`; worktree isolada `/home/gaalbu/codigos/de-la-do-para-wt/validacao`. Checkout principal com alteração preexistente em `tasks/progress.md` preservado. |
+| Tarefa | Validar pela implementação as entregas mais críticas de frete e expedição; rodada parcial, sem declarar a auditoria do plano concluída. |
+| Evidência | No código de produção, `GET /api/v1/checkout/{snapshotId}/delivery-options` consulta `DeliveryOptionsService.findAvailable`; `MelhorEnvioSandboxAdapter.quote` apenas faz parse de texto fornecido; busca de referências mostra `ShippingQuoteService.persist` usado nos testes, sem caller de produção. A interface usa esse GET e seus testes interceptam as APIs. |
+| Resultado | C42, C43 e C44 funcionalmente parciais: não há geração de cotação conectada à jornada. C70 continua não aceito: PR #134 tem persistência/cliente de escrita sandbox, mas ainda falta orquestração administrativa e C04; manifesto não pode ser inferido do catálogo atual. Critérios detalhados registrados em `docs/traceability.md` e checkboxes de C42–C44 reabertos em `docs/PLANO-MESTRE.md`. |
+| Fonte externa | Documentação oficial atual do Melhor Envio: cotação é POST ao endpoint de cálculo sandbox; sem credenciais, nenhum resultado externo alegado. |
+| Verificação | Inspeção de chamadas de produção, controller, serviços, adapter, especificações e histórico das PRs #134/#135. Nenhum teste novo ou resultado sandbox foi alegado nesta rodada. |
+| Próximo passo | Implementar produtor/cliente opt-in de cotação e persistência ligada ao snapshot (C42/C43), então validar C44 por navegador integrado; retomar C70 após as bases de shipping e C04. |
+| Perguntas | Conta sandbox e dados autorizados de remetente continuam pendências operacionais previstas em C04; podem ser solicitados quando código e jornada opt-in estiverem prontos para homologação. |
+
 ## Sessão 2026-09-20 — bootstrap C00a/C00b
 
 | Campo | Conteúdo |
