@@ -9,9 +9,9 @@ import java.util.UUID;
 public final class PackageComposer {
 
     private static final List<Box> BOXES = List.of(
-            new Box("P", 240, 180, 120, 2_000, 150),
-            new Box("M", 300, 260, 200, 5_000, 250),
-            new Box("G", 400, 320, 300, 10_000, 400));
+            new Box("P", 240, 180, 120, 250, 190, 130, 2_000, 150),
+            new Box("M", 300, 260, 200, 310, 270, 210, 5_000, 250),
+            new Box("G", 400, 320, 300, 410, 330, 310, 10_000, 400));
 
     private PackageComposer() {}
 
@@ -131,9 +131,9 @@ public final class PackageComposer {
         private Box smallestBox() {
             return BOXES.stream()
                     .filter(candidate -> weightGrams + candidate.tareGrams() <= candidate.maxWeightGrams())
-                    .filter(candidate -> lengthMm <= candidate.lengthMm()
-                            && widthMm <= candidate.widthMm()
-                            && heightMm <= candidate.heightMm())
+                    .filter(candidate -> lengthMm <= candidate.innerLengthMm()
+                            && widthMm <= candidate.innerWidthMm()
+                            && heightMm <= candidate.innerHeightMm())
                     .findFirst()
                     .orElse(null);
         }
@@ -175,17 +175,26 @@ public final class PackageComposer {
         }
 
         public int lengthMm() {
-            return lengthMm;
+            return box.outerLengthMm();
         }
 
         public int widthMm() {
-            return widthMm;
+            return box.outerWidthMm();
         }
 
         public int heightMm() {
-            return heightMm;
+            return box.outerHeightMm();
         }
     }
 
-    private record Box(String code, int lengthMm, int widthMm, int heightMm, int maxWeightGrams, int tareGrams) {}
+    private record Box(
+            String code,
+            int innerLengthMm,
+            int innerWidthMm,
+            int innerHeightMm,
+            int outerLengthMm,
+            int outerWidthMm,
+            int outerHeightMm,
+            int maxWeightGrams,
+            int tareGrams) {}
 }
