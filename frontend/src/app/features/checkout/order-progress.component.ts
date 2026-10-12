@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 interface OrderProgress {
   id: string;
   status: string;
+  mode: 'DELIVERY' | 'PICKUP';
   totalCents: number;
   items: Array<{ productName: string; quantity: number; lineTotalCents: number }>;
   payment?: {
@@ -14,6 +15,22 @@ interface OrderProgress {
     checkoutUrl: string | null;
     checkoutExpiresAt: string | null;
   } | null;
+}
+
+interface ShippingProgress {
+  shipments: Array<{
+    packageSequences: number[];
+    status: string;
+    exception: boolean;
+    updatedAt: string | null;
+  }>;
+}
+
+interface PickupInfo {
+  code: string;
+  point: string;
+  window: string;
+  retentionBusinessDays: number;
 }
 
 @Component({
@@ -31,7 +48,7 @@ interface OrderProgress {
         </p>
         <button type="button" (click)="load()">Tentar novamente</button>
       } @else if (order(); as current) {
-        <p class="status" role="status">{{ orderStatus(current.status) }}</p>
+        <p class="status" role="status">{{ orderStatusForOrder(current) }}</p>
         <p>
           Pedido <strong>{{ current.id }}</strong>
         </p>
@@ -76,7 +93,44 @@ interface OrderProgress {
           <h2>Pedido em análise</h2>
           <p>Nossa equipe vai revisar o pedido e registrar a decisão aqui.</p>
         } @else {
-          <p>{{ orderStatus(current.status) }}</p>
+          <p>{{ orderStatusForOrder(current) }}</p>
+        }
+        @if (current.mode === 'DELIVERY') {
+          <section aria-labelledby="shipping-progress-title">
+            <h2 id="shipping-progress-title">Entrega</h2>
+            @if (shippingError()) {
+              <p role="alert">Não foi possível atualizar o andamento da entrega.</p>
+            } @else if (shippingProgress(); as progress) {
+              @if (progress.shipments.length === 0) {
+                <p>O preparo do envio ainda não começou.</p>
+              }
+              @for (shipment of progress.shipments; track $index) {
+                <article class="shipment" [attr.aria-label]="packageLabel(shipment.packageSequences)">
+                  <h3>{{ packageLabel(shipment.packageSequences) }}</h3>
+                  <p role="status">{{ shipmentStatus(shipment.status) }}</p>
+                  @if (shipment.exception) {
+                    <p role="alert">Este envio precisa de análise da equipe.</p>
+                  }
+                </article>
+              }
+            } @else {
+              <p role="status">Consultando o andamento da entrega…</p>
+            }
+          </section>
+        } @else if (current.status === 'READY_FOR_PICKUP') {
+          <section aria-labelledby="pickup-progress-title">
+            <h2 id="pickup-progress-title">Retirada</h2>
+            @if (pickupError()) {
+              <p role="alert">Não foi possível consultar os dados de retirada.</p>
+            } @else if (pickupInfo(); as pickup) {
+              <p><strong>Ponto:</strong> {{ pickup.point }}</p>
+              <p><strong>Horário:</strong> {{ pickup.window }}</p>
+              <p><strong>Código de retirada:</strong> <strong>{{ pickup.code }}</strong></p>
+              <p>O ponto guarda o pedido por {{ pickup.retentionBusinessDays }} dias úteis.</p>
+            } @else {
+              <p role="status">Consultando os dados de retirada…</p>
+            }
+          </section>
         }
         @if (refundMessage(current); as message) {
           <p class="refund" role="status">{{ message }}</p>
@@ -152,6 +206,10 @@ interface OrderProgress {
       padding: 1rem;
       border-left: 3px solid var(--color-accent, var(--color-ink));
     }
+    .shipment {
+      padding: 0.5rem 1rem;
+      border-left: 2px solid var(--color-line);
+    }
   `,
 })
 export class OrderProgressComponent implements OnInit, OnDestroy {
@@ -164,6 +222,10 @@ export class OrderProgressComponent implements OnInit, OnDestroy {
   readonly confirming = signal(false);
   readonly cancelling = signal(false);
   readonly cancelError = signal<string | null>(null);
+  readonly shippingProgress = signal<ShippingProgress | null>(null);
+  readonly shippingError = signal(false);
+  readonly pickupInfo = signal<PickupInfo | null>(null);
+  readonly pickupError = signal(false);
   private orderId = '';
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -172,7 +234,13 @@ export class OrderProgressComponent implements OnInit, OnDestroy {
     void this.load();
     this.timer = setInterval(() => {
       const current = this.order();
-      if (current?.status === 'PENDING_PAYMENT' || current?.payment?.status === 'REFUND_REQUESTED')
+      if (
+        current &&
+        (current.status === 'PENDING_PAYMENT' ||
+          current.payment?.status === 'REFUND_REQUESTED' ||
+          this.shippingNeedsRefresh(current) ||
+          (current.mode === 'PICKUP' && current.status === 'READY_FOR_PICKUP'))
+      )
         void this.load();
     }, 5000);
   }
@@ -190,13 +258,48 @@ export class OrderProgressComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(false);
     try {
-      this.order.set(
-        await firstValueFrom(
-          this.http.get<OrderProgress>(`/api/v1/orders/${this.orderId}`, {
-            headers: this.accessHeaders(),
-          }),
-        ),
+      const current = await firstValueFrom(
+        this.http.get<OrderProgress>(`/api/v1/orders/${this.orderId}`, {
+          headers: this.accessHeaders(),
+        }),
       );
+      this.order.set(current);
+      if (current.mode === 'DELIVERY') {
+        this.pickupInfo.set(null);
+        this.pickupError.set(false);
+        try {
+          this.shippingProgress.set(
+            await firstValueFrom(
+              this.http.get<ShippingProgress>(
+                `/api/v1/orders/${this.orderId}/shipping-progress`,
+                { headers: this.accessHeaders() },
+              ),
+            ),
+          );
+          this.shippingError.set(false);
+        } catch {
+          this.shippingError.set(true);
+          this.shippingProgress.set(null);
+        }
+      } else {
+        this.shippingProgress.set(null);
+        this.shippingError.set(false);
+        this.pickupInfo.set(null);
+        this.pickupError.set(false);
+        if (current.status === 'READY_FOR_PICKUP') {
+          try {
+            this.pickupInfo.set(
+              await firstValueFrom(
+                this.http.get<PickupInfo>(`/api/v1/orders/${this.orderId}/pickup`, {
+                  headers: this.accessHeaders(),
+                }),
+              ),
+            );
+          } catch {
+            this.pickupError.set(true);
+          }
+        }
+      }
     } catch {
       this.error.set(true);
     } finally {
@@ -280,6 +383,38 @@ export class OrderProgressComponent implements OnInit, OnDestroy {
         IN_TRANSIT: 'Pedido com a transportadora',
         DELIVERED: 'Pedido entregue',
       }[status] ?? 'Status do pedido atualizado'
+    );
+  }
+
+  orderStatusForOrder(order: OrderProgress): string {
+    if (order.mode === 'DELIVERY' && order.status === 'DELIVERED') {
+      return 'Status geral em atualização; confira o andamento de cada pacote.';
+    }
+    return this.orderStatus(order.status);
+  }
+
+  private shippingNeedsRefresh(order: OrderProgress): boolean {
+    if (order.mode !== 'DELIVERY' || order.status === 'CANCELLED') return false;
+    const shipments = this.shippingProgress()?.shipments ?? [];
+    return shipments.length === 0 || shipments.some((shipment) => shipment.status !== 'DELIVERED');
+  }
+
+  packageLabel(sequences: number[]): string {
+    if (sequences.length === 1) return `Pacote ${sequences[0]}`;
+    return `Pacotes ${sequences.slice(0, -1).join(', ')} e ${sequences.at(-1)}`;
+  }
+
+  shipmentStatus(status: string): string {
+    return (
+      {
+        PREPARING_LABEL: 'Preparando a etiqueta de teste',
+        LABEL_CREATED: 'Etiqueta de teste gerada; aguardando despacho',
+        HANDED_TO_CARRIER: 'Envio recebido pela transportadora',
+        IN_TRANSIT: 'Envio em trânsito',
+        DELIVERED: 'Pacote entregue',
+        UNDER_REVIEW: 'Envio em análise',
+        CANCELLED: 'Envio cancelado; em análise',
+      }[status] ?? 'Status do envio atualizado'
     );
   }
 
