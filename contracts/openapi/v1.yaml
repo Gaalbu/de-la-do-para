@@ -2573,7 +2573,10 @@ components:
           type: string
           enum: [PREPARING_LABEL, LABEL_CREATED, HANDED_TO_CARRIER, IN_TRANSIT, DELIVERED, UNDER_REVIEW, CANCELLED]
         exception: {type: boolean}
-        updatedAt: {type: string, format: date-time, nullable: true}
+        updatedAt:
+          oneOf:
+            - {type: string, format: date-time}
+            - {type: 'null'}
     ConfirmPickupRequest:
       type: object
       additionalProperties: false

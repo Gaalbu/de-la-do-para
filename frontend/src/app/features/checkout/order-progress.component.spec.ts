@@ -2,7 +2,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
 import { OrderProgressComponent } from './order-progress.component';
 
 describe('OrderProgressComponent', () => {
@@ -30,6 +29,7 @@ describe('OrderProgressComponent', () => {
     const fixture = TestBed.createComponent(OrderProgressComponent);
     fixture.detectChanges();
     http.expectOne('/api/v1/orders/order-1').flush(order('DELIVERY', 'PAID'));
+    await Promise.resolve();
     http.expectOne('/api/v1/orders/order-1/shipping-progress').flush({
       shipments: [
         { packageSequences: [1, 2], status: 'DELIVERED', exception: false, updatedAt: null },
@@ -51,6 +51,7 @@ describe('OrderProgressComponent', () => {
     const fixture = TestBed.createComponent(OrderProgressComponent);
     fixture.detectChanges();
     http.expectOne('/api/v1/orders/order-1').flush(order('DELIVERY', 'DELIVERED'));
+    await Promise.resolve();
     http.expectOne('/api/v1/orders/order-1/shipping-progress').flush({
       shipments: [
         { packageSequences: [1], status: 'DELIVERED', exception: false, updatedAt: null },
@@ -70,6 +71,7 @@ describe('OrderProgressComponent', () => {
     const fixture = TestBed.createComponent(OrderProgressComponent);
     fixture.detectChanges();
     http.expectOne('/api/v1/orders/order-1').flush(order('PICKUP', 'READY_FOR_PICKUP'));
+    await Promise.resolve();
     const pickup = http.expectOne('/api/v1/orders/order-1/pickup');
     expect(pickup.request.withCredentials).toBe(false);
     pickup.flush({
@@ -91,10 +93,10 @@ describe('OrderProgressComponent', () => {
     const fixture = TestBed.createComponent(OrderProgressComponent);
     fixture.detectChanges();
     http.expectOne('/api/v1/orders/order-1').flush(order('DELIVERY', 'PAID'));
-    http.expectOne('/api/v1/orders/order-1/shipping-progress').flush(
-      { title: 'Unavailable' },
-      { status: 503, statusText: 'Unavailable' },
-    );
+    await Promise.resolve();
+    http
+      .expectOne('/api/v1/orders/order-1/shipping-progress')
+      .flush({ title: 'Unavailable' }, { status: 503, statusText: 'Unavailable' });
     await fixture.whenStable();
     fixture.detectChanges();
 

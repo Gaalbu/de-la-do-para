@@ -105,7 +105,10 @@ interface PickupInfo {
                 <p>O preparo do envio ainda não começou.</p>
               }
               @for (shipment of progress.shipments; track $index) {
-                <article class="shipment" [attr.aria-label]="packageLabel(shipment.packageSequences)">
+                <article
+                  class="shipment"
+                  [attr.aria-label]="packageLabel(shipment.packageSequences)"
+                >
                   <h3>{{ packageLabel(shipment.packageSequences) }}</h3>
                   <p role="status">{{ shipmentStatus(shipment.status) }}</p>
                   @if (shipment.exception) {
@@ -125,7 +128,9 @@ interface PickupInfo {
             } @else if (pickupInfo(); as pickup) {
               <p><strong>Ponto:</strong> {{ pickup.point }}</p>
               <p><strong>Horário:</strong> {{ pickup.window }}</p>
-              <p><strong>Código de retirada:</strong> <strong>{{ pickup.code }}</strong></p>
+              <p>
+                <strong>Código de retirada:</strong> <strong>{{ pickup.code }}</strong>
+              </p>
               <p>O ponto guarda o pedido por {{ pickup.retentionBusinessDays }} dias úteis.</p>
             } @else {
               <p role="status">Consultando os dados de retirada…</p>
@@ -270,10 +275,9 @@ export class OrderProgressComponent implements OnInit, OnDestroy {
         try {
           this.shippingProgress.set(
             await firstValueFrom(
-              this.http.get<ShippingProgress>(
-                `/api/v1/orders/${this.orderId}/shipping-progress`,
-                { headers: this.accessHeaders() },
-              ),
+              this.http.get<ShippingProgress>(`/api/v1/orders/${this.orderId}/shipping-progress`, {
+                headers: this.accessHeaders(),
+              }),
             ),
           );
           this.shippingError.set(false);
