@@ -23,6 +23,15 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limites | Link de verificação ainda aponta para rota a implementar; teste de browser e CI ficam para o fechamento da fatia. |
 | Próximo passo | Implementar `/verify-email` para consumir exclusivamente `#token=…`, limpar o fragmento do histórico e validar token ausente/expirado/sucesso. |
 
+## Continuação 2026-10-12 — C81 rota de verificação
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | Criada a rota `/verify-email` compatível com o `APP_IDENTITY_VERIFICATION_URL` padrão. Lê o token apenas do fragmento, substitui a URL atual sem `#token` antes do POST e apresenta sucesso, link ausente, token inválido/expirado/usado ou indisponibilidade. |
+| Verificação | Testes de verificação 4/4: token válido, fragmento sem token, falha ao remover URL (não envia token) e HTTP 410. E2E Playwright 1/1 cadastro→verificação; observou `page.url()` sem fragmento antes do POST. `GOMAXPROCS=1 ./scripts/verify.sh frontend`: lint, formatação, 38/38 testes Angular, build SSR e 8/8 E2E passaram. `./scripts/verify.sh docs`: 26 Markdown sem links quebrados, contrato válido, eventos, geração e TypeScript passaram; 8 avisos Redocly existentes. `./scripts/check-commits.sh origin/codex/c80-cart-merge HEAD` aprovou 2 commits; `git diff --check` limpo. |
+| Limites | APIs foram interceptadas no E2E; C76 contém ITs PostgreSQL/Mailpit para backend, mas não houve envio externo. A CI remota do PR C81 ainda é necessária. |
+| Próximo passo | Publicar a fatia final, abrir PR draft C81 sobre C80 e acompanhar os checks no SHA atual; sem merge automático. |
+
 ## Sessão 2026-10-05 — C76 registro e verificação de e-mail
 
 | Campo | Conteúdo |
