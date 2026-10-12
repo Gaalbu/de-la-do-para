@@ -1579,10 +1579,11 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C42 — `feat(shipping): quote sandbox freight through an adapter`
 
-- [x] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. Implementado e merged no PR #55 (`66a433c`).
+- [ ] **Depende:** C04, C11, C41a. **Alvos:** adapter Melhor Envio, config, parser e testes; M. PR #55 (`66a433c`) integrou somente o parser do contrato.
 - Boundary sandbox implementado sem rede: contrato do adapter, configuração com timeout/credencial, parser Jackson com cobertura integral dos pacotes, custo/prazo positivos e validade futura; sem expor credenciais ou alterar carrinho.
 - **Aceite:** cotação respeita todos os pacotes/peso/dimensões/destino; parse valida cobertura/custos/prazos; timeout/credencial expirada/serviço ausente tratados.
 - **Verificar:** testes WireMock e uma cotação SB sanitizada; nenhuma chamada externa no teste comum.
+- **Auditoria 2026-10-10:** parcial. `MelhorEnvioSandboxAdapter` só interpreta um payload recebido; não chama o provedor, não valida a requisição completa e não há prova de cotação SB. Reabrir até implementar/wirar a origem de cotação e obter a evidência exigida por C04.
 
 ### C43 — `feat(shipping): bind delivery quotes to purchase snapshots`
 
@@ -1594,9 +1595,10 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C44 — `feat(checkout-ui): collect address and select delivery or pickup`
 
-- [x] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M. Implementado e integrado nos PRs #60–#62; merge final no commit `4551e24`, com CI `35772388503` verde.
+- [ ] **Depende:** C40, C43. **Alvos:** `F/checkout/address`, `delivery`, resumo e teste; M. PRs #60–#62 integraram a interface e a seleção das opções disponíveis.
 - Contrato preliminar criado em `specs/SPEC-checkout.md`: endereço sem inferência, opções persistidas, estado recuperável de cotação indisponível e invalidação por snapshot/endereço/modalidade.
 - **Aceite:** visitante compara modalidades, pacotes, prazos e custo total; cotação indisponível tem recuperação; CEP/endereço são validados sem inventar dados.
+- **Auditoria 2026-10-10:** parcial na jornada integrada. O checkout lista opções já persistidas, mas não há produtor de cotação conectado ao fluxo; sem C42/C04, a escolha de entrega não pode ser demonstrada desde a solicitação do frete. Reabrir até a jornada funcionar com opções produzidas pelo fluxo suportado.
 - **Verificar:** F/E/A; troca de endereço/carrinho força nova cotação.
 
 **G3:** visitante monta carrinho, informa destino e compara frete/retirada, com custos claros antes do pagamento. Validar a jornada pelo navegador.
@@ -1829,14 +1831,14 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 - [x] **Depende:** C41, C51, C61. **Alvos:** regras de retirada, código/histórico e testes; M.
 - **Aceite:** ponto/prazo informados; código e papel autorizados; entrega/retirada confirmada uma vez.
 - **Verificar:** BI(PickupLifecycle), código inválido/repetido e pedido não pago.
-- **Estado atual (2026-09-28):** implementado e publicado em `feat/c72-pickup-lifecycle-atomic`, na PR #117 empilhada sobre C62 #111. O estado/histórico/outbox é transacional; shipping acessa orders por `OrderFulfillmentPort`. Admin inicia preparação, marca pronto (gera código aleatório cifrado AES-GCM) e confirma com código válido, sob o mesmo lock de cancelamento. Só o dono autenticado ou o token daquele pedido consulta ponto/janela/código, com resposta `private, no-store`; código é removido ao consumir e nunca aparece em admin/outbox/logs. A guarda informada é de 3 dias úteis (D66), sem data final calculada até C25 configurar calendário. Maven `verify`: Surefire 126/126 e Failsafe 156/156; CI remoto 7/7 verde no SHA `6a843a2`. PR permanece OPEN/MERGEABLE e não foi mesclada; detalhes e limites em `tasks/progress.md`.
+- **Estado atual (2026-10-10):** implementado e integrado no PR #117 (merge `a4febbfd` em 2026-10-03). O estado/histórico/outbox é transacional; shipping acessa orders por `OrderFulfillmentPort`. Admin inicia preparação, marca pronto (gera código aleatório cifrado AES-GCM) e confirma com código válido, sob o mesmo lock de cancelamento. Só o dono autenticado ou o token daquele pedido consulta ponto/janela/código, com resposta `private, no-store`; código é removido ao consumir e nunca aparece em admin/outbox/logs. A guarda informada é de 3 dias úteis (D66), sem data final calculada até C25 configurar calendário. Maven `verify`: Surefire 126/126 e Failsafe 156/156; CI remoto 7/7 verde no SHA `6a843a2`. Ainda falta a interface C73/C73a e a homologação externa.
 
 ### C73 — `feat(shipping-ui): operate dispatch and pickup from the admin area`
 
 - [ ] **Depende:** C16, C69, C70, C71, C72. **Alvos:** admin expedição, ações e testes; M.
 - **Aceite:** operador prepara/envia/entrega ou confirma retirada; ações respeitam estado; impressão deixa claro que etiqueta é de teste.
 - **Verificar:** F/E; operar uma entrega e uma retirada; cancelamento concorre com transição logística conforme V16.
-- **Estado atual (2026-09-28):** operações backend de retirada pertencem a C72; C73 ainda precisa de tela administrativa e operação de expedição. Dependências C69–C71 e teste visual continuam pendentes.
+- **Estado atual (2026-10-10):** parcial. A tela `/admin/shipping` opera o ciclo de retirada pela API C72: pedido pago → preparação → pronto → confirmação com o código informado pelo cliente; permite consultar produtos/SKUs antes do preparo e mantém pedidos retirados somente para consulta. A tela e a rota são protegidas por `adminGuard`, ações buscam CSRF e conflito 409 orienta atualizar. A fatia foi verificada com build frontend e Playwright E2E (API interceptada). Envio/entrega por transportadora, etiqueta de teste, tracking em tela e prova integrada com backend seguem pendentes em C70/C71/C73a; não marcar concluída.
 
 ### C73a — `feat(orders-ui): display delivery and pickup progress`
 

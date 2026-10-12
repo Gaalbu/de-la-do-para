@@ -69,4 +69,12 @@ export const routes: Routes = [
         (m) => m.OperationsAdminComponent,
       ),
   },
+  {
+    path: 'admin/shipping',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/shipping/shipping-admin.component').then(
+        (m) => m.ShippingAdminComponent,
+      ),
+  },
 ];
