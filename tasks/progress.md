@@ -3,6 +3,44 @@
 Documento operacional previsto no plano mestre (§1 “Registro para continuidade”).
 Atualizar ao final de cada sessão, somente após evidência verificada.
 
+## Continuação 2026-10-12 — corrigir dependência herdada na pilha C81
+
+| Campo | Conteúdo |
+|---|---|
+| Achado | O primeiro CI da PR #157 falhou no gate `security`: o branch-base C80 ainda resolvia `source-map-js` 1.2.1 (GHSA-68fv-2mgg-jv7q), apesar da correção já estar integrada em `main`. `npm audit --prefix frontend --audit-level=high --json` reproduziu 1 vulnerabilidade alta. |
+| Mudanças | Cherry-pick do commit já existente `5775aab` de correção, resultando no SHA `58da09c`; override fixa `source-map-js` 1.2.2. |
+| Verificação | `npm --prefix frontend ci` concluiu e `npm --prefix frontend audit --audit-level=high` reportou zero vulnerabilidades; `npm ci` reportou 0 vulnerabilities. PR #157 atualizada para o SHA `58da09c`, base explícita `codex/c80-cart-merge`, `CLEAN`; CI deste SHA está em execução. |
+| Próximo passo | Aguardar checks de segurança, frontend e backend no novo SHA e atualizar estado da PR sem integrar a pilha. |
+
+## Sessão 2026-10-12 — C81 cliente de cadastro e verificação (slice de serviço)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `codex/c81-account-ui`, criada em `origin/codex/c80-cart-merge@cea0850` (C80 empilhada sobre C76). |
+| Tarefa | C81 — habilitar cadastro/verificação opcional no frontend; primeiro slice: chamadas tipadas ao contrato C76. |
+| Mudanças | `IdentityService.register()` obtém CSRF e envia cadastro como CUSTOMER sem criar sessão local; `verifyEmail()` envia somente o token ao endpoint público. Novos testes verificam rota, payload, cookies e resposta de sucesso. |
+| Verificação | Teste focado `npm run test:ci -- --include='src/app/features/identity/services/identity.service.spec.ts'`: 2/2 passaram. O teste RED inicial confirmou ausência dos métodos; após implementação, GREEN. `npm ci` instalado pelo lockfile. |
+| Limites | A tela/rotas ainda não foram adicionadas neste slice. Cadastro preserva erro HTTP para a UI traduzir; nenhuma senha/token é gravado em storage ou log. Worktree não possui ainda CI remoto próprio. |
+| Próximo passo | Entregar formulário de cadastro acessível e depois rota `/verify-email` que leia e remova o token do fragmento antes de chamar o backend; então validar jornada browser e publicar PR C81 sobre C80. |
+
+## Continuação 2026-10-12 — C81 formulário de cadastro
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | Adicionada tela `/register` com validação de e-mail e tamanho de senha, confirmação de envio via e-mail, tratamento seguro de duplicidade/indisponibilidade e limpeza da senha após sucesso. Login agora oferece a rota de cadastro; compra continua explicitamente possível sem conta. |
+| Verificação | `npm run test:ci -- --include='src/app/features/identity/pages/register/register.component.spec.ts'`: 3/3 passaram (cadastro/sucesso, e-mail duplicado e senha inválida sem chamada à API). |
+| Limites | Link de verificação ainda aponta para rota a implementar; teste de browser e CI ficam para o fechamento da fatia. |
+| Próximo passo | Implementar `/verify-email` para consumir exclusivamente `#token=…`, limpar o fragmento do histórico e validar token ausente/expirado/sucesso. |
+
+## Continuação 2026-10-12 — C81 rota de verificação
+
+| Campo | Conteúdo |
+|---|---|
+| Mudanças | Criada a rota `/verify-email` compatível com o `APP_IDENTITY_VERIFICATION_URL` padrão. Lê o token apenas do fragmento, substitui a URL atual sem `#token` antes do POST e apresenta sucesso, link ausente, token inválido/expirado/usado ou indisponibilidade. |
+| Verificação | Testes de verificação 4/4: token válido, fragmento sem token, falha ao remover URL (não envia token) e HTTP 410. E2E Playwright 1/1 cadastro→verificação; observou `page.url()` sem fragmento antes do POST. `GOMAXPROCS=1 ./scripts/verify.sh frontend`: lint, formatação, 38/38 testes Angular, build SSR e 8/8 E2E passaram. `./scripts/verify.sh docs`: 26 Markdown sem links quebrados, contrato válido, eventos, geração e TypeScript passaram; 8 avisos Redocly existentes. `./scripts/check-commits.sh origin/codex/c80-cart-merge HEAD` aprovou 2 commits; `git diff --check` limpo. |
+| Limites | APIs foram interceptadas no E2E; C76 contém ITs PostgreSQL/Mailpit para backend, mas não houve envio externo. A CI remota do PR C81 ainda é necessária. |
+| Próximo passo | Publicar a fatia final, abrir PR draft C81 sobre C80 e acompanhar os checks no SHA atual; sem merge automático. |
+
 ## Sessão 2026-10-05 — C76 registro e verificação de e-mail
 
 | Campo | Conteúdo |
