@@ -3,6 +3,15 @@
 Documento operacional previsto no plano mestre (§1 “Registro para continuidade”).
 Atualizar ao final de cada sessão, somente após evidência verificada.
 
+## Continuação 2026-10-12 — corrigir dependência herdada na pilha C81
+
+| Campo | Conteúdo |
+|---|---|
+| Achado | O primeiro CI da PR #157 falhou no gate `security`: o branch-base C80 ainda resolvia `source-map-js` 1.2.1 (GHSA-68fv-2mgg-jv7q), apesar da correção já estar integrada em `main`. `npm audit --prefix frontend --audit-level=high --json` reproduziu 1 vulnerabilidade alta. |
+| Mudanças | Cherry-pick do commit já existente `5775aab` de correção, resultando no SHA `58da09c`; override fixa `source-map-js` 1.2.2. |
+| Verificação | `npm --prefix frontend ci` concluiu e `npm --prefix frontend audit --audit-level=high` reportou zero vulnerabilidades; `npm ci` reportou 0 vulnerabilities. PR #157 atualizada para o SHA `58da09c`, base explícita `codex/c80-cart-merge`, `CLEAN`; CI deste SHA está em execução. |
+| Próximo passo | Aguardar checks de segurança, frontend e backend no novo SHA e atualizar estado da PR sem integrar a pilha. |
+
 ## Sessão 2026-10-12 — C81 cliente de cadastro e verificação (slice de serviço)
 
 | Campo | Conteúdo |
