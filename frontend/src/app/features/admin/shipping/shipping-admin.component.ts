@@ -76,10 +76,20 @@ export class ShippingAdminComponent implements OnInit {
     await this.load();
   }
 
+  async refresh(): Promise<void> {
+    this.expandedOrderId.set(null);
+    this.orderDetails.set({});
+    this.detailsError.set(null);
+    await this.load();
+  }
+
   async load(page = this.page()): Promise<void> {
     if (this.loading()) return;
     this.loading.set(true);
     this.error.set(null);
+    this.detailsError.set(null);
+    this.orderDetails.set({});
+    this.expandedOrderId.set(null);
     try {
       const result = await firstValueFrom(
         this.http.get<OrderPage>(`/api/v1/admin/orders?page=${page}&size=${this.pageSize}`, {

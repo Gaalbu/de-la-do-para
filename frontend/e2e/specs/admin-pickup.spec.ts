@@ -167,3 +167,48 @@ test('a changed order state is reported and can be refreshed', async ({ page }) 
       .getByRole('button', { name: 'Iniciar preparação' }),
   ).toHaveCount(0);
 });
+
+test('refreshing orders invalidates previously loaded item details', async ({ page }) => {
+  let productName = 'Farinha anterior';
+  await page.route('**/api/v1/admin/orders**', async (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === 'GET' && /\/admin\/orders\/cached-order$/.test(url.pathname)) {
+      await route.fulfill({
+        json: {
+          id: 'cached-order',
+          items: [
+            {
+              productName,
+              skuLabel: 'Pacote 500 g',
+              quantity: 1,
+              unitPriceCents: 1800,
+              lineTotalCents: 1800,
+            },
+          ],
+        },
+      });
+      return;
+    }
+    await route.fulfill({
+      json: {
+        content: [order('cached-order', 'PAID')],
+        page: 0,
+        size: 50,
+        totalElements: 1,
+        totalPages: 1,
+      },
+    });
+  });
+
+  await page.goto('/admin/shipping');
+  const card = page.getByRole('article', { name: /Pedido cached-order/ });
+  await card.getByRole('button', { name: 'Ver itens' }).click();
+  await expect(card).toContainText('Farinha anterior');
+
+  productName = 'Farinha atualizada';
+  await page.getByRole('button', { name: 'Atualizar pedidos' }).click();
+  await expect(card.getByRole('button', { name: 'Ver itens' })).toBeVisible();
+  await card.getByRole('button', { name: 'Ver itens' }).click();
+  await expect(card).toContainText('Farinha atualizada');
+  await expect(card).not.toContainText('Farinha anterior');
+});

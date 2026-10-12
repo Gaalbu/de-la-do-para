@@ -6,7 +6,7 @@
       <h1 id="shipping-title">Expedição e retirada</h1>
       <p>Avance pedidos de retirada conforme o estado registrado no pedido.</p>
     </div>
-    <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
+    <button type="button" class="secondary" (click)="refresh()" [disabled]="loading()">
       {{ loading() ? 'Atualizando…' : 'Atualizar pedidos' }}
     </button>
   </header>
