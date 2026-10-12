@@ -39,6 +39,24 @@ export class IdentityService {
     }
   }
 
+  async register(email: string, password: string): Promise<Account> {
+    this.loading.set(true);
+    try {
+      await this.fetchCsrf();
+      return await firstValueFrom(
+        this.http.post<Account>('/api/v1/accounts', { email, password }, { withCredentials: true }),
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async verifyEmail(token: string): Promise<Account> {
+    return firstValueFrom(
+      this.http.post<Account>('/api/v1/accounts/verify', { token }, { withCredentials: true }),
+    );
+  }
+
   async fetchCurrent(): Promise<Account | null> {
     try {
       const account = await firstValueFrom(

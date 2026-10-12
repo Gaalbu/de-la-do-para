@@ -3,6 +3,17 @@
 Documento operacional previsto no plano mestre (§1 “Registro para continuidade”).
 Atualizar ao final de cada sessão, somente após evidência verificada.
 
+## Sessão 2026-10-12 — C81 cliente de cadastro e verificação (slice de serviço)
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Branch `codex/c81-account-ui`, criada em `origin/codex/c80-cart-merge@cea0850` (C80 empilhada sobre C76). |
+| Tarefa | C81 — habilitar cadastro/verificação opcional no frontend; primeiro slice: chamadas tipadas ao contrato C76. |
+| Mudanças | `IdentityService.register()` obtém CSRF e envia cadastro como CUSTOMER sem criar sessão local; `verifyEmail()` envia somente o token ao endpoint público. Novos testes verificam rota, payload, cookies e resposta de sucesso. |
+| Verificação | Teste focado `npm run test:ci -- --include='src/app/features/identity/services/identity.service.spec.ts'`: 2/2 passaram. O teste RED inicial confirmou ausência dos métodos; após implementação, GREEN. `npm ci` instalado pelo lockfile. |
+| Limites | A tela/rotas ainda não foram adicionadas neste slice. Cadastro preserva erro HTTP para a UI traduzir; nenhuma senha/token é gravado em storage ou log. Worktree não possui ainda CI remoto próprio. |
+| Próximo passo | Entregar formulário de cadastro acessível e depois rota `/verify-email` que leia e remova o token do fragmento antes de chamar o backend; então validar jornada browser e publicar PR C81 sobre C80. |
+
 ## Sessão 2026-10-05 — C76 registro e verificação de e-mail
 
 | Campo | Conteúdo |
