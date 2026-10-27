@@ -1855,14 +1855,14 @@ Critério transversal D63: todo commit funcional inclui contrato/documentação,
 
 ### C76 — `feat(identity): register and verify optional customer accounts`
 
-- [ ] **Depende:** C08, C14, C15. **Alvos:** cadastro, token de verificação, adapter SMTP de identidade e testes; M.
+- [x] **Depende:** C08, C14, C15. **Alvos:** cadastro, token de verificação, adapter SMTP de identidade e testes; M. Integrada no main em 2026-10-26 (PR #136, merge 80a5679, CI 7/7).
 - **Aceite:** cadastro opcional com e-mail verificado; token de uso único e expiração; login não concede papel admin.
 - **Verificar:** BI(CustomerRegistration), token vencido/repetido e e-mail duplicado sem exposição indevida.
 - **Estado atual (2026-10-05):** implementação backend na PR #136, branch `codex/c76-account-verification`, OPEN e pronta para revisão; sem merge. Backend local passou em Temurin 25.0.4 com `-Xint` (128 unitários + 161 integrações, Spotless e Checkstyle), `contracts:check` passou com 8 avisos Redocly existentes e `docs:check` passou. GitHub Actions passou 7/7 no SHA atual `b4712c0` (backend, frontend, contracts, docs, security, commit-policy, quality-gate); `aislop` 100/100 sem achados. Manter o marco aberto até integração do PR e conclusão das tarefas dependentes de frontend.
 
 ### C77 — `feat(identity): recover customer access securely`
 
-- [ ] **Depende:** C76. **Alvos:** solicitação/consumo de recuperação e testes; M.
+- [x] **Depende:** C76. **Alvos:** solicitação/consumo de recuperação e testes; M. Integrada no main em 2026-10-26 (PR #138, merge 6da92b3, CI 7/7).
 - **Aceite:** resposta evita enumerar contas; token de uso único; troca de senha trata sessões anteriores conforme spec.
 - **Verificar:** BI(AccountRecovery), rate limit, token inválido/expirado e tentativa concorrente; duas redefinições com tokens ativos da mesma conta devem produzir exatamente um `200` e um `410`, sem deadlock.
 - **Políticas confirmadas (2026-10-05):** no máximo 3 solicitações/hora por IP+e-mail; token com validade de 15 minutos; redefinição revoga todas as sessões existentes.
