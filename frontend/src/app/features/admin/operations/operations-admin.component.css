@@ -1,0 +1,51 @@
+.admin {
+  max-width: 70rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+.incident,
+.confirm {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #ddd;
+}
+.confirm {
+  border-color: #9b1c1c;
+}
+label {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.75rem 0;
+}
+textarea,
+button {
+  padding: 0.55rem;
+  font: inherit;
+}
+button.secondary {
+  margin-left: 0.5rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+caption {
+  text-align: left;
+  font-weight: 600;
+}
+th,
+td {
+  border-bottom: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+code {
+  word-break: break-all;
+}
+.error {
+  color: #9b1c1c;
+}
+.notice {
+  color: #176b3a;
+}

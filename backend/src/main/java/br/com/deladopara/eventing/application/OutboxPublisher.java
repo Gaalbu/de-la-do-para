@@ -37,7 +37,7 @@ public class OutboxPublisher {
         var published = 0;
         for (var item : claimed) {
             try {
-                broker.publish(item.event());
+                broker.publish(item.event(), item.traceParent());
                 if (events.markPublished(item.event().eventId(), item.leaseUntil(), now) == 1) {
                     published++;
                 } else {

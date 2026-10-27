@@ -180,6 +180,22 @@ qualquer outra linha, sempre na ordem pedido → reserva → cupom → pagamento
 | Reembolso confirmado | pagamento `REFUND_REQUESTED` | pagamento `REFUNDED`; uso por e-mail do cupom devolvido (D34), limite global permanece gasto (proposta C31) | `payment.refunded` |
 | Pedido com pacote na transportadora (D30) | pedido `IN_TRANSIT` | pedido `UNDER_REVIEW`; sem reembolso automático | `order.status_changed` |
 
+A expiração (C66, `CheckoutExpirationService` no perfil worker) lê os pedidos
+vencidos sem lock e decide cada um sob o lock do pedido, com motivo
+`RESERVATION_EXPIRED`. Pagamento já `CONFIRMED` e ainda não aplicado fica com o
+handler de resultado, que o trata como tardio.
+
+O cancelamento (C68, `CheckoutCancellationService`, `POST /orders/{id}/cancellation`
+com token de convidado ou sessão dona e `POST /admin/orders/{id}/cancellation`) segue
+as linhas acima sob o lock do pedido, com motivo `ORDER_CANCELLED` (ou
+`CANCELLATION_REQUESTED` para `IN_TRANSIT` → `UNDER_REVIEW`). Pedido `PENDING_PAYMENT`
+cuja intent já está `CONFIRMED` é recusado (409), porque a confirmação será aplicada.
+Pedido já `CANCELLED` ou `UNDER_REVIEW` devolve o estado atual sem efeitos, então a
+repetição preserva o primeiro resultado. Pagamento confirmado depois de um
+cancelamento sem pagamento segue como tardio: pedido intacto e reembolso
+solicitado. O fato `payment.refunded` devolve o uso por e-mail do cupom
+(`CONSUMED` → `REFUNDED`, D34).
+
 O pedido `EXPIRED` é terminal: se o pagamento chegar depois da expiração já
 aplicada, o pedido fica `EXPIRED` e só o pagamento segue para análise e
 reembolso.
@@ -187,6 +203,9 @@ reembolso.
 - **CHK-Q03 (aberta):** estoque de pedido pago e cancelado antes do despacho.
   Proposta: movimento de devolução ao mesmo lote, com motivo
   `ORDER_CANCELLED`, sem reabrir lote bloqueado ou vencido. Momento: C66.
+  C68 implementa a proposta como padrão (`StockReservationService.returnCommitted`,
+  movimento `RELEASE` com motivo "pedido cancelado"); lote bloqueado ou vencido
+  recebe as unidades, mas continua inelegível para venda. Aprovação final pendente.
 - **CHK-Q04 (aberta):** pedido `UNDER_REVIEW` por pagamento tardio, depois do
   reembolso confirmado. Proposta: permanece em análise até o administrador
   cancelar com motivo `REFUND_COMPENSATION` (a tabela da SPEC-orders só
@@ -205,10 +224,10 @@ reembolso.
 | V07 | Timeout após criação no provedor | `UNKNOWN` + `findCheckout` (C54/C55) | `CheckoutOperationRunnerIT`, conciliação C64 |
 | V08 | Webhook duplicado/antigo | inbox + versão | `AsaasWebhookIT`, `PaymentOutcomeIT.staleEventDoesNotRegress` |
 | V09 | Webhook forjado ou valor divergente | token + consulta + comparação de valor | `AsaasWebhookIT.forgedIsRejected`, `PaymentOutcomeIT.amountMismatchGoesToReview` |
-| V10 | Reserva expira com confirmação em trânsito | lock do pedido e checagem de `expiresAt` sob lock | `PaymentOutcomeIT.latePaymentGoesToReviewAndRefund` |
+| V10 | Reserva expira com confirmação em trânsito | lock do pedido e checagem de `expiresAt` sob lock; expiração não age sobre pagamento já `CONFIRMED` (C66) | `PaymentOutcomeIT.paymentAfterTheReservationExpiredGoesToReviewAndRefund`; `CheckoutExpirationIT` (confirmação em trânsito, pagamento após expiração, corrida expiração × confirmação e três expiradores concorrentes) |
 | V11 | Cupom em duas compras | lock da linha do cupom (C31) | `CouponReservationServiceIT` (existente) + `CheckoutAcceptanceIT` |
 | V12 | Preço/cotação/endereço muda | `summaryVersion` | `CheckoutAcceptanceIT.changedSummaryIsRejectedWithoutWrites` |
-| V16 | Cancelamento contra expedição/retirada | lock do pedido; transição validada no estado atual | `OrderCancellationIT.cancelAndPickupAreMutuallyExclusive` |
+| V16 | Cancelamento contra expedição/retirada | lock do pedido; transição validada no estado atual | `OrderCancellationIT.cancellationAndPickupConfirmationAreMutuallyExclusive` (C68) |
 
 ## A8. Erros
 

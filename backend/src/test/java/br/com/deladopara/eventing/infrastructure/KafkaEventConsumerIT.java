@@ -67,6 +67,25 @@ class KafkaEventConsumerIT {
     }
 
     @Test
+    void effectsRunUnderTheEventCorrelationAndTheWorkerContextIsRestored() {
+        var correlation = java.util.UUID.randomUUID();
+        var envelope = mock(br.com.deladopara.eventing.application.EventEnvelope.class);
+        when(envelope.correlationId()).thenReturn(correlation);
+        poll(new ConsumerRecord<>("events", 0, 5L, "key", "valid"));
+        when(validator.validate("valid")).thenReturn(envelope);
+        var seen = new java.util.concurrent.atomic.AtomicReference<String>();
+        when(service.consume(envelope)).thenAnswer(call -> {
+            seen.set(org.slf4j.MDC.get("correlationId"));
+            return EventConsumptionOutcome.APPLIED;
+        });
+
+        adapter().pollAndProcess();
+
+        assertThat(seen.get()).isEqualTo(correlation.toString());
+        assertThat(org.slf4j.MDC.get("correlationId")).isNull();
+    }
+
+    @Test
     void transientFailureRewindsPausesAndDoesNotCommitUntilRetryIsDue() {
         poll(new ConsumerRecord<>("events", 0, 5L, "key", "boom"));
         var retryAt = NOW.plusSeconds(3);

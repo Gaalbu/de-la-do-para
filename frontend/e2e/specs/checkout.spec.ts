@@ -226,3 +226,74 @@ test('shows declined and uncertain provider outcomes without claiming success', 
   await expect(page.getByRole('link', { name: /pagamento/ })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Pagamento confirmado' })).toHaveCount(0);
 });
+
+test('cancels a paid order once and follows the refund after a reload', async ({ page }) => {
+  let state: { status: string; payment: string } = { status: 'PAID', payment: 'CONFIRMED' };
+  let cancellations = 0;
+  await page.route('**/api/v1/csrf', (route) => route.fulfill({ json: { token: 't' } }));
+  await page.route('**/api/v1/orders/order-1/cancellation', async (route) => {
+    cancellations++;
+    state = { status: 'CANCELLED', payment: 'REFUND_REQUESTED' };
+    await route.fulfill({ json: { status: 'CANCELLED' } });
+  });
+  await page.route('**/api/v1/orders/order-1', (route) =>
+    route.fulfill({
+      json: {
+        id: 'order-1',
+        status: state.status,
+        totalCents: 3600,
+        items: [{ productName: 'Farinha d’água', quantity: 2, lineTotalCents: 3600 }],
+        payment: { status: state.payment, checkoutUrl: null, checkoutExpiresAt: null },
+      },
+    }),
+  );
+
+  await page.goto('/orders/order-1');
+  await page.getByRole('button', { name: 'Cancelar pedido' }).click();
+  await expect(page.getByText(/reembolsado integralmente/)).toBeVisible();
+  await page.getByRole('button', { name: 'Manter pedido' }).click();
+  await expect(page.getByRole('button', { name: 'Confirmar cancelamento' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Cancelar pedido' }).click();
+  await page.getByRole('button', { name: 'Confirmar cancelamento' }).click();
+  await expect(page.getByRole('heading', { name: 'Pedido cancelado' })).toBeVisible();
+  await expect(page.getByText('Reembolso solicitado.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Cancelar pedido|Confirmar/ })).toHaveCount(0);
+
+  state = { status: 'CANCELLED', payment: 'REFUNDED' };
+  await page.reload();
+  await expect(page.getByText('Reembolso integral concluído.')).toBeVisible();
+  expect(cancellations).toBe(1);
+});
+
+test('explains review for orders with the carrier and refusals from the API', async ({ page }) => {
+  let status = 'IN_TRANSIT';
+  await page.route('**/api/v1/csrf', (route) => route.fulfill({ json: { token: 't' } }));
+  await page.route('**/api/v1/orders/order-1/cancellation', (route) =>
+    route.fulfill({
+      status: 409,
+      contentType: 'application/problem+json',
+      json: { codigo: 'ORDER_002' },
+    }),
+  );
+  await page.route('**/api/v1/orders/order-1', (route) =>
+    route.fulfill({
+      json: {
+        id: 'order-1',
+        status,
+        totalCents: 3600,
+        items: [{ productName: 'Farinha d’água', quantity: 2, lineTotalCents: 3600 }],
+        payment: { status: 'CONFIRMED', checkoutUrl: null, checkoutExpiresAt: null },
+      },
+    }),
+  );
+
+  await page.goto('/orders/order-1');
+  await page.getByRole('button', { name: 'Solicitar cancelamento' }).click();
+  await expect(page.getByText(/não gera reembolso automático/)).toBeVisible();
+
+  status = 'DELIVERED';
+  await page.getByRole('button', { name: 'Confirmar cancelamento' }).click();
+  await expect(page.getByRole('alert')).toContainText('não pode mais ser cancelado');
+  await expect(page.getByRole('button', { name: /cancelamento|Cancelar/ })).toHaveCount(0);
+});

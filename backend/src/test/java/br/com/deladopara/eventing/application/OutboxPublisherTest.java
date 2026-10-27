@@ -62,7 +62,7 @@ class OutboxPublisherTest {
 
         assertThat(publisher.publishBatch()).isEqualTo(1);
 
-        verify(broker).publish(event);
+        verify(broker).publish(event, null);
         verify(events).markPublished(EVENT_ID, leaseUntil, NOW);
     }
 
@@ -74,7 +74,7 @@ class OutboxPublisherTest {
                 .thenReturn(List.of(new ClaimedOutboxEvent(event, leaseUntil)));
         doThrow(new OutboxPublishException("broker unavailable", new RuntimeException()))
                 .when(broker)
-                .publish(event);
+                .publish(event, null);
 
         assertThat(publisher.publishBatch()).isZero();
 

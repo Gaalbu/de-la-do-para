@@ -16,7 +16,8 @@ public interface PaymentProvider {
     /** Looks a checkout up by our intent reference; the only safe way to resolve an unknown creation. */
     Optional<CheckoutState> findCheckout(UUID paymentIntentId);
 
-    record CheckoutRequest(UUID paymentIntentId, UUID orderId, long amountCents) {}
+    /** {@code payBy} is when the order's stock hold ends; a checkout must not stay payable after it. */
+    record CheckoutRequest(UUID paymentIntentId, UUID orderId, long amountCents, Instant payBy) {}
 
     record CreatedCheckout(String checkoutId, String url, Instant expiresAt) {}
 

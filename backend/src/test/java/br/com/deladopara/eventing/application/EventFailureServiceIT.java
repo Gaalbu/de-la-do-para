@@ -30,7 +30,7 @@ class EventFailureServiceIT {
 
     @BeforeEach
     void clean() {
-        jdbc.execute("TRUNCATE event_consumer_failure");
+        jdbc.execute("TRUNCATE event_replay_request, event_consumer_failure");
     }
 
     @Test
