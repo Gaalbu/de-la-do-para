@@ -57,9 +57,12 @@ public class EventingWorkerConfig {
             br.com.deladopara.eventing.application.EventEnvelopeValidator validator,
             br.com.deladopara.eventing.application.EventConsumptionService consumption,
             br.com.deladopara.eventing.application.EventFailureService failures,
-            EventingWorkerProperties properties) {
+            EventingWorkerProperties properties,
+            org.springframework.beans.factory.ObjectProvider<io.micrometer.tracing.Tracer> tracer,
+            org.springframework.beans.factory.ObjectProvider<io.micrometer.tracing.propagation.Propagator> propagator) {
         consumer.subscribe(java.util.List.of(properties.consumerTopic()));
-        return new KafkaEventConsumer(consumer, validator, consumption, failures, Clock.systemUTC());
+        var tracing = new ConsumerTracing(tracer.getIfAvailable(), propagator.getIfAvailable());
+        return new KafkaEventConsumer(consumer, validator, consumption, failures, Clock.systemUTC(), tracing);
     }
 
     @Bean(destroyMethod = "")

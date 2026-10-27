@@ -61,4 +61,12 @@ export const routes: Routes = [
         (m) => m.InventoryAdminComponent,
       ),
   },
+  {
+    path: 'admin/operations',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/operations/operations-admin.component').then(
+        (m) => m.OperationsAdminComponent,
+      ),
+  },
 ];

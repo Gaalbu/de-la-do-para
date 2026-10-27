@@ -100,6 +100,9 @@ class EventingWorkerConfigIT {
     @DynamicPropertySource
     static void eventingProperties(DynamicPropertyRegistry registry) {
         registry.add("app.eventing.publisher.bootstrap-servers", KAFKA::getBootstrapServers);
+        // The test classpath has its own application.yml; expose the scrape endpoint as the worker profile does.
+        registry.add("management.endpoints.web.exposure.include", () -> "health,metrics,prometheus");
+        registry.add("management.prometheus.metrics.export.enabled", () -> "true");
         registry.add("app.eventing.publisher.topic", () -> "events.worker-test");
         registry.add("app.eventing.publisher.lease", () -> "PT30S");
         registry.add("app.eventing.publisher.batch-size", () -> 10);
@@ -117,6 +120,26 @@ class EventingWorkerConfigIT {
         assertThat(context.getBean(KafkaEventConsumer.class)).isNotNull();
         assertThat(context.getBean(EventingWorkerProperties.class).topic())
                 .isNotEqualTo(context.getBean(EventingWorkerProperties.class).consumerTopic());
+    }
+
+    @Test
+    void workerExposesRecoveryMetricsForPrometheus() throws Exception {
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(
+                        (org.springframework.web.context.WebApplicationContext) context)
+                .build();
+
+        var response = mvc.perform(
+                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/actuator/prometheus"))
+                .andReturn()
+                .getResponse();
+        assertThat(response.getStatus()).isEqualTo(200);
+        var body = response.getContentAsString();
+
+        assertThat(body)
+                .contains("dlp_eventing_outbox_pending_count")
+                .contains("dlp_eventing_consumer_failures{state=\"QUARANTINED\"}")
+                .contains("dlp_payments_intents{status=\"UNKNOWN\"}")
+                .doesNotContain("orderId");
     }
 
     @Test

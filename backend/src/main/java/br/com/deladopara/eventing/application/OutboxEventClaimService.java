@@ -40,7 +40,7 @@ public class OutboxEventClaimService {
         claimed.forEach(event -> event.claim(leaseUntil));
         events.flush();
         return claimed.stream()
-                .map(event -> new ClaimedOutboxEvent(event.toDomain(), leaseUntil))
+                .map(event -> new ClaimedOutboxEvent(event.toDomain(), leaseUntil, event.getTraceParent()))
                 .toList();
     }
 

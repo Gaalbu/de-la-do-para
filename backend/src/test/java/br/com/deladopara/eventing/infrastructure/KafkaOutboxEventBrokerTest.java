@@ -37,6 +37,27 @@ class KafkaOutboxEventBrokerTest {
         assertThat(record.getValue().value().toString()).doesNotContain("attemptCount");
     }
 
+    @Test
+    void carriesTheStoredTraceContextAsAW3cHeader() throws Exception {
+        @SuppressWarnings("unchecked")
+        Producer<String, String> producer = org.mockito.Mockito.mock(Producer.class);
+        when(producer.send(org.mockito.ArgumentMatchers.any(ProducerRecord.class)))
+                .thenReturn(CompletableFuture.completedFuture(new RecordMetadata(null, 0, 0, 0, 0, 0)));
+        var broker = new KafkaOutboxEventBroker(producer, new ObjectMapper().findAndRegisterModules(), "events.v1");
+        var traceParent = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
+
+        broker.publish(event(), traceParent);
+        broker.publish(event(), null);
+
+        var records = ArgumentCaptor.forClass(ProducerRecord.class);
+        verify(producer, org.mockito.Mockito.times(2)).send(records.capture());
+        var traced = records.getAllValues().get(0).headers().lastHeader("traceparent");
+        assertThat(new String(traced.value(), java.nio.charset.StandardCharsets.US_ASCII))
+                .isEqualTo(traceParent);
+        assertThat(records.getAllValues().get(1).headers().lastHeader("traceparent"))
+                .isNull();
+    }
+
     private OutboxEvent event() {
         var now = Instant.parse("2026-09-22T12:00:00Z");
         var id = UUID.fromString("11111111-1111-1111-1111-111111111111");

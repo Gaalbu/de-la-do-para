@@ -85,16 +85,18 @@ public class PaymentRepository {
                 .findFirst();
     }
 
-    /** Claims the oldest pending CREATE_CHECKOUT operation without waiting on rows another worker holds. */
+    /** Claims the oldest pending operation of this kind without waiting on rows another worker holds. */
     @Transactional(propagation = Propagation.MANDATORY)
-    public Optional<Operation> claimPendingCheckout(Instant now, Instant leaseUntil) {
-        return jdbc.query("""
+    public Optional<Operation> claimPending(OperationKind kind, Instant now, Instant leaseUntil) {
+        return jdbc
+                .query("""
                         UPDATE payment_external_operation SET status = 'IN_FLIGHT', lease_until = ?, started_at = ?
                         WHERE id = (SELECT id FROM payment_external_operation
-                                    WHERE status = 'PENDING' AND kind = 'CREATE_CHECKOUT'
+                                    WHERE status = 'PENDING' AND kind = ?
                                     ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
                         RETURNING *
-                        """, PaymentRepository::operation, Timestamp.from(leaseUntil), Timestamp.from(now)).stream()
+                        """, PaymentRepository::operation, Timestamp.from(leaseUntil), Timestamp.from(now), kind.name())
+                .stream()
                 .findFirst();
     }
 
@@ -131,6 +133,186 @@ public class PaymentRepository {
                 intentId);
     }
 
+    private static final String UNKNOWN_WITHOUT_ACTIVE_QUERY = """
+            SELECT i.id, i.amount_cents, i.updated_at,
+                   (SELECT count(*) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS lookups,
+                   (SELECT max(q.finished_at) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY') AS last_lookup_at
+            FROM payment_intent i
+            WHERE i.status = 'UNKNOWN'
+              AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
+                              WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
+            """;
+
+    private static final String REFUNDS_AWAITING_LOOKUP = """
+            SELECT i.id, r.finished_at AS refund_finished_at,
+                   (SELECT count(*) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at) AS lookups,
+                   (SELECT max(q.finished_at) FROM payment_external_operation q
+                    WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.created_at >= r.created_at)
+                       AS last_lookup_at
+            FROM payment_intent i
+            JOIN payment_external_operation r ON r.intent_id = i.id AND r.kind = 'REFUND'
+            WHERE i.status = 'REFUND_REQUESTED' AND r.status IN ('SUCCEEDED', 'UNKNOWN')
+              AND NOT EXISTS (SELECT 1 FROM payment_external_operation q
+                              WHERE q.intent_id = i.id AND q.kind = 'QUERY' AND q.status = 'IN_FLIGHT')
+            """;
+
+    /**
+     * Locks UNKNOWN intents that have no lookup in flight, skipping rows another worker holds, with how many lookups
+     * already ran and when the last one finished. The candidates come from the statement's snapshot: a lookup another
+     * worker committed while this statement waited is not visible, so callers re-read with
+     * {@link #unknownWithoutActiveQuery(UUID)} before starting one.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<UnknownIntent> lockUnknownWithoutActiveQuery(int limit) {
+        return jdbc.query(
+                UNKNOWN_WITHOUT_ACTIVE_QUERY + " ORDER BY i.updated_at, i.id LIMIT ? FOR UPDATE OF i SKIP LOCKED",
+                PaymentRepository::unknownIntent,
+                limit);
+    }
+
+    /** Re-reads one intent with a fresh snapshot; empty when it is no longer UNKNOWN or a lookup is in flight. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<UnknownIntent> unknownWithoutActiveQuery(UUID intentId) {
+        return jdbc
+                .query(UNKNOWN_WITHOUT_ACTIVE_QUERY + " AND i.id = ?", PaymentRepository::unknownIntent, intentId)
+                .stream()
+                .findFirst();
+    }
+
+    /**
+     * Locks REFUND_REQUESTED intents whose refund was sent (SUCCEEDED but not settled, or UNKNOWN) and have no lookup
+     * in flight, with how many lookups ran since the refund and when the last one, or the refund, finished. Like
+     * {@link #lockUnknownWithoutActiveQuery(int)}, callers re-read with {@link #refundAwaitingLookup(UUID)}.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<RefundAwaitingLookup> lockRefundsAwaitingLookup(int limit) {
+        return jdbc.query(
+                REFUNDS_AWAITING_LOOKUP + " ORDER BY r.finished_at, i.id LIMIT ? FOR UPDATE OF i SKIP LOCKED",
+                PaymentRepository::refundAwaitingLookup,
+                limit);
+    }
+
+    /** Re-reads one refund with a fresh snapshot; empty when it settled or a lookup is in flight. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<RefundAwaitingLookup> refundAwaitingLookup(UUID intentId) {
+        return jdbc
+                .query(REFUNDS_AWAITING_LOOKUP + " AND i.id = ?", PaymentRepository::refundAwaitingLookup, intentId)
+                .stream()
+                .findFirst();
+    }
+
+    private static UnknownIntent unknownIntent(ResultSet rs, int row) throws SQLException {
+        var last = rs.getTimestamp("last_lookup_at");
+        return new UnknownIntent(
+                rs.getObject("id", UUID.class),
+                rs.getLong("amount_cents"),
+                rs.getInt("lookups"),
+                last == null ? rs.getTimestamp("updated_at").toInstant() : last.toInstant());
+    }
+
+    private static RefundAwaitingLookup refundAwaitingLookup(ResultSet rs, int row) throws SQLException {
+        var last = rs.getTimestamp("last_lookup_at");
+        return new RefundAwaitingLookup(
+                rs.getObject("id", UUID.class),
+                rs.getInt("lookups"),
+                last == null ? rs.getTimestamp("refund_finished_at").toInstant() : last.toInstant());
+    }
+
+    /** The lookup an administrator queued for this intent that no worker has claimed yet, if any. */
+    public Optional<UUID> pendingQuery(UUID intentId) {
+        return jdbc
+                .queryForList(
+                        "SELECT id FROM payment_external_operation WHERE intent_id = ? AND kind = 'QUERY'"
+                                + " AND status = 'PENDING'",
+                        UUID.class,
+                        intentId)
+                .stream()
+                .findFirst();
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void insertAdminLookupRequest(
+            UUID id, UUID intentId, UUID operationId, String actor, String reason, Instant now) {
+        jdbc.update(
+                "INSERT INTO payment_admin_lookup_request (id, intent_id, operation_id, actor, reason, requested_at)"
+                        + " VALUES (?, ?, ?, ?, ?, ?)",
+                id,
+                intentId,
+                operationId,
+                actor,
+                reason,
+                Timestamp.from(now));
+    }
+
+    /** Intents that still need recovery work, oldest change first. */
+    public List<AttentionIntent> needingAttention(int limit) {
+        return jdbc.query(
+                """
+                SELECT id, order_id, amount_cents, status, status_reason, updated_at FROM payment_intent
+                WHERE status IN ('UNKNOWN', 'UNDER_REVIEW', 'REFUND_REQUESTED')
+                ORDER BY updated_at, id
+                LIMIT ?
+                """,
+                (rs, row) -> new AttentionIntent(
+                        rs.getObject("id", UUID.class),
+                        rs.getObject("order_id", UUID.class),
+                        rs.getLong("amount_cents"),
+                        PaymentStatus.valueOf(rs.getString("status")),
+                        rs.getString("status_reason"),
+                        rs.getTimestamp("updated_at").toInstant()),
+                limit);
+    }
+
+    /** Every provider operation of the intent, newest first: the operator's audit trail. */
+    public List<OperationTrail> operationTrail(UUID intentId) {
+        return jdbc.query(
+                """
+                SELECT o.id, o.kind, o.status, o.last_error, o.created_at, o.finished_at, a.actor, a.reason
+                FROM payment_external_operation o
+                LEFT JOIN payment_admin_lookup_request a ON a.operation_id = o.id
+                WHERE o.intent_id = ?
+                ORDER BY o.created_at DESC, o.id
+                """,
+                (rs, row) -> {
+                    var finished = rs.getTimestamp("finished_at");
+                    return new OperationTrail(
+                            rs.getObject("id", UUID.class),
+                            OperationKind.valueOf(rs.getString("kind")),
+                            OperationStatus.valueOf(rs.getString("status")),
+                            rs.getString("last_error"),
+                            rs.getTimestamp("created_at").toInstant(),
+                            finished == null ? null : finished.toInstant(),
+                            rs.getString("actor"),
+                            rs.getString("reason"));
+                },
+                intentId);
+    }
+
+    /** Records a provider lookup as already in flight, in the same transaction that chose the intent. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void startQuery(UUID id, UUID intentId, Instant now, Instant leaseUntil) {
+        jdbc.update(
+                "INSERT INTO payment_external_operation (id, intent_id, kind, status, lease_until, created_at,"
+                        + " started_at) VALUES (?, ?, 'QUERY', 'IN_FLIGHT', ?, ?, ?)",
+                id,
+                intentId,
+                Timestamp.from(leaseUntil),
+                Timestamp.from(now),
+                Timestamp.from(now));
+    }
+
+    /** Links the checkout a lookup found, so its notifications can be matched; never replaces a known one. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void linkCheckout(UUID intentId, String checkoutId) {
+        jdbc.update(
+                "UPDATE payment_intent SET provider_checkout_id = ? WHERE id = ? AND provider_checkout_id IS NULL",
+                checkoutId,
+                intentId);
+    }
+
     public Instant checkoutExpiresAt(UUID intentId) {
         var value = jdbc.queryForObject(
                 "SELECT checkout_expires_at FROM payment_intent WHERE id = ?", Timestamp.class, intentId);
@@ -143,7 +325,8 @@ public class PaymentRepository {
                 rs.getObject("order_id", UUID.class),
                 rs.getLong("amount_cents"),
                 PaymentStatus.valueOf(rs.getString("status")),
-                rs.getInt("status_version"));
+                rs.getInt("status_version"),
+                rs.getTimestamp("created_at").toInstant());
     }
 
     static Operation operation(ResultSet rs, int row) throws SQLException {
@@ -157,7 +340,28 @@ public class PaymentRepository {
                 rs.getString("last_error"));
     }
 
-    public record Intent(UUID id, UUID orderId, long amountCents, PaymentStatus status, int version) {}
+    public record Intent(
+            UUID id, UUID orderId, long amountCents, PaymentStatus status, int version, Instant createdAt) {}
+
+    /** {@code since} is when the last lookup finished, or when the intent became UNKNOWN. */
+    public record UnknownIntent(UUID id, long amountCents, int lookups, Instant since) {}
+
+    /** {@code since} is when the last lookup finished, or when the refund call finished. */
+    public record RefundAwaitingLookup(UUID intentId, int lookups, Instant since) {}
+
+    public record AttentionIntent(
+            UUID id, UUID orderId, long amountCents, PaymentStatus status, String reason, Instant updatedAt) {}
+
+    /** {@code requestedBy}/{@code requestReason} are set only for lookups an administrator asked for. */
+    public record OperationTrail(
+            UUID id,
+            OperationKind kind,
+            OperationStatus status,
+            String result,
+            Instant createdAt,
+            Instant finishedAt,
+            String requestedBy,
+            String requestReason) {}
 
     public record Operation(
             UUID id, UUID intentId, OperationKind kind, OperationStatus status, Instant leaseUntil, String lastError) {}

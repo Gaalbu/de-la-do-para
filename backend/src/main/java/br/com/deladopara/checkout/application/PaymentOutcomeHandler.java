@@ -65,6 +65,10 @@ public class PaymentOutcomeHandler implements EventHandler {
     @Override
     public void handle(EventEnvelope event) {
         var payload = event.payload();
+        if ("payment.refunded".equals(event.eventType())) {
+            returnCouponUse(UUID.fromString(payload.path("orderId").asText()));
+            return;
+        }
         if (!"payment.status_changed".equals(event.eventType())
                 || !PaymentStatus.CONFIRMED.name().equals(payload.path("to").asText())) {
             return;
@@ -102,8 +106,21 @@ public class PaymentOutcomeHandler implements EventHandler {
                 coupons.release(reference);
             }
         }
-        if (order.status() == OrderStatus.PENDING_PAYMENT || order.status() == OrderStatus.EXPIRED) {
+        if (order.status() == OrderStatus.PENDING_PAYMENT
+                || order.status() == OrderStatus.EXPIRED
+                || order.status() == OrderStatus.CANCELLED) {
             payments.transition(intentId, PaymentStatus.REFUND_REQUESTED, "LATE_PAYMENT", event.correlationId());
+        }
+    }
+
+    /**
+     * A settled full refund gives the buyer's per-e-mail coupon use back (D34); the global limit stays spent. Only a
+     * consumed use moves: a coupon released with an unpaid order has nothing to return.
+     */
+    private void returnCouponUse(UUID orderId) {
+        var order = orders.lock(orderId);
+        if (order.couponCode() != null && coupons.isConsumed("order:" + orderId)) {
+            coupons.markFullyRefunded("order:" + orderId);
         }
     }
 }

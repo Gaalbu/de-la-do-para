@@ -3,6 +3,7 @@ package br.com.deladopara.payments.application;
 import br.com.deladopara.payments.adapter.persistence.PaymentRepository;
 import br.com.deladopara.payments.application.PaymentProvider.CheckoutRequest;
 import br.com.deladopara.payments.application.PaymentProvider.CreatedCheckout;
+import br.com.deladopara.payments.domain.OperationKind;
 import br.com.deladopara.payments.domain.OperationStatus;
 import br.com.deladopara.payments.domain.PaymentStatus;
 import java.time.Clock;
@@ -22,6 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class CheckoutOperations {
+
+    /**
+     * The intent is created in the same transaction as the order's stock reservation, which is held for exactly 15
+     * minutes (D11, enforced by {@code inventory_reservation_hold_15_minutes}).
+     */
+    static final Duration RESERVATION_HOLD = Duration.ofMinutes(15);
 
     private final PaymentRepository payments;
     private final PaymentIntentService intents;
@@ -50,12 +57,18 @@ public class CheckoutOperations {
     @Transactional
     public Optional<Claimed> claim() {
         var now = clock.instant();
-        return payments.claimPendingCheckout(now, now.plus(lease)).map(operation -> {
-            var intent = payments.find(operation.intentId()).orElseThrow();
-            intents.transition(intent.id(), PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
-            return new Claimed(
-                    operation.id(), new CheckoutRequest(intent.id(), intent.orderId(), intent.amountCents()));
-        });
+        return payments.claimPending(OperationKind.CREATE_CHECKOUT, now, now.plus(lease))
+                .map(operation -> {
+                    var intent = payments.find(operation.intentId()).orElseThrow();
+                    intents.transition(intent.id(), PaymentStatus.CREATING_CHECKOUT, null, UUID.randomUUID());
+                    return new Claimed(
+                            operation.id(),
+                            new CheckoutRequest(
+                                    intent.id(),
+                                    intent.orderId(),
+                                    intent.amountCents(),
+                                    intent.createdAt().plus(RESERVATION_HOLD)));
+                });
     }
 
     @Transactional
@@ -84,14 +97,19 @@ public class CheckoutOperations {
         }
     }
 
-    /** An expired lease never authorizes a new call: the request may have reached the provider. */
+    /**
+     * An expired lease never authorizes a new call: the request may have reached the provider. An abandoned lookup
+     * only counts as an inconclusive one; its intent is already UNKNOWN.
+     */
     @Transactional
     public int recoverAbandoned() {
         var now = clock.instant();
         List<PaymentRepository.Operation> abandoned = payments.lockAbandonedInFlight(now);
         for (var operation : abandoned) {
             payments.finishOperation(operation.id(), OperationStatus.UNKNOWN, "LEASE_EXPIRED", now);
-            intents.transition(operation.intentId(), PaymentStatus.UNKNOWN, "LEASE_EXPIRED", UUID.randomUUID());
+            if (operation.kind() == OperationKind.CREATE_CHECKOUT) {
+                intents.transition(operation.intentId(), PaymentStatus.UNKNOWN, "LEASE_EXPIRED", UUID.randomUUID());
+            }
         }
         return abandoned.size();
     }

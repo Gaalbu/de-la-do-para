@@ -1,0 +1,137 @@
+<main class="admin" aria-labelledby="operations-title">
+  <p><a routerLink="/admin">← Voltar à administração</a></p>
+  <h1 id="operations-title">Operações e recuperação</h1>
+  <p>
+    Ações daqui só pedem trabalho ao worker, com motivo registrado. Nada cria cobrança, reembolso ou
+    evento novo.
+  </p>
+  <button type="button" (click)="load()" [disabled]="loading()">
+    {{ loading() ? 'Atualizando…' : 'Atualizar' }}
+  </button>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="notice" role="status">{{ notice() }}</p>
+  }
+
+  @if (pending(); as action) {
+    <section class="confirm" aria-labelledby="confirm-title">
+      <h2 id="confirm-title">
+        {{
+          action.kind === 'lookup' ? 'Pedir nova consulta ao provedor' : 'Pedir replay do evento'
+        }}
+      </h2>
+      <p>{{ effect(action) }}</p>
+      <label>
+        Motivo (registrado na auditoria)
+        <textarea [(ngModel)]="reason" name="reason" maxlength="200" rows="2" required></textarea>
+      </label>
+      <button type="button" (click)="confirm()" [disabled]="sending() || !reason.trim()">
+        {{ sending() ? 'Enviando…' : 'Confirmar pedido' }}
+      </button>
+      <button type="button" class="secondary" (click)="cancel()" [disabled]="sending()">
+        Cancelar
+      </button>
+    </section>
+  }
+
+  <section aria-labelledby="payments-title">
+    <h2 id="payments-title">Pagamentos que exigem atenção</h2>
+    @if (payments().length === 0) {
+      <p>Nenhum pagamento incerto, em análise ou com reembolso pendente.</p>
+    }
+    @for (payment of payments(); track payment.intent.id) {
+      <article class="incident" [attr.aria-label]="'Pagamento do pedido ' + payment.intent.orderId">
+        <header>
+          <strong>{{ paymentStatus(payment.intent.status) }}</strong>
+          · {{ formatPrice(payment.intent.amountCents) }}
+          @if (payment.intent.reason) {
+            · motivo <code>{{ payment.intent.reason }}</code>
+          }
+        </header>
+        <p>
+          Pedido <code>{{ payment.intent.orderId }}</code> · pagamento
+          <code>{{ payment.intent.id }}</code> · atualizado em
+          {{ payment.intent.updatedAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+        </p>
+        <table>
+          <caption>
+            Operações no provedor
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Operação</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Resultado</th>
+              <th scope="col">Pedida por</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (operation of payment.operations; track operation.id) {
+              <tr>
+                <td>{{ operationKind(operation.kind) }}</td>
+                <td>{{ operation.status }}</td>
+                <td>{{ operation.result ?? '—' }}</td>
+                <td>
+                  @if (operation.requestedBy) {
+                    {{ operation.requestedBy }} — {{ operation.requestReason }}
+                  } @else {
+                    sistema
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <button type="button" (click)="start({ kind: 'lookup', payment: payment })">
+          Pedir nova consulta
+        </button>
+      </article>
+    }
+  </section>
+
+  <section aria-labelledby="events-title">
+    <h2 id="events-title">Eventos em quarentena</h2>
+    @if (events().length === 0) {
+      <p>Nenhum evento em quarentena.</p>
+    }
+    @for (event of events(); track event.topic + event.partition + '-' + event.offset) {
+      <article
+        class="incident"
+        [attr.aria-label]="'Evento ' + event.topic + ' ' + event.partition + '/' + event.offset"
+      >
+        <header>
+          <strong>{{
+            event.failureKind === 'INVALID' ? 'Envelope inválido' : 'Falha repetida'
+          }}</strong>
+          · {{ event.attempts }} tentativa(s) · <code>{{ event.lastError }}</code>
+        </header>
+        <p>
+          {{ event.topic }} · partição {{ event.partition }} · offset {{ event.offset }} · em
+          quarentena desde {{ event.quarantinedAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+        </p>
+        <p>
+          Correlação <code>{{ event.correlationId ?? '—' }}</code> · evento
+          <code>{{ event.eventId ?? 'ilegível' }}</code>
+        </p>
+        @if (event.replayStatus) {
+          <p>
+            Último replay: <strong>{{ event.replayStatus }}</strong>
+            @if (event.replayResult) {
+              ({{ event.replayResult }})
+            }
+            · pedido por {{ event.replayRequestedBy }}
+          </p>
+        }
+        @if (event.eventId) {
+          <button type="button" (click)="start({ kind: 'replay', event: event })">
+            Pedir replay
+          </button>
+        } @else {
+          <p>Replay indisponível: o registro não tem um evento legível.</p>
+        }
+      </article>
+    }
+  </section>
+</main>

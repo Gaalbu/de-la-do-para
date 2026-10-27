@@ -104,7 +104,7 @@ public class StockReservationService {
                     allocation.skuId(),
                     allocation.units());
         }
-        movements(id, "RESERVATION", -1, allocations, now);
+        movements(id, "RESERVATION", -1, allocations, now, "reserva de compra");
         return new Reservation(id, reference, Status.ACTIVE, now.plus(HOLD), List.copyOf(allocations));
     }
 
@@ -129,6 +129,26 @@ public class StockReservationService {
         if (reservation.status() != Status.ACTIVE) {
             return reservation;
         }
+        return giveBack(reservation, "reserva de compra");
+    }
+
+    /**
+     * Returns a paid order's committed units to the lots they came from once (CHK-Q03 proposal, C68); a released
+     * reservation is left untouched. A blocked or expired lot gets its units back but stays ineligible for sale.
+     */
+    @Transactional
+    public Reservation returnCommitted(String reference, String reason) {
+        var reservation = lock(reference);
+        if (reservation.status() == Status.RELEASED) {
+            return reservation;
+        }
+        if (reservation.status() != Status.COMMITTED) {
+            throw new ReservationNotActiveException(reference);
+        }
+        return giveBack(reservation, reason);
+    }
+
+    private Reservation giveBack(Reservation reservation, String reason) {
         var now = clock.instant();
         var ordered = reservation.allocations().stream()
                 .sorted(Comparator.comparing(Allocation::skuId).thenComparing(Allocation::lotId))
@@ -141,7 +161,7 @@ public class StockReservationService {
                     Timestamp.from(now),
                     allocation.lotId());
         }
-        movements(reservation.id(), "RELEASE", 1, ordered, now);
+        movements(reservation.id(), "RELEASE", 1, ordered, now, reason);
         setStatus(reservation.id(), Status.RELEASED);
         return reservation.with(Status.RELEASED);
     }
@@ -191,7 +211,8 @@ public class StockReservationService {
     }
 
     /** One movement per SKU, keyed so that the same step for the same reservation can never be written twice. */
-    private void movements(UUID reservationId, String type, int sign, List<Allocation> allocations, Instant now) {
+    private void movements(
+            UUID reservationId, String type, int sign, List<Allocation> allocations, Instant now, String reason) {
         allocations.stream()
                 .collect(Collectors.groupingBy(
                         Allocation::skuId, TreeMap::new, Collectors.summingInt(Allocation::units)))
@@ -203,7 +224,7 @@ public class StockReservationService {
                         type,
                         sign * units,
                         type.toLowerCase(Locale.ROOT) + ":" + reservationId + ":" + skuId,
-                        "reserva de compra",
+                        reason,
                         Timestamp.from(now)));
     }
 

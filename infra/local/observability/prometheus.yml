@@ -1,0 +1,13 @@
+# C79a — coleta local das métricas de recuperação do worker.
+# O worker roda no host (perfil `worker`, porta 18081 por padrão neste guia).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: dlp-worker
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:18081"]
+        labels:
+          process: worker

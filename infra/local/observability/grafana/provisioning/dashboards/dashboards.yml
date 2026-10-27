@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+  - name: dlp
+    folder: De Lá do Pará
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

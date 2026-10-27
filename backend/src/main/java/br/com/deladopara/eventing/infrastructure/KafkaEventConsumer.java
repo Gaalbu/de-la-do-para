@@ -21,6 +21,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class KafkaEventConsumer implements AutoCloseable {
 
@@ -32,6 +33,7 @@ public class KafkaEventConsumer implements AutoCloseable {
     private final EventConsumptionService consumption;
     private final EventFailureService failures;
     private final Clock clock;
+    private final ConsumerTracing tracing;
     private final Map<TopicPartition, Instant> pausedUntil = new HashMap<>();
 
     public KafkaEventConsumer(
@@ -40,11 +42,22 @@ public class KafkaEventConsumer implements AutoCloseable {
             EventConsumptionService consumption,
             EventFailureService failures,
             Clock clock) {
+        this(consumer, validator, consumption, failures, clock, ConsumerTracing.NONE);
+    }
+
+    public KafkaEventConsumer(
+            Consumer<String, String> consumer,
+            EventEnvelopeValidator validator,
+            EventConsumptionService consumption,
+            EventFailureService failures,
+            Clock clock,
+            ConsumerTracing tracing) {
         this.consumer = consumer;
         this.validator = validator;
         this.consumption = consumption;
         this.failures = failures;
         this.clock = clock;
+        this.tracing = tracing;
     }
 
     public int pollAndProcess() {
@@ -91,7 +104,17 @@ public class KafkaEventConsumer implements AutoCloseable {
         EventEnvelope envelope = null;
         try {
             envelope = validator.validate(record.value());
-            consumption.consume(envelope);
+            // Effects and their logs carry the correlation of the request that produced the event (C79).
+            var previous = MDC.get("correlationId");
+            if (envelope.correlationId() != null) {
+                MDC.put("correlationId", envelope.correlationId().toString());
+            }
+            try {
+                var valid = envelope;
+                tracing.inSpan(record, valid.eventType(), () -> consumption.consume(valid));
+            } finally {
+                restoreCorrelation(previous);
+            }
             return true;
         } catch (RuntimeException exception) {
             return handleFailure(partition, record, envelope, exception);
@@ -152,5 +175,13 @@ public class KafkaEventConsumer implements AutoCloseable {
     @Override
     public void close() {
         consumer.close();
+    }
+
+    private static void restoreCorrelation(String previous) {
+        if (previous == null) {
+            MDC.remove("correlationId");
+        } else {
+            MDC.put("correlationId", previous);
+        }
     }
 }

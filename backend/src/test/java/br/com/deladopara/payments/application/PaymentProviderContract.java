@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import br.com.deladopara.payments.application.PaymentProvider.CheckoutRequest;
 import br.com.deladopara.payments.application.PaymentProvider.CheckoutStatus;
 import br.com.deladopara.payments.application.PaymentProvider.ProviderRejectedException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +35,8 @@ public abstract class PaymentProviderContract {
     protected abstract ProviderEvent redeliver(ProviderEvent event);
 
     private static CheckoutRequest request(long amountCents) {
-        return new CheckoutRequest(UUID.randomUUID(), UUID.randomUUID(), amountCents);
+        return new CheckoutRequest(
+                UUID.randomUUID(), UUID.randomUUID(), amountCents, Instant.now().plus(Duration.ofMinutes(15)));
     }
 
     @Test
