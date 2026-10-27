@@ -1133,3 +1133,14 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Bloqueios | C70/C71/C73/C73a/C82b (lane do Codex, drafts #134/#135); C75/C78/C81b (A13/ORD-Q02); C03 (revisão visual); C04/C45/C63/C89 (credenciais de sandbox); C31/C32/C84 (política de cupom, PR #125 em draft); C24a/C25/C29 (revisão das specs). Daí dependem C79 (traces e instrumentação de frete/notificações), C79a (traces), C83 (etiquetas), C85–C88, C90–C98. |
 | Migrations | V36 (`payment_admin_lookup_request`) e V37 (`event_replay_request`) no main; os drafts #134/#135 usam V35/V36 e precisam renumerar ao mesclar. |
 | Próximo passo | Destravar as dependências externas acima; em seguida C94 (após C70 e C82b) e o fechamento da C79. |
+
+## Sessão 2026-10-26 — lane do Claude: advisories de dependências e C90 parcial
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Retomar o plano; liberar o gate `security` e iniciar a C90 sem violar dependências. |
+| Mudanças | PR #166: `npm audit fix` e `overrides.vite = 8.3.5` (`@angular/build` fixa vite 8.3.0 exato); `npm audit` 0 vulnerabilidades. PR #167 (draft): `load/catalog.js` e `load/README.md`, primeira fatia da C90 (catálogo somente leitura). |
+| Verificação | #166: `scripts/verify.sh frontend` exit 0 (E2E 10/10), segredos OK, CI 7/7. `osv-scanner` ausente localmente; coberto pelo CI. #167: não executada, `k6` ausente. |
+| Remoto | #166 aberta com CI verde, merge aguarda autorização. #136 atualizada com a `main`, bloqueada só pelo `security` que a #166 resolve; #138 empilhada nela. |
+| Bloqueios | C79 (C70/C75), C94 (C70/C82b), C90 completa (C88, k6, dataset). |
+| Próximo passo | Mesclar #166, reexecutar CI da #136, mesclar #136 e rebasear/mesclar #138. |
