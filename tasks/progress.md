@@ -1072,6 +1072,18 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Limite | A UI usa respostas simuladas no Playwright; nenhuma confirmação Asaas externa foi testada. Chrome DevTools MCP não está configurado; Chromium via Playwright foi usado. C62 ainda não foi merged. |
 | Próximo passo | Enviar este registro, acompanhar o CI atualizado da PR #111 e deixá-la pronta para revisão quando os checks finais passarem; depois seguir a próxima tarefa elegível de acordo com as dependências e o acesso real exigido por C63. |
 
+## Sessão 2026-10-05 — C77 recuperação de conta
+
+| Campo | Conteúdo |
+|---|---|
+| Base | Worktree isolada `/home/gaalbu/codigos/de-la-do-para-wt/c77-account-recovery`, branch `codex/c77-account-recovery`, base C76 SHA `b4712c0`. O checkout compartilhado e as worktrees de peers não foram alterados. |
+| Decisões | Usuário confirmou: 3 solicitações/hora por IP+e-mail, token de recuperação válido por 15 minutos e revogação de todas as sessões após redefinir a senha. Limite de login 5/15m continua pendente. Registrado na spec, decisões e plano mestre. |
+| Mudanças | Endpoints `/api/v1/accounts/recovery` e `/reset`; respostas idênticas sem enumeração; limitador fixo em memória, chave SHA-256 do IP+e-mail, capacidade limitada; token opaco/hash, uso único e expiração; bloqueio por conta antes da atualização condicional de token para serializar resets sem deadlock; troca de senha limpa lockout e revoga sessões `SPRING_SESSION` na mesma transação; e-mails, propriedades HTTPS, contrato OpenAPI, spec e matriz de rastreio atualizados. |
+| Verificação | Temurin 25.0.4 com `-Xint`: `IdentityMailIT` 8/8 (PostgreSQL/Testcontainers), `IdentitySmtpIT` 2/2 (Mailpit), `IdentityPropertiesTest` 2/2; competição de resets produziu 200/410 e tokens expirados/reutilizados foram rejeitados. `scripts/verify.sh docs` e `contracts` passaram com 8 avisos Redocly existentes; secrets, `npm audit` e `osv-scanner` v2.6.0 sem achados; `aislop` 100/100, `git diff --check` passou. Gate backend completo local terminou anteriormente em SIGSEGV da JVM após 31 testes sem falha de asserção observada. GitHub Actions passou 7/7 no SHA `9bd11f4`, run `37375333673` (backend, frontend, contracts, docs, security, commit-policy, quality-gate). |
+| Limite | A tentativa local da suíte backend completa sofreu `SIGSEGV` durante Surefire após 31 testes sem falha observada; a CI remota passou o backend completo. O rate-limit é local por processo; sem UI frontend (C81a) ou homologação de SMTP externo. |
+| Remoto | Commits `354a6ae` (feature), `ce4b5b0` (Checkstyle), `6d68a91` (evidência local), `9bd11f4` (reconciliação) e `3a404f3` (resultado da CI) publicados em `codex/c77-account-recovery`; PR [#138](https://github.com/Gaalbu/de-la-do-para/pull/138) OPEN/pronta para revisão, empilhada sobre PR #136. CI passou 7/7 no SHA `9bd11f4`; nova rodada no SHA `3a404f3` está em fila. |
+| Próximo passo | Acompanhar a CI do commit documental mais recente e aguardar integração da base C76 antes de integrar C77. |
+
 ### Revisão de privacidade C62 — 2026-09-28
 
 - Revisão apontou que a chave de `sessionStorage` continha a intenção serializada, incluindo e-mail/endereço. O commit atômico `2207582` substitui o nome por HMAC-SHA-256 com sal aleatório da sessão; retry da mesma intenção mantém a chave idempotente, e os nomes não revelam dados pessoais.

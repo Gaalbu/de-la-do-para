@@ -88,6 +88,12 @@ public class Account {
         this.updatedAt = now;
     }
 
+    public void resetPasswordHash(String passwordHash, Instant now) {
+        this.passwordHash = passwordHash;
+        this.lockedUntil = null;
+        this.updatedAt = now;
+    }
+
     public void setEmailVerified(boolean verified, Instant now) {
         this.emailVerified = verified;
         this.updatedAt = now;

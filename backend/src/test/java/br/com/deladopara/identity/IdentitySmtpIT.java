@@ -37,7 +37,12 @@ class IdentitySmtpIT {
         sender.setHost(MAILPIT.getHost());
         sender.setPort(MAILPIT.getMappedPort(1025));
         var properties = new IdentityProperties(
-                10, Duration.ofMinutes(30), "https://loja.example/verify-email", "no-reply@deladopara.local");
+                10,
+                Duration.ofMinutes(30),
+                "https://loja.example/verify-email",
+                Duration.ofMinutes(15),
+                "https://loja.example/reset-password",
+                "no-reply@deladopara.local");
         var adapter = new SmtpIdentityMailAdapter(sender, properties);
         var email = "smtp-" + java.util.UUID.randomUUID() + "@example.test";
 
@@ -54,5 +59,37 @@ class IdentitySmtpIT {
                 Session.getInstance(new Properties()),
                 new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8)));
         assertThat(message.getContent().toString()).contains("https://loja.example/verify-email#token=opaque-token");
+    }
+
+    @Test
+    void smtpAdapterDeliversThePasswordRecoveryLinkToMailpit() throws Exception {
+        var sender = new JavaMailSenderImpl();
+        sender.setHost(MAILPIT.getHost());
+        sender.setPort(MAILPIT.getMappedPort(1025));
+        var properties = new IdentityProperties(
+                10,
+                Duration.ofMinutes(30),
+                "https://loja.example/verify-email",
+                Duration.ofMinutes(15),
+                "https://loja.example/reset-password",
+                "no-reply@deladopara.local");
+        var adapter = new SmtpIdentityMailAdapter(sender, properties);
+        var email = "recovery-" + java.util.UUID.randomUUID() + "@example.test";
+
+        adapter.sendRecovery(email, "https://loja.example/reset-password#token=opaque-token", Duration.ofMinutes(15));
+
+        var request = HttpRequest.newBuilder(URI.create("http://" + MAILPIT.getHost() + ":"
+                        + MAILPIT.getMappedPort(8025) + "/api/v1/message/latest/raw"))
+                .GET()
+                .build();
+        var response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).contains(email);
+        var message = new MimeMessage(
+                Session.getInstance(new Properties()),
+                new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8)));
+        assertThat(message.getSubject()).isEqualTo("Redefina sua senha — De Lá do Pará");
+        assertThat(message.getContent().toString())
+                .contains("https://loja.example/reset-password#token=opaque-token", "15 minutos", "uso único");
     }
 }
