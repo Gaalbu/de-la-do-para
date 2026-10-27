@@ -17,13 +17,32 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(PostgresTestContainer.class)
+@Import({PostgresTestContainer.class, SessionSecurityIT.MailConfiguration.class})
 class SessionSecurityIT {
     private static final String PASSWORD = "correct-horse-battery";
+
+    @TestConfiguration
+    static class MailConfiguration {
+        @Bean
+        @org.springframework.context.annotation.Primary
+        JavaMailSender testMailSender() {
+            return new JavaMailSenderImpl() {
+                @Override
+                public void send(SimpleMailMessage message) {
+                    // These session security tests do not inspect SMTP delivery.
+                }
+            };
+        }
+    }
 
     private final int port;
     private final AccountService accounts;

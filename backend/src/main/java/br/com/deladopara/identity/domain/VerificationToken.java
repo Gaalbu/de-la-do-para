@@ -81,7 +81,7 @@ public class VerificationToken {
     }
 
     public boolean isExpired(Instant now) {
-        return now.isAfter(expiresAt);
+        return !now.isBefore(expiresAt);
     }
 
     public boolean isUsed() {

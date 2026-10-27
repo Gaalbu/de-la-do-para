@@ -2,7 +2,8 @@ package br.com.deladopara.identity.adapter.web;
 
 import br.com.deladopara.identity.adapter.web.dto.AccountResponse;
 import br.com.deladopara.identity.adapter.web.dto.RegisterRequest;
-import br.com.deladopara.identity.application.AccountService;
+import br.com.deladopara.identity.adapter.web.dto.VerifyEmailRequest;
+import br.com.deladopara.identity.application.AccountVerificationService;
 import br.com.deladopara.identity.domain.Account;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -16,17 +17,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
 
-    private final AccountService service;
+    private final AccountVerificationService verification;
 
-    public AccountController(AccountService service) {
-        this.service = service;
+    public AccountController(AccountVerificationService verification) {
+        this.verification = verification;
     }
 
     @PostMapping
     public ResponseEntity<AccountResponse> register(@Valid @RequestBody RegisterRequest req) {
-        var account = service.register(req.email(), req.password(), Account.Role.CUSTOMER);
+        var account = verification.register(req.email(), req.password());
         return ResponseEntity.created(URI.create("/api/v1/accounts/" + account.getId()))
                 .body(toResponse(account));
+    }
+
+    @PostMapping("/verify")
+    public AccountResponse verify(@Valid @RequestBody VerifyEmailRequest request) {
+        return toResponse(verification.verify(request.token()));
     }
 
     private static AccountResponse toResponse(Account a) {
