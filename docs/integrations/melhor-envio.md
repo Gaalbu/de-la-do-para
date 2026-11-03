@@ -34,8 +34,10 @@ restante. Não alegar integração comprovada.
   volumes em cm/kg com valor segurado por pacote em BRL.
 - O parser lê uma lista de serviços, usa `custom_price` e
   `custom_delivery_time`, e rejeita opções cuja resposta não corresponda aos
-  pacotes/dimensões/peso/seguro enviados. Nenhum endpoint de checkout invoca
-  o adapter ainda; a chamada é opt-in e a configuração real está pendente.
+  pacotes/dimensões/peso/seguro enviados. Com `SHIPPING_ADAPTER_ENABLED=true`,
+  o endpoint de opções de entrega do checkout recompõe o snapshot e invoca o
+  adapter quando não existe cotação válida com fingerprint atual; por padrão,
+  a chamada permanece desabilitada.
 - `SHIPPING_ADAPTER_ENABLED=true` habilita o bean. Configurar
   `shipping.adapter.credential` (token), `shipping.adapter.user-agent` (nome
   do app e e-mail de contato), `shipping.adapter.timeout`,
@@ -52,8 +54,9 @@ restante. Não alegar integração comprovada.
   peso total com proteção, D59/D58/D60) do CEP 66053-000 ao destino;
   `insurance_value` = preço do snapshot; parse valida cobertura/custos/prazos
   via `custom_*`; timeout/credencial expirada/serviço ausente tratados.
-- Quote persistida e vinculada a itens + endereço + composição (C43);
-  qualquer alteração invalida a cotação (V12).
+- Quote persistida e vinculada a snapshot, versão, endereço, composição,
+  origem e preços atuais (C43); a seleção recompõe esses dados no servidor e
+  rejeita fingerprint obsoleto. Alteração de preço/embalagem invalida a seleção.
 - Etiquetas/tracking por pacote com estado e correlação; falha parcial
   preserva pacotes concluídos (C70/C71, V15/V22) — endpoints de
   compra/geração de etiqueta e tracking a exercitar no spike.
@@ -74,3 +77,22 @@ restante. Não alegar integração comprovada.
 
 - Conta sandbox Melhor Envio + app OAuth2 (client id/secret + redirect);
   e-mail de contato para o `User-Agent`; CEPs de destino de teste.
+
+
+## Estado de implementação e evidência (2026-11-03)
+
+A branch `codex/c42-live-quotes` conecta o endpoint de opções de entrega do
+checkout ao gerador de cotações. O gerador carrega SKU ativo e preço atual,
+compõe os volumes, calcula fingerprint com snapshot/versão, origem/destino,
+embalagem e seguro, reutiliza opção válida compatível ou chama o adapter e
+persiste as respostas. Na seleção, o fingerprint é recalculado no servidor;
+preço ou embalagem alterados causam conflito.
+
+Os testes focados locais passaram: 21/21 em `PackageComposerTest`,
+`ShippingQuoteGenerationServiceTest`, `ShippingQuoteServiceTest`,
+`CheckoutSnapshotServiceTest`, `CheckoutControllerTest` e
+`MelhorEnvioSandboxAdapterTest`, com `MockRestServiceServer`. Isso valida o
+cliente HTTP contra resposta controlada, não uma chamada real ao carrier. A
+integração permanece opt-in (`SHIPPING_ADAPTER_ENABLED=false` por padrão),
+sem credenciais reais; CI da branch, aceitação de CEP/rota pelo sandbox e
+jornada integrada no navegador ainda precisam de evidência.

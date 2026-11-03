@@ -56,10 +56,10 @@ class MelhorEnvioSandboxAdapterTest {
                 .andExpect(jsonPath("$.from.postal_code").value("66053000"))
                 .andExpect(jsonPath("$.to.postal_code").value("66053000"))
                 .andExpect(jsonPath("$.volumes[0].length").value(25.0))
-                .andExpect(jsonPath("$.volumes[0].weight").value(0.35))
+                .andExpect(jsonPath("$.volumes[0].weight").value(0.4))
                 .andExpect(jsonPath("$.volumes[0].insurance").value(12.34))
                 .andRespond(withSuccess("""
-                [{"id":1,"name":"PAC","custom_price":"25.90","custom_delivery_time":5,"packages":[{"price":"25.90","discount":"0.00","format":"box","dimensions":{"height":13,"width":19,"length":25},"weight":"0.35","insurance_value":"12.34","products":[]}]}]
+                [{"id":1,"name":"PAC","custom_price":"25.90","custom_delivery_time":5,"packages":[{"price":"25.90","discount":"0.00","format":"box","dimensions":{"height":13,"width":19,"length":25},"weight":"0.4","insurance_value":"12.34","products":[]}]}]
                 """, MediaType.APPLICATION_JSON));
         var result = adapter.quote(new ShippingQuoteRequest("66053000", "66053-000", packages, Map.of(1, 1234L)), NOW);
 

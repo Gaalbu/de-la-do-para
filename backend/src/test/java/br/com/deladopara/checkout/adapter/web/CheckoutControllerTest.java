@@ -94,4 +94,12 @@ class CheckoutControllerTest {
         assertThat(response.quoteId()).isEqualTo(quoteId);
         assertThat(response.inputFingerprint()).isEqualTo("fingerprint");
     }
+
+    @Test
+    void mapsCarrierFailureToRecoverableServiceUnavailable() {
+        var response = new CheckoutController(mock(CheckoutSnapshotService.class)).shippingUnavailable();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(503);
+        assertThat(response.getBody().codigo()).isEqualTo("CHECKOUT_007");
+    }
 }
