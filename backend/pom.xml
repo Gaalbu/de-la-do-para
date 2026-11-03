@@ -34,6 +34,9 @@
     <!-- jackson-databind 2.21.5/3.1.5 do Boot 4.1.1: GHSA-gx83-3vf8-gh7j, GHSA-q4xh-88c3-wmh7, GHSA-wjgm-6hv5-3cvf, GHSA-cxp5-3px4-pw24, GHSA-wv8q-qhhj-9h54. -->
     <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
     <jackson-bom.version>3.1.7</jackson-bom.version>
+    <!-- Fixes reported by osv-scanner on the Boot 4.1.1 managed dependency set. -->
+    <opentelemetry.version>1.67.0</opentelemetry.version>
+    <snappy-java.version>1.1.10.9</snappy-java.version>
   </properties>
 
   <dependencyManagement>
@@ -49,6 +52,11 @@
         <groupId>at.yawk.lz4</groupId>
         <artifactId>lz4-java</artifactId>
         <version>${lz4-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${snappy-java.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

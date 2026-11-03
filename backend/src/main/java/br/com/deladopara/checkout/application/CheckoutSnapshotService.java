@@ -6,6 +6,7 @@ import br.com.deladopara.checkout.adapter.persistence.CheckoutSnapshotEntity;
 import br.com.deladopara.checkout.adapter.persistence.CheckoutSnapshotRepository;
 import br.com.deladopara.shipping.application.DeliveryOptionsService;
 import br.com.deladopara.shipping.application.ShippingQuote;
+import br.com.deladopara.shipping.application.ShippingQuoteGenerationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
@@ -25,6 +26,16 @@ public class CheckoutSnapshotService {
     private final Clock clock;
     private final DeliveryOptionsService deliveryOptions;
     private final PickupOptionsService pickupOptions;
+    private final ShippingQuoteGenerationService shippingQuotes;
+
+    public CheckoutSnapshotService(
+            CartRepository carts,
+            CheckoutSnapshotRepository snapshots,
+            ObjectMapper objectMapper,
+            Clock clock,
+            DeliveryOptionsService deliveryOptions) {
+        this(carts, snapshots, objectMapper, clock, deliveryOptions, null, null);
+    }
 
     @Autowired
     public CheckoutSnapshotService(
@@ -32,8 +43,16 @@ public class CheckoutSnapshotService {
             CheckoutSnapshotRepository snapshots,
             ObjectMapper objectMapper,
             Clock clock,
-            DeliveryOptionsService deliveryOptions) {
-        this(carts, snapshots, objectMapper, clock, deliveryOptions, null);
+            DeliveryOptionsService deliveryOptions,
+            PickupOptionsService pickupOptions,
+            ShippingQuoteGenerationService shippingQuotes) {
+        this.carts = carts;
+        this.snapshots = snapshots;
+        this.objectMapper = objectMapper;
+        this.clock = clock;
+        this.deliveryOptions = deliveryOptions;
+        this.pickupOptions = pickupOptions;
+        this.shippingQuotes = shippingQuotes;
     }
 
     public CheckoutSnapshotService(
@@ -43,15 +62,9 @@ public class CheckoutSnapshotService {
             Clock clock,
             DeliveryOptionsService deliveryOptions,
             PickupOptionsService pickupOptions) {
-        this.carts = carts;
-        this.snapshots = snapshots;
-        this.objectMapper = objectMapper;
-        this.clock = clock;
-        this.deliveryOptions = deliveryOptions;
-        this.pickupOptions = pickupOptions;
+        this(carts, snapshots, objectMapper, clock, deliveryOptions, pickupOptions, null);
     }
 
-    @Transactional(readOnly = true)
     public List<ShippingQuote> findDeliveryOptions(
             String sessionId, UUID snapshotId, long snapshotVersion, String destinationPostalCode) {
         var sessionKey = GuestCartService.hashSession(sessionId);
@@ -60,7 +73,10 @@ public class CheckoutSnapshotService {
         if (snapshot.getCartVersion() != snapshotVersion) {
             throw new SnapshotVersionConflictException();
         }
-        return deliveryOptions.findAvailable(snapshotId, snapshotVersion, destinationPostalCode);
+        return shippingQuotes == null
+                ? deliveryOptions.findAvailable(snapshotId, snapshotVersion, destinationPostalCode)
+                : shippingQuotes.findOrCreate(
+                        snapshot.getId(), snapshot.getCartVersion(), snapshot.getItems(), destinationPostalCode);
     }
 
     @Transactional(readOnly = true)
@@ -72,7 +88,11 @@ public class CheckoutSnapshotService {
         if (snapshot.getCartVersion() != snapshotVersion) {
             throw new SnapshotVersionConflictException();
         }
-        return deliveryOptions.select(snapshotId, snapshotVersion, quoteId, inputFingerprint);
+        var quote = deliveryOptions.select(snapshotId, snapshotVersion, quoteId, inputFingerprint);
+        if (shippingQuotes != null) {
+            shippingQuotes.assertCurrent(snapshot.getId(), snapshot.getCartVersion(), snapshot.getItems(), quote);
+        }
+        return quote;
     }
 
     @Transactional(readOnly = true)

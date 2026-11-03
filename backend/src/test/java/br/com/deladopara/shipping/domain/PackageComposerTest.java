@@ -32,9 +32,32 @@ class PackageComposerTest {
         var small = PackageComposer.compose(
                 List.of(new PackageComposer.Line(FOOD, PackageComposer.Category.FOOD, false, 1, 100, 100, 100, 100)));
         assertThat(small.getFirst().boxCode()).isEqualTo("P");
+        assertThat(small.getFirst().lengthMm()).isEqualTo(250);
+        assertThat(small.getFirst().widthMm()).isEqualTo(190);
+        assertThat(small.getFirst().heightMm()).isEqualTo(130);
+        assertThat(small.getFirst().totalWeightGrams()).isEqualTo(300);
 
         assertThatThrownBy(() -> PackageComposer.compose(List.of(
                         new PackageComposer.Line(FOOD, PackageComposer.Category.FOOD, false, 1, 500, 100, 100, 100))))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void includesFragileProtectionWeightAndDoesNotAddPaperFillToIt() {
+        var fragile = PackageComposer.compose(
+                List.of(new PackageComposer.Line(CRAFT, PackageComposer.Category.CRAFT, true, 1, 100, 100, 100, 600)));
+
+        assertThat(fragile.getFirst().totalWeightGrams()).isEqualTo(950);
+        assertThat(fragile.getFirst().lengthMm()).isEqualTo(310);
+    }
+
+    @Test
+    void validatesThreeDimensionalPackingInsteadOfComparingOnlyMaximumAxes() {
+        var plans = PackageComposer.compose(
+                List.of(new PackageComposer.Line(FOOD, PackageComposer.Category.FOOD, false, 3, 100, 100, 100, 500)));
+
+        assertThat(plans).hasSize(1);
+        assertThat(plans.getFirst().boxCode()).isEqualTo("M");
+        assertThat(plans.getFirst().totalWeightGrams()).isEqualTo(1_800);
     }
 }

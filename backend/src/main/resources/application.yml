@@ -58,6 +58,10 @@ app:
 
 shipping:
   pickup-code-encryption-key: ${SHIPPING_PICKUP_ENCRYPTION_KEY}
+  adapter:
+    enabled: ${SHIPPING_ADAPTER_ENABLED:false}
+    base-url: ${SHIPPING_ADAPTER_BASE_URL:https://sandbox.melhorenvio.com.br}
+    quote-validity: ${SHIPPING_QUOTE_VALIDITY:PT5M}
 
 management:
   endpoints:
