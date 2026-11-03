@@ -27,6 +27,25 @@ restante. Não alegar integração comprovada.
   pacote — base para verificar nossa composição multi-pacote (C41a/V21).
   Erro de validação: 422 com `errors` por campo.
 
+## Implementação local do adapter de cotação (2026-11-03)
+
+- `MelhorEnvioSandboxAdapter` envia POST para o host fixo do sandbox, com
+  `Authorization: Bearer`, `User-Agent` configurável, origem/destino e
+  volumes em cm/kg com valor segurado por pacote em BRL.
+- O parser lê uma lista de serviços, usa `custom_price` e
+  `custom_delivery_time`, e rejeita opções cuja resposta não corresponda aos
+  pacotes/dimensões/peso/seguro enviados. Nenhum endpoint de checkout invoca
+  o adapter ainda; a chamada é opt-in e a configuração real está pendente.
+- `SHIPPING_ADAPTER_ENABLED=true` habilita o bean. Configurar
+  `shipping.adapter.credential` (token), `shipping.adapter.user-agent` (nome
+  do app e e-mail de contato), `shipping.adapter.timeout`,
+  `shipping.adapter.quote-validity` (TTL local; default 5 minutos) e opcionalmente
+  `shipping.adapter.origin-postal-code` (default aprovado `66053000`). A URL
+  base pode ser configurada, mas o bean rejeita qualquer host que não seja
+  `sandbox.melhorenvio.com.br`.
+- Teste usa `MockRestServiceServer`; não é homologação sandbox, e o adapter
+  ainda não foi exercitado com credenciais reais.
+
 ## Mapeamento para os módulos
 
 - `shipping` (C42): adapter envia **todos** os pacotes (dimensões externas +

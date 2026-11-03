@@ -1,8 +1,9 @@
 package br.com.deladopara.shipping.application;
 
 import java.time.Instant;
+import java.util.List;
 
 public interface FreightQuoteAdapter {
 
-    CarrierQuote quote(ShippingQuoteRequest request, String sandboxPayload, Instant now);
+    List<CarrierQuote> quote(ShippingQuoteRequest request, Instant now);
 }
