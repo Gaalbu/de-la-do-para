@@ -66,8 +66,7 @@ public class ShippingQuoteGenerationService {
         var request =
                 new ShippingQuoteRequest(originPostalCode, destination, input.packages(), input.insuranceValues());
         var carrierQuotes = adapter.quote(request, Instant.now(clock));
-        return quoteService.persistAll(
-                snapshotId, snapshotVersion, destination, fingerprint, carrierQuotes, 1);
+        return quoteService.persistAll(snapshotId, snapshotVersion, destination, fingerprint, carrierQuotes, 1);
     }
 
     public void assertCurrent(UUID snapshotId, long snapshotVersion, String serializedItems, ShippingQuote quote) {
@@ -152,8 +151,8 @@ public class ShippingQuoteGenerationService {
                             packagePlan.totalWeightGrams(),
                             insuranceValues.get(packagePlan.sequence())))
                     .toList();
-            var canonical = objectMapper.writeValueAsBytes(new FingerprintInput(
-                    snapshotId, snapshotVersion, originPostalCode, destination, shapes));
+            var canonical = objectMapper.writeValueAsBytes(
+                    new FingerprintInput(snapshotId, snapshotVersion, originPostalCode, destination, shapes));
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(canonical));
         } catch (Exception exception) {
             throw new IllegalStateException("shipping quote fingerprint could not be generated", exception);

@@ -146,8 +146,7 @@ class ShippingQuoteGenerationServiceTest {
         assertThat(request.getValue().insuranceValueCentsByPackage()).containsEntry(1, 1800L);
         PackageComposer.PackagePlan packagePlan = request.getValue().packages().getFirst();
         assertThat(packagePlan.totalWeightGrams()).isEqualTo(720);
-        verify(quoteService)
-                .persistAll(eq(snapshotId), eq(7L), eq("66053000"), anyString(), eq(List.of(quote)), eq(1));
+        verify(quoteService).persistAll(eq(snapshotId), eq(7L), eq("66053000"), anyString(), eq(List.of(quote)), eq(1));
     }
 
     private static ProductSku activeFoodSku() {

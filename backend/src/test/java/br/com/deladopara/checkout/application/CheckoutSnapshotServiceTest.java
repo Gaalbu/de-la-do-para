@@ -78,8 +78,7 @@ class CheckoutSnapshotServiceTest {
 
         service.findDeliveryOptions(sessionId, snapshotId, 4, "66053-000");
 
-        Mockito.verify(generation)
-                .findOrCreate(snapshotId, 4, "[]", "66053-000");
+        Mockito.verify(generation).findOrCreate(snapshotId, 4, "[]", "66053-000");
     }
 
     @Test

@@ -75,7 +75,8 @@ public class CheckoutSnapshotService {
         }
         return shippingQuotes == null
                 ? deliveryOptions.findAvailable(snapshotId, snapshotVersion, destinationPostalCode)
-                : shippingQuotes.findOrCreate(snapshot.getId(), snapshot.getCartVersion(), snapshot.getItems(), destinationPostalCode);
+                : shippingQuotes.findOrCreate(
+                        snapshot.getId(), snapshot.getCartVersion(), snapshot.getItems(), destinationPostalCode);
     }
 
     @Transactional(readOnly = true)
