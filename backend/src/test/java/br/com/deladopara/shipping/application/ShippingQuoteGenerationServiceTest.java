@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import br.com.deladopara.catalog.adapter.persistence.ProductSkuRepository;
 import br.com.deladopara.catalog.domain.Product;
 import br.com.deladopara.catalog.domain.ProductSku;
-import br.com.deladopara.checkout.adapter.persistence.CheckoutSnapshotEntity;
 import br.com.deladopara.pricing.application.SkuPriceService;
 import br.com.deladopara.pricing.domain.Money;
 import br.com.deladopara.pricing.domain.SkuPrice;
@@ -44,10 +43,12 @@ class ShippingQuoteGenerationServiceTest {
         var prices = Mockito.mock(SkuPriceService.class);
         when(prices.findCurrentPrices(List.of(SKU))).thenReturn(Map.of(SKU, new SkuPrice(SKU, Money.brl(1900))));
         var service = generationService(skuRepository, prices);
-        var snapshot = snapshot();
-        var selectedQuote = quote(snapshot, "fingerprint-created-at-1800-cents");
+        var snapshotId = UUID.randomUUID();
+        var snapshotVersion = 7L;
+        var items = serializedItems();
+        var selectedQuote = quote(snapshotId, snapshotVersion, "fingerprint-created-at-1800-cents");
 
-        assertThatThrownBy(() -> service.assertCurrent(snapshot, selectedQuote))
+        assertThatThrownBy(() -> service.assertCurrent(snapshotId, snapshotVersion, items, selectedQuote))
                 .isInstanceOf(SelectionConflictException.class);
     }
 
@@ -58,7 +59,9 @@ class ShippingQuoteGenerationServiceTest {
         when(skuRepository.findAllByIdIn(List.of(SKU))).thenReturn(List.of(sku));
         var prices = Mockito.mock(SkuPriceService.class);
         when(prices.findCurrentPrices(List.of(SKU))).thenReturn(Map.of(SKU, new SkuPrice(SKU, Money.brl(1800))));
-        var snapshot = snapshot();
+        var snapshotId = UUID.randomUUID();
+        var snapshotVersion = 7L;
+        var items = serializedItems();
         var adapter = Mockito.mock(FreightQuoteAdapter.class);
         var carrierQuote = new CarrierQuote("1", "PAC", 1500, 4, NOW.plusSeconds(300), List.of(1));
         when(adapter.quote(any(), eq(NOW))).thenReturn(List.of(carrierQuote));
@@ -70,8 +73,8 @@ class ShippingQuoteGenerationServiceTest {
                 var fingerprint = invocation.getArgument(3, String.class);
                 return List.of(new ShippingQuote(
                         quoteId,
-                        snapshot.getId(),
-                        snapshot.getCartVersion(),
+                        snapshotId,
+                        snapshotVersion,
                         "66053000",
                         fingerprint,
                         "1",
@@ -87,12 +90,12 @@ class ShippingQuoteGenerationServiceTest {
         when(quoteService.persistAll(any(), anyLong(), anyString(), anyString(), any(), anyInt()))
                 .thenAnswer(quoteCreatedByPersistence);
         var serviceWithAdapter = generationService(skuRepository, prices, adapter, quoteService);
-        var saved = serviceWithAdapter.findOrCreate(snapshot, "66053-000");
+        var saved = serviceWithAdapter.findOrCreate(snapshotId, snapshotVersion, items, "66053-000");
 
         assertThat(saved).hasSize(1);
         assertThat(saved.getFirst().inputFingerprint()).isNotBlank();
         var selectedQuote = saved.getFirst();
-        serviceWithAdapter.assertCurrent(snapshot, selectedQuote);
+        serviceWithAdapter.assertCurrent(snapshotId, snapshotVersion, items, selectedQuote);
     }
 
     @Test
@@ -130,15 +133,10 @@ class ShippingQuoteGenerationServiceTest {
                 new ObjectMapper(),
                 Clock.fixed(NOW, ZoneOffset.UTC),
                 "66053000");
-        var snapshot = new CheckoutSnapshotEntity(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                7,
-                "guest-key",
-                "[{\"skuId\":\"" + SKU + "\",\"quantity\":1}]",
-                NOW);
+        var snapshotId = UUID.randomUUID();
+        var items = serializedItems();
 
-        var result = service.findOrCreate(snapshot, "66053-000");
+        var result = service.findOrCreate(snapshotId, 7, items, "66053-000");
 
         assertThat(result).containsExactly(persisted);
         var request = ArgumentCaptor.forClass(ShippingQuoteRequest.class);
@@ -149,7 +147,7 @@ class ShippingQuoteGenerationServiceTest {
         PackageComposer.PackagePlan packagePlan = request.getValue().packages().getFirst();
         assertThat(packagePlan.totalWeightGrams()).isEqualTo(720);
         verify(quoteService)
-                .persistAll(eq(snapshot.getId()), eq(7L), eq("66053000"), anyString(), eq(List.of(quote)), eq(1));
+                .persistAll(eq(snapshotId), eq(7L), eq("66053000"), anyString(), eq(List.of(quote)), eq(1));
     }
 
     private static ProductSku activeFoodSku() {
@@ -211,21 +209,15 @@ class ShippingQuoteGenerationServiceTest {
                 "66053000");
     }
 
-    private static CheckoutSnapshotEntity snapshot() {
-        return new CheckoutSnapshotEntity(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                7,
-                "guest-key",
-                "[{\"skuId\":\"" + SKU + "\",\"quantity\":1}]",
-                NOW);
+    private static String serializedItems() {
+        return "[{\"skuId\":\"" + SKU + "\",\"quantity\":1}]";
     }
 
-    private static ShippingQuote quote(CheckoutSnapshotEntity snapshot, String fingerprint) {
+    private static ShippingQuote quote(UUID snapshotId, long snapshotVersion, String fingerprint) {
         return new ShippingQuote(
                 UUID.randomUUID(),
-                snapshot.getId(),
-                snapshot.getCartVersion(),
+                snapshotId,
+                snapshotVersion,
                 "66053000",
                 fingerprint,
                 "1",

@@ -78,7 +78,8 @@ class CheckoutSnapshotServiceTest {
 
         service.findDeliveryOptions(sessionId, snapshotId, 4, "66053-000");
 
-        Mockito.verify(generation).findOrCreate(snapshot, "66053-000");
+        Mockito.verify(generation)
+                .findOrCreate(snapshotId, 4, "[]", "66053-000");
     }
 
     @Test
@@ -161,7 +162,7 @@ class CheckoutSnapshotServiceTest {
 
         assertThat(service.selectDeliveryOption(sessionId, snapshotId, 4, quoteId, "fingerprint"))
                 .isSameAs(quote);
-        Mockito.verify(shippingQuotes).assertCurrent(snapshot, quote);
+        Mockito.verify(shippingQuotes).assertCurrent(snapshotId, 4, "[]", quote);
     }
 
     @Test
@@ -195,7 +196,7 @@ class CheckoutSnapshotServiceTest {
                 .thenReturn(quote);
         Mockito.doThrow(new DeliveryOptionsService.SelectionConflictException())
                 .when(shippingQuotes)
-                .assertCurrent(snapshot, quote);
+                .assertCurrent(snapshotId, 4, "[]", quote);
         var service = new CheckoutSnapshotService(
                 Mockito.mock(CartRepository.class),
                 snapshots,

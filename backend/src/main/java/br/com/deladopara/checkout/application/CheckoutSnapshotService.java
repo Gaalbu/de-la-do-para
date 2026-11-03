@@ -75,7 +75,7 @@ public class CheckoutSnapshotService {
         }
         return shippingQuotes == null
                 ? deliveryOptions.findAvailable(snapshotId, snapshotVersion, destinationPostalCode)
-                : shippingQuotes.findOrCreate(snapshot, destinationPostalCode);
+                : shippingQuotes.findOrCreate(snapshot.getId(), snapshot.getCartVersion(), snapshot.getItems(), destinationPostalCode);
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +89,7 @@ public class CheckoutSnapshotService {
         }
         var quote = deliveryOptions.select(snapshotId, snapshotVersion, quoteId, inputFingerprint);
         if (shippingQuotes != null) {
-            shippingQuotes.assertCurrent(snapshot, quote);
+            shippingQuotes.assertCurrent(snapshot.getId(), snapshot.getCartVersion(), snapshot.getItems(), quote);
         }
         return quote;
     }

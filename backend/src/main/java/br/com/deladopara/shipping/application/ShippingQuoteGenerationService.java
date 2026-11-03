@@ -2,8 +2,6 @@ package br.com.deladopara.shipping.application;
 
 import br.com.deladopara.catalog.adapter.persistence.ProductSkuRepository;
 import br.com.deladopara.catalog.domain.Product;
-import br.com.deladopara.checkout.adapter.persistence.CheckoutSnapshotEntity;
-import br.com.deladopara.checkout.application.CheckoutSnapshotService.Item;
 import br.com.deladopara.pricing.application.SkuPriceService;
 import br.com.deladopara.shipping.domain.PackageComposer;
 import br.com.deladopara.shipping.domain.PackageComposer.Category;
@@ -53,11 +51,12 @@ public class ShippingQuoteGenerationService {
         this.originPostalCode = originPostalCode;
     }
 
-    public List<ShippingQuote> findOrCreate(CheckoutSnapshotEntity snapshot, String destinationPostalCode) {
-        var input = currentInput(snapshot, destinationPostalCode);
+    public List<ShippingQuote> findOrCreate(
+            UUID snapshotId, long snapshotVersion, String serializedItems, String destinationPostalCode) {
+        var input = currentInput(snapshotId, snapshotVersion, serializedItems, destinationPostalCode);
         var destination = input.destination();
         var fingerprint = input.fingerprint();
-        var available = deliveryOptions.findAvailable(snapshot.getId(), snapshot.getCartVersion(), destination);
+        var available = deliveryOptions.findAvailable(snapshotId, snapshotVersion, destination);
         var matching = available.stream()
                 .filter(quote -> quote.inputFingerprint().equals(fingerprint))
                 .toList();
@@ -68,20 +67,21 @@ public class ShippingQuoteGenerationService {
                 new ShippingQuoteRequest(originPostalCode, destination, input.packages(), input.insuranceValues());
         var carrierQuotes = adapter.quote(request, Instant.now(clock));
         return quoteService.persistAll(
-                snapshot.getId(), snapshot.getCartVersion(), destination, fingerprint, carrierQuotes, 1);
+                snapshotId, snapshotVersion, destination, fingerprint, carrierQuotes, 1);
     }
 
-    public void assertCurrent(CheckoutSnapshotEntity snapshot, ShippingQuote quote) {
-        var current = currentInput(snapshot, quote.destinationPostalCode());
+    public void assertCurrent(UUID snapshotId, long snapshotVersion, String serializedItems, ShippingQuote quote) {
+        var current = currentInput(snapshotId, snapshotVersion, serializedItems, quote.destinationPostalCode());
         if (!quote.inputFingerprint().equals(current.fingerprint())) {
             throw new DeliveryOptionsService.SelectionConflictException();
         }
     }
 
-    private CurrentInput currentInput(CheckoutSnapshotEntity snapshot, String destinationPostalCode) {
+    private CurrentInput currentInput(
+            UUID snapshotId, long snapshotVersion, String serializedItems, String destinationPostalCode) {
         var destination = normalizePostalCode(destinationPostalCode);
-        var items = readItems(snapshot.getItems());
-        var skuIds = items.stream().map(Item::skuId).distinct().toList();
+        var items = readItems(serializedItems);
+        var skuIds = items.stream().map(SnapshotItem::skuId).distinct().toList();
         var skuById =
                 skus.findAllByIdIn(skuIds).stream().collect(Collectors.toMap(sku -> sku.getId(), Function.identity()));
         if (skuById.size() != skuIds.size() || skuById.values().stream().anyMatch(sku -> !sku.isActive())) {
@@ -117,13 +117,13 @@ public class ShippingQuoteGenerationService {
                                                 .cents(),
                                         line.quantity()))
                                 .reduce(0L, Math::addExact)));
-        var fingerprint = fingerprint(snapshot, destination, packages, insuranceValues);
+        var fingerprint = fingerprint(snapshotId, snapshotVersion, destination, packages, insuranceValues);
         return new CurrentInput(destination, packages, insuranceValues, fingerprint);
     }
 
-    private List<Item> readItems(String serializedItems) {
+    private List<SnapshotItem> readItems(String serializedItems) {
         try {
-            var items = objectMapper.readValue(serializedItems, new TypeReference<List<Item>>() {});
+            var items = objectMapper.readValue(serializedItems, new TypeReference<List<SnapshotItem>>() {});
             if (items.isEmpty() || items.stream().anyMatch(item -> item.skuId() == null || item.quantity() <= 0)) {
                 throw new IllegalStateException("checkout snapshot items are invalid");
             }
@@ -134,7 +134,8 @@ public class ShippingQuoteGenerationService {
     }
 
     private String fingerprint(
-            CheckoutSnapshotEntity snapshot,
+            UUID snapshotId,
+            long snapshotVersion,
             String destination,
             List<PackageComposer.PackagePlan> packages,
             Map<Integer, Long> insuranceValues) {
@@ -152,7 +153,7 @@ public class ShippingQuoteGenerationService {
                             insuranceValues.get(packagePlan.sequence())))
                     .toList();
             var canonical = objectMapper.writeValueAsBytes(new FingerprintInput(
-                    snapshot.getId(), snapshot.getCartVersion(), originPostalCode, destination, shapes));
+                    snapshotId, snapshotVersion, originPostalCode, destination, shapes));
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(canonical));
         } catch (Exception exception) {
             throw new IllegalStateException("shipping quote fingerprint could not be generated", exception);
@@ -169,6 +170,8 @@ public class ShippingQuoteGenerationService {
         }
         return normalized;
     }
+
+    private record SnapshotItem(UUID skuId, int quantity) {}
 
     private record CurrentInput(
             String destination,
