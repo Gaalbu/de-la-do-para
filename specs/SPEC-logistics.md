@@ -111,4 +111,4 @@ npm run docs:check --prefix frontend
 git diff --check
 ```
 
-Revisar manualmente a correspondência com `docs/decisions.md` e `docs/PLANO-MESTRE.md`.
+Revisar manualmente a correspondência com `docs/decisions.md` e `docs/archive/plano-mestre-completo.md`.

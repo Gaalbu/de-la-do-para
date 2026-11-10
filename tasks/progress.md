@@ -1157,3 +1157,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Bloqueios | C70/C71/C73/C73a/C82b (lane do Codex, drafts #134/#135); C75/C78/C81b (A13/ORD-Q02); C03 (revisão visual); C04/C45/C63/C89 (credenciais de sandbox); C31/C32/C84 (política de cupom, PR #125 em draft); C24a/C25/C29 (revisão das specs). Daí dependem C79 (traces e instrumentação de frete/notificações), C79a (traces), C83 (etiquetas), C85–C88, C90–C98. |
 | Migrations | V36 (`payment_admin_lookup_request`) e V37 (`event_replay_request`) no main; os drafts #134/#135 usam V35/V36 e precisam renumerar ao mesclar. |
 | Próximo passo | Destravar as dependências externas acima; em seguida C94 (após C70 e C82b) e o fechamento da C79. |
+
+## Sessão 2026-11-10 — lane do Claude: CI do main e plano enxuto
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Recolocar o `main` em verde e reduzir o plano mestre |
+| Mudanças | #176/#177: `PaymentOutcomeIT` passou a truncar `coupon`/`coupon_usage` (falhava com `coupon_code_key` duplicada); `snappy-java` 1.1.10.9, OpenTelemetry 1.67.0 e override `minimatch` 11.0.1 contra os advisories novos do gate `security`. Branches #167 e #168 atualizadas com `main`. `docs/PLANO-MESTRE.md` caiu de 2081 para ~140 linhas (regras, trilhas, gates, status); o texto integral está em `docs/archive/plano-mestre-completo.md` e as referências cruzadas foram atualizadas. |
+| Verificação | #177 com CI 7/7; #167 e #168 com CI 7/7 após o merge do `main`. `docs:check` 28 arquivos sem link quebrado e `git diff --check` limpos para o plano enxuto. |
+| Limite | A tabela de status do plano foi derivada de `tasks/progress.md` e dos PRs mesclados, não de nova execução. #167/#168/#170 e Dependabot seguem sem merge. |
+| Próximo passo | Fechar C79/C79a e completar C90 (carga de checkout); C94 depende de C70/C82b. |

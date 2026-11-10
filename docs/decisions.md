@@ -2,7 +2,7 @@
 
 Transcrição fiel das decisões aprovadas pelo usuário (D01–D67), das propostas
 técnicas em revisão (A01–A10) e das perguntas com encaminhamento. Fonte:
-`docs/PLANO-MESTRE.md` (consolidação 20/09/2026). Quando houver sobreposição,
+`docs/archive/plano-mestre-completo.md` (consolidação 20/09/2026). Quando houver sobreposição,
 a decisão mais recente e específica prevalece. Não repetir perguntas já
 respondidas em D01–D65.
 
