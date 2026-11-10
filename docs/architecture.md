@@ -63,6 +63,8 @@ request ─► transação local: efeito + linha na outbox ─► commit
 | Migração sobre dados antigos / restauração | Preserva dados, chaves e histórico | `DatabaseUpgradeAndRestoreIT` |
 | Sessão e permissões | Sessão rotaciona no login; mutação exige CSRF; cliente não alcança rotas admin | `SessionSecurityIT` |
 | Acesso a pedido | Convidado só com o token do pedido (guardado como hash); cliente não vê pedido alheio | `OrderAccessIT` |
+| Página privada em cache compartilhado | Rotas de conta, carrinho, checkout, pedido e admin saem com `Cache-Control: private, no-store` e não ecoam o cookie de sessão no HTML | `session-isolation.spec.ts` (Playwright) |
+| Violação automática de acessibilidade | Rotas principais sem violações WCAG 2.1 A/AA no axe; revisão de teclado e contraste em conteúdo real continua manual | `a11y.spec.ts` (`npm run e2e:a11y`) |
 | Rota sem contrato / drift de schema | Reprova no build | `RouteContractCoverageTest`, `contracts:check` |
 
 ## O que a v1 não faz
