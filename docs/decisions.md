@@ -110,6 +110,10 @@ respondidas em D01–D65.
 - **C24a (2026-09-21):** guarda de retirada de 3 dias úteis com análise manual
   (D66); fixture sintética de lotes com relógio fixo e fronteiras de validade
   (D67). São decisões do usuário; não representam estoque ou operação reais.
+- **C77 (2026-10-05):** o usuário confirmou 3 solicitações de recuperação por
+  hora por combinação IP+e-mail, token de recuperação válido por 15 minutos e
+  revogação de todas as sessões após redefinição de senha. O limite de login
+  (5 tentativas/15 minutos por IP+e-mail) continua pendente.
 - **CAT-Q01 (C18, respondida pelo usuário em 2026-09-21):** produtores são
   geridos somente por administradores na v1; produtores não têm contas nem
   acesso próprio. A decisão não autoriza portal de produtor.
