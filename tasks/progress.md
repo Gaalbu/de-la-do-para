@@ -1157,3 +1157,13 @@ Atualizar ao final de cada sessão, somente após evidência verificada.
 | Bloqueios | C70/C71/C73/C73a/C82b (lane do Codex, drafts #134/#135); C75/C78/C81b (A13/ORD-Q02); C03 (revisão visual); C04/C45/C63/C89 (credenciais de sandbox); C31/C32/C84 (política de cupom, PR #125 em draft); C24a/C25/C29 (revisão das specs). Daí dependem C79 (traces e instrumentação de frete/notificações), C79a (traces), C83 (etiquetas), C85–C88, C90–C98. |
 | Migrations | V36 (`payment_admin_lookup_request`) e V37 (`event_replay_request`) no main; os drafts #134/#135 usam V35/V36 e precisam renumerar ao mesclar. |
 | Próximo passo | Destravar as dependências externas acima; em seguida C94 (após C70 e C82b) e o fechamento da C79. |
+
+## Sessão 2026-11-10 — fechamento da v1: arquitetura e clone limpo (C88, C95, C96 parciais)
+
+| Campo | Conteúdo |
+|---|---|
+| Tarefa | Fechar a v1 sem as lanes bloqueadas: matriz de falhas, trade-offs e validação a partir de clone limpo |
+| Mudanças | `docs/architecture.md` (módulos, fluxo outbox→Kafka→consumidor, decisões com custo e 23 cenários de falha, cada um com a classe/método de teste que o prova, conferidos no código); README com o estado real da v1 e provedores simulados. |
+| Verificação | Clone limpo de `main@0a9b5c5`: `npm ci`, `scripts/verify.sh docs` e `contracts` passaram; `scripts/release-smoke.sh` passou (imagens sem root nem segredos, 29 migrations em banco vazio, API/worker/frontend saudáveis, API e worker na mesma imagem). |
+| Limite | Não subi a API a partir do README no clone: o Compose usa nomes de contêiner fixos (`dlp-postgres`) e colidiu com a stack local existente (senha do `.env` real), então o `up` recriou o contêiner com o volume preservado. Os testes citados na matriz não foram reexecutados nesta sessão; valem pelo CI 7/7 do `main`. C95 fica parcial até um clone limpo subir a API com `.env` próprio. |
+| Próximo passo | Mesclar #178/#179; C85/C86/C87 (testes de sessão, a11y e compatibilidade); C90/C91 com `k6`; C96a/C96b (roteiro e vídeo); C97/C98. |
