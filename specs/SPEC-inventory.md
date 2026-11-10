@@ -192,5 +192,5 @@ sucesso genérico como prova de reserva atômica.
 Antes de C26, revisar: definições de saldo, transições de 15 minutos, fórmula
 de dias restantes, alocação indivisível, ajustes auditados e propostas abertas
 de FEFO/bloqueio. Decisões abertas devem ser apresentadas uma por vez conforme
-`docs/PLANO-MESTRE.md`; regra pendente bloqueia somente o comportamento que
+`docs/archive/plano-mestre-completo.md`; regra pendente bloqueia somente o comportamento que
 depende dela.

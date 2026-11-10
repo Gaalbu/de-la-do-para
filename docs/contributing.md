@@ -1,6 +1,6 @@
 # Contribuindo — De Lá do Pará (SDD)
 
-Guia operacional criado em C02. Fonte: `docs/PLANO-MESTRE.md` (§7 SDD, §8
+Guia operacional criado em C02. Fonte: `docs/archive/plano-mestre-completo.md` (§7 SDD, §8
 commits, §9 verificação). Nomes e código em inglês; guias e textos da loja
 em pt-BR.
 

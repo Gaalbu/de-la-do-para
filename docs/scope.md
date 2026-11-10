@@ -1,7 +1,7 @@
 # Escopo aprovado e mapa de capacidades — De Lá do Pará
 
 Transcrição do escopo confirmado pelo usuário (decisões D01–D64 em
-[`decisions.md`](decisions.md)). Fonte canônica: `docs/PLANO-MESTRE.md`
+[`decisions.md`](decisions.md)). Fonte canônica: `docs/archive/plano-mestre-completo.md`
 (consolidação 20/09/2026). Nada aqui é inferência nova: qualquer mudança de
 escopo exige decisão explícita do usuário e atualização deste arquivo antes do
 código. Revisão do mapa pelo usuário é pré-requisito das specs de módulos.
