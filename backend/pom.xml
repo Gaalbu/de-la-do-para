@@ -31,6 +31,10 @@
     <tomcat.version>11.0.26</tomcat.version>
     <!-- lz4-java 1.10.1 do kafka-clients 4.2.1: GHSA-xx22-p4ch-683r. -->
     <lz4-java.version>1.12.0</lz4-java.version>
+    <!-- snappy-java 1.1.10.7 do kafka-clients: GHSA-gwq9-9ffj-mvrv, GHSA-q233-g92q-qxp6, GHSA-xqrx-qh46-34m7. -->
+    <snappy-java.version>1.1.10.9</snappy-java.version>
+    <!-- opentelemetry-api 1.62.0 do Boot: GHSA-ccrj-gw8r-854m. -->
+    <opentelemetry.version>1.67.0</opentelemetry.version>
     <!-- jackson-databind 2.21.5/3.1.5 do Boot 4.1.1: GHSA-gx83-3vf8-gh7j, GHSA-q4xh-88c3-wmh7, GHSA-wjgm-6hv5-3cvf, GHSA-cxp5-3px4-pw24, GHSA-wv8q-qhhj-9h54. -->
     <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
     <jackson-bom.version>3.1.7</jackson-bom.version>
@@ -49,6 +53,11 @@
         <groupId>at.yawk.lz4</groupId>
         <artifactId>lz4-java</artifactId>
         <version>${lz4-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${snappy-java.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
