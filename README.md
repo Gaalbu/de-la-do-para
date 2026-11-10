@@ -8,12 +8,18 @@ localmente, sem custo de serviços.
 - Frontend: Angular (vitrine com SSR + áreas privadas).
 - Diferencial técnico: checkout confiável com outbox transacional, consumidores
   idempotentes e conciliação de resultado desconhecido.
-- Integrações de teste: Asaas Sandbox e Melhor Envio Sandbox (opt-in).
+- Pagamento e frete são **simulados** por padrão (determinísticos, sem custo).
+  O adapter Asaas existe, é opt-in (`PAYMENTS_PROVIDER=asaas`) e é testado com
+  respostas HTTP gravadas; não há prova em sandbox real nesta versão.
 
-**Estado:** bootstrap C06–C11b implementado; observabilidade HTTP C12 e CI
-inicial C13 disponíveis nesta branch. A loja, checkout e integrações reais
-continuam em desenvolvimento. Plano em [docs/PLANO-MESTRE.md](docs/PLANO-MESTRE.md)
-e evidências em [tasks/progress.md](tasks/progress.md).
+**Estado (v1):** vitrine, carrinho, checkout com reserva de estoque e cupom,
+pagamento assíncrono, conciliação, expiração, cancelamento e reembolso, retirada
+local, contas por API, painel de operações e observabilidade (métricas, traces e
+painéis Grafana) estão em `main`. Fora da v1: etiquetas e rastreio de frete,
+notificações por e-mail, UI de conta e de cupons. Arquitetura, trade-offs e a
+matriz de falhas provadas por teste: [docs/architecture.md](docs/architecture.md).
+Plano: [docs/PLANO-MESTRE.md](docs/PLANO-MESTRE.md); evidências em
+[tasks/progress.md](tasks/progress.md).
 
 ## Começar
 
@@ -38,10 +44,10 @@ API e Angular são executados separadamente neste estágio:
 npm --prefix frontend start
 ```
 
-A API real oferece `/actuator/health`, `/actuator/health/liveness` e
-`/actuator/health/readiness`. `/api/v1/status` é apenas um stub WireMock;
-catálogo e checkout ainda não estão implementados. O proxy Angular `/api`
-ainda aponta para 8080; ajustar a porta quando integrar endpoints de negócio.
+A API oferece `/actuator/health` (`liveness`, `readiness`) e os endpoints de
+negócio descritos em [docs/api-guide.md](docs/api-guide.md). O proxy Angular
+`/api` aponta para a porta 8080; ao subir a API em 18080 como acima, ajuste o
+proxy.
 
 ## Verificar
 
@@ -51,6 +57,7 @@ scripts/verify.sh contracts
 scripts/verify.sh frontend
 ```
 
+- [Arquitetura e matriz de falhas](docs/architecture.md): decisões, trade-offs e testes que provam cada falha.
 - [CI e requisitos](docs/ci.md): gates reproduzíveis, relatórios e limitações.
 - [API](docs/api-guide.md): contrato canônico e exemplos executáveis.
 - [Observabilidade](docs/observability.md): correlação, logs e probes.
