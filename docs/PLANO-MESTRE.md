@@ -73,8 +73,7 @@ quality-gate. PR aberta ou mergeável não conta como integração.
 
 ## Status das tarefas
 
-Legenda: ✅ mesclada em `main` · 🟡 parcial · 🚧 PR/branch aberta · ⛔ bloqueada ·
-⬜ pendente. Dependências de cada ID: ficha no arquivo integral.
+Legenda: ✅ mesclada em `main`. Dependências de cada ID: ficha no arquivo integral.
 
 ### Concluídas
 
@@ -98,39 +97,41 @@ Legenda: ✅ mesclada em `main` · 🟡 parcial · 🚧 PR/branch aberta · ⛔ 
 | C82, C82a | Replay autorizado de eventos e conciliação financeira |
 | C93 | Upgrade com dados e restore isolado |
 
-### Em andamento ou parcial
+### Fora da v1 (corte de escopo de 2026-11-10)
 
-| ID | Estado | Falta |
+O diferencial do portfólio é o checkout confiável (outbox, Kafka, conciliação,
+reembolso, observabilidade), já em `main`. O que dependia de sandbox, de decisão
+em aberto ou de muita superfície sai da v1 e fica registrado como evolução.
+As fichas continuam no arquivo integral.
+
+| IDs | O que sai | Consequência |
 |---|---|---|
-| C63 | 🟡 adapter Asaas mesclado | evidência sandbox dos dois meios (C04) |
-| C79, C79a | 🟡 métricas, traces e painéis | instrumentação de frete e notificações (C70, C75) |
-| C83 | 🟡 pagamentos incertos e eventos | etiquetas (C82b) |
-| C90 | 🚧 #167 rascunho, carga de leitura do catálogo | carga de checkout |
-| C92, C92a | 🟡 imagens e smoke | UIs de conta e expedição (C73, C81) |
-| C42, C43 | 🚧 #173 rascunho, cotação sandbox | validação C04 |
-| C70, C71 | 🚧 drafts #134/#135 | manifesto por pacote, mapeamento pacote↔etiqueta (C04) |
+| C70, C71, C73, C73a, C82b | Etiquetas, rastreio e operação de expedição | Entrega usa a cotação aceita; retirada local (C72) é o fluxo completo de cumprimento |
+| C75, C78, C81b | Notificações e vínculo de compra de convidado | Convidado acompanha o pedido pelo link com token (C52/C62) |
+| C80, C81, C81a, C84 | Fusão de carrinho, UI de conta e admin de cupom | Contas ficam só na API (C76/C77); cupom criado pela API admin |
+| C03, C04, C63 (SB), C89 | Revisão visual e provas em sandbox real | Pagamento e frete simulados; adapter Asaas fica como código testado por HTTP gravado |
+| #173 (C42 ao vivo) | Cotação ao vivo | Cotação simulada determinística |
+| C79 (frete/notificações), C83 (etiquetas) | Partes que dependiam dos itens acima | Operações e observabilidade cobrem pagamento e eventos |
+| C92 (UIs de conta/expedição) | Escopo reduzido | Release empacota API, worker e vitrine/checkout |
 
-### Pendentes por bloqueio
+Drafts #134, #135 e #173 e as branches da lane Codex ficam preservados, sem
+merge. README e vídeo declaram o que é simulado.
 
-| IDs | Bloqueio |
+### Fechamento da v1 (ordem)
+
+| ID | Entrega |
 |---|---|
-| C03 | Revisão visual do Manito |
-| C04, C45 (homologação), C89 | Credenciais de sandbox Asaas e Melhor Envio |
-| C24a, C25, C29 (políticas) | Revisão das propostas das specs (FEFO, combinação de cupons, contador global) |
-| C75, C78, C81b | Decisões A13 e ORD-Q02 |
-| C73, C73a, C82b | Dependem de C70/C71 |
-| C80, C81, C81a, C84 | Lane Codex: carrinho autenticado, UI de conta, admin de cupons |
-| C85–C88, C90–C91 | Dependem de C70, C79, C82b |
-| C94 | Depende de C70 e C82b |
-| C95–C98 | Fechamento: clone limpo, portfólio, vídeo, checklist e release |
-
-## Ordem restante
-
-1. Destravar entradas do Manito: C03, C04 (contas sandbox), políticas de cupom e
-   A13/ORD-Q02.
-2. Lane Codex: C70 → C71 → C73/C73a/C82b, e C80 → C81 → C81a.
-3. Lane Claude: fechar C79/C79a e C90 → C94 → C85–C88 → C91.
-4. Fechamento: C92/C92a, C95 → C96/C96a/C96b → C97 → C98.
+| C79, C79a, C83 | Dar por completos para pagamentos e eventos |
+| C85 | Isolamento de sessão na API e no SSR |
+| C86 | Jornadas de teclado/a11y do cliente e do admin existentes |
+| C87 | Compatibilidade de eventos e API |
+| C88 | Matriz falha → teste automatizado verificado |
+| C90, C91 | Carga de catálogo (#167) e checkout; orçamentos medidos (precisa de `k6`) |
+| C92a | Artefatos de release reproduzíveis com smoke |
+| C94 | Recuperação após banco antigo, só pagamentos/eventos |
+| C95 | Bootstrap validado a partir de clone limpo |
+| C96, C96a, C96b | Trade-offs, roteiro e vídeo |
+| C97, C98 | Checklist final e primeira release local |
 
 ## Riscos
 
