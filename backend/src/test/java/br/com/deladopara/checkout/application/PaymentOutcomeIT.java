@@ -91,7 +91,7 @@ class PaymentOutcomeIT {
         jdbc.execute("TRUNCATE payment_provider_event, payment_external_operation, payment_intent,"
                 + " purchase_order_status_history, purchase_order_item, purchase_order, inventory_reservation_line,"
                 + " inventory_reservation, inventory_movements, inventory_lots, event_consumption,"
-                + " event_consumer_cursor, event_outbox CASCADE");
+                + " event_consumer_cursor, event_outbox, coupon_usage, coupon CASCADE");
         for (var t : triggers) {
             jdbc.execute("ALTER TABLE " + t[0] + " ENABLE TRIGGER " + t[1]);
         }
