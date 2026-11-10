@@ -57,6 +57,7 @@ scripts/verify.sh contracts
 scripts/verify.sh frontend
 ```
 
+- [Checklist de release](docs/release-checklist.md): o que está provado e o que não está.
 - [Arquitetura e matriz de falhas](docs/architecture.md): decisões, trade-offs e testes que provam cada falha.
 - [CI e requisitos](docs/ci.md): gates reproduzíveis, relatórios e limitações.
 - [API](docs/api-guide.md): contrato canônico e exemplos executáveis.
