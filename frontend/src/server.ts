@@ -36,6 +36,18 @@ app.use(
 );
 
 /**
+ * Private pages (account, cart, checkout, orders, admin) must never be stored by
+ * a shared cache (ADR-0004). Public catalog pages keep the default policy.
+ */
+const privatePath = /^\/(login|cart|checkout|orders|admin)(\/|$)/;
+app.use((req, res, next) => {
+  if (privatePath.test(req.path)) {
+    res.setHeader('Cache-Control', 'private, no-store');
+  }
+  next();
+});
+
+/**
  * Handle all other requests by rendering the Angular application.
  */
 app.use((req, res, next) => {
