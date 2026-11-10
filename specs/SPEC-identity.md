@@ -100,16 +100,16 @@ Cada critério em §9 aponta para teste nomeado. Relógio controlado (`Clock.fix
 |---|---|---|---|---|---|
 | IDN-001 registro + login | `AccountValidationTest.registerAndLogin` | sem conta | POST /api/v1/accounts (201) → POST /api/v1/sessions (200 + Set-Cookie) | 201, Location, não retorna senha | unit/controller slice |
 | IDN-002 e-mail duplicado | `AccountValidationTest.duplicateEmail` | conta `a@b.com` verificada | POST /api/v1/accounts `a@B.com` | 409 IDENTITY_002, não cria segunda linha | unit/IT |
-| IDN-003 verificação | `IdentityPersistenceIT.emailVerification` | conta não verificada + token hash expirando em 30m | GET /api/v1/accounts/verify?token=… | 200, `emailVerified=true`, token single-use (segunda tentativa 410) | IT (PG real) |
-| IDN-004 token expirado | `IdentityPersistenceIT.expiredToken` | token expirado (-1m) | GET /api/v1/accounts/verify?token=… | 410 IDENTITY_004 | IT |
+| IDN-003 verificação | `IdentityMailIT.registrationSendsHashedSingleUseVerificationTokenAndKeepsCustomerRole` | cadastro novo + e-mail capturado | POST /api/v1/accounts/verify com token extraído do fragmento do link | 200, `emailVerified=true`, somente hash persistido e token single-use (segunda tentativa 410) | IT (PostgreSQL real; transporte SMTP substituído por capturador) |
+| IDN-004 token expirado | `IdentityMailIT.expiredVerificationTokenCannotVerifyAccount` | conta não verificada + token expirado no PostgreSQL | POST /api/v1/accounts/verify com token expirado | 410 IDENTITY_004; conta permanece não verificada | IT (PostgreSQL real) |
 | IDN-005 login senha errada | `SessionSecurityTest.wrongPassword` | conta verificada | POST /api/v1/sessions senha errada | 401 IDENTITY_005, sem Set-Cookie, sem enumeração | unit |
 | IDN-006 sem sessão → 401 | `SessionSecurityTest.noSession` | sem cookie | GET /api/v1/sessions/current | 401 | slice |
 | IDN-007 CSRF ausente → 403 | `SessionSecurityTest.csrfMissing` | sessão válida sem header XSRF | POST /api/v1/accounts (ou DELETE session) | 403 | slice (SecurityMockMvc) |
 | IDN-008 papel admin | `SessionSecurityTest.adminGuard` | sessão cliente | POST /api/v1/admin/accounts (quando existir) / GET admin-only | 403 IDENTITY_008 | slice |
 | IDN-009 logout invalida | `SessionSecurityTest.logoutInvalidates` | sessão válida | DELETE /api/v1/sessions/current → GET /current | 204 + cookie expirado; GET subsequente 401 | IT (session JDBC) |
-| IDN-010 recuperação single-use | `IdentityPersistenceIT.passwordReset` | conta verificada | POST /request-recovery → POST /reset com token → reuse | 202 (sempre), depois 200 primeira vez, 410 reuse | IT |
+| IDN-010 recuperação single-use | `IdentityMailIT.recoveryIsNonEnumerableSingleUseAndRevokesEveryExistingSession` | conta verificada | solicitar com e-mail existente e ausente, reset com token → reuse | 202 sem enumeração, reset 200, todas as sessões revogadas, token 410 no reuso e senha antiga não autentica | IT (PostgreSQL real) |
 | IDN-011 convidado isolado | `SessionSecurityTest.guestIsolation` | pedido convidado com token | GET /api/v1/orders/:id sem sessão e sem token → com token → com sessão de outro e-mail | 401/403 sem, 200 com token correto, 403 com sessão de e-mail diferente mas igual ao do pedido | IT (integração com orders em C76) |
-| IDN-012 rate limit login | `SessionSecurityTest.loginRateLimit` | 5 falhas em 15m no mesmo IP/e-mail | 6ª tentativa | 429 IDENTITY_012 com Retry-After | unit (Bucket4j/Caffeine local, sem infra externa) |
+| IDN-012 rate limit | `IdentityMailIT.recoveryLimitIsThreePerHourForCombinedIpAndEmail` | mesmas combinação IP+e-mail | 4ª solicitação em 1h | 429 IDENTITY_012 com Retry-After; solicitações 1–3 retornam 202 | IT; login permanece pendente |
 
 Contratos: `RouteContractCoverageTest` (C11b) já falha se rota sem contrato; `contracts:check` valida exemplos vs schema. E2E (C16) navegará login/logout/expiração no browser.
 
@@ -119,9 +119,9 @@ O que esta spec não decide — pendência bloqueia só a regra dependente, com 
 
 - OAuth/OIDC/2FA/passkeys — fora de v1; não inferir. Se pedido, nova decisão D__ e ADR.
 - Cadastro de admin: criação local inicial por comando/seed com senha gerada e impressa no log local (C15), sem senha publicada em repo. Política de convite/admin adicional fica para C76.
-- Rate limit exato (valores acima são proposta operacional): 5 tentativas/15m por IP+e-mail para login e 3/h para recovery; confirmar em C15 com teste de limite documentado; sem fechar automaticamente.
+- Rate limit para login: 5 tentativas/15m por IP+e-mail permanece proposta e aguarda confirmação. Para recovery, o usuário confirmou em C77 (2026-10-05) o limite de 3 solicitações/hora por IP+e-mail.
 - Tamanho mínimo de senha além de 8 e política de complexidade extra pendente de decisão — não escolher silenciosamente.
-- Duração de sessão: idle 30m, absoluto 12h (proposta A04) — confirmar em C15; expiração de token verificação 30m, recuperação 15m (mesma regra).
+- Duração de sessão: idle 30m e absoluto 12h (proposta A04) — confirmar em C15; token de verificação expira em 30m. Em C77 (2026-10-05), o usuário confirmou token de recuperação de 15m e revogação de todas as sessões após redefinição de senha.
 - E-mail de remetente/no-reply e template visual — pendente de C04/brand; usar placeholder `no-reply@deladopara.local` + Mailpit em dev, sem alegar envio real.
 - Acesso do admin ao histórico de outros clientes: apenas via papel ADMIN em rotas admin dedicadas; cliente nunca lista pedidos de outro (isolamento por `accountId`).
 - Paginação/filtragem de listagens admin — fora desta spec; quando houver, seguir convenção de `contracts/openapi/v1.yaml`.
@@ -143,7 +143,8 @@ Isolamento: igualdade de e-mail entre `GUEST` e `CUSTOMER` nunca vincula pedidos
 - `accounts.email` único case-insensitive; `CHECK length(email) ≤ 254`; `password_hash` NOT NULL.
 - `verification_tokens.token_hash` único; `expires_at` NOT NULL; `used_at` nullable; `type` ∈ {VERIFY, RECOVERY}.
 - Sessões em `SPRING_SESSION` (JDBC): `creation_time`, `last_access_time`, `max_inactive_interval` coerentes; expiração server-side prevalece sobre cookie.
-- Token em repouso sempre hash SHA-256 (hex) + `BCrypt` não aplicável a token; token em trânsito só via HTTPS; e-mail de verificação contém link com token opaco (não JWT).
+- Token em repouso sempre hash SHA-256 (hex) + `BCrypt` não aplicável a token; token em trânsito só via HTTPS; e-mail de verificação contém link com token opaco (não JWT), somente no fragmento que o navegador não envia ao servidor.
+- Tokens de verificação têm 256 bits aleatórios e codificação Base64 URL-safe, expiração configurável (30 min por padrão) e bloqueio pessimista durante o consumo para manter uso único sob concorrência.
 
 ### 7.3 Transições
 
@@ -176,19 +177,20 @@ Prefixo: `/api/v1`. Auth: `cookie DLSESSION + X-XSRF-TOKEN` quando indicado. Tod
 
 | # | Método | Caminho | Permissão | Request | Sucesso | Erros |
 |---|---|---|---|---|---|---|
-| I-01 | POST | `/api/v1/accounts` | público + CSRF se sessão existe | `{email, password}` | 201 Created + `Location: /api/v1/accounts/{id}` + `{id,email,emailVerified:false}` | 400 (validação), 409 IDENTITY_002 duplicado (case-insensitive), 403 CSRF, 429 |
-| I-02 | POST | `/api/v1/accounts/verify` | público | `{token}` ou `GET /verify?token` com redirect 303 para frontend | 200 `{emailVerified:true}` | 400 token ausente, 410 expirado/usado |
+| I-01 | POST | `/api/v1/accounts` | público + CSRF se sessão existe | `{email, password}` | 201 Created + `Location: /api/v1/accounts/{id}` + `{id,email,emailVerified:false}`; e-mail com token opaco no fragmento HTTPS | 400 (validação), 409 IDENTITY_002 duplicado (case-insensitive), 403 CSRF, 429, 503 IDENTITY_009 (SMTP indisponível; conta e token sofrem rollback) |
+| I-02 | POST | `/api/v1/accounts/verify` | público | `{token}` extraído pelo frontend do fragmento `#token=...` | 200 `{emailVerified:true}` | 400 token ausente/malformado, 410 IDENTITY_004 inválido, expirado ou usado |
 | I-03 | POST | `/api/v1/sessions` | público (login) | `{email,password}` + CSRF se já há sessão | 200 `{id,email,role,emailVerified}` + `Set-Cookie: DLSESSION=…` + `X-XSRF-TOKEN` | 400 validação, 401 IDENTITY_005 credenciais, 423 locked, 403 CSRF, 429 |
 | I-04 | GET | `/api/v1/sessions/current` | autenticado | — | 200 `{id,email,role,emailVerified}` | 401 |
 | I-05 | DELETE | `/api/v1/sessions/current` | autenticado + CSRF | — | 204 + `Set-Cookie: DLSESSION=; Max-Age=0` | 401, 403 CSRF |
-| I-06 | POST | `/api/v1/accounts/recovery` | público | `{email}` | 202 (sempre) | 400 validação, 403 CSRF (se sessão), 429 |
-| I-07 | POST | `/api/v1/accounts/reset` | público | `{token,newPassword}` | 200 | 400 validação, 410 token, 403 CSRF, 429 |
+| I-06 | POST | `/api/v1/accounts/recovery` | público + CSRF se sessão existe | `{email}` | 202 (sempre, sem enumerar; e-mail apenas para conta verificada CUSTOMER) | 400 validação, 403 CSRF (se sessão), 429 após 3 solicitações/h por IP+e-mail |
+| I-07 | POST | `/api/v1/accounts/reset` | público + CSRF se sessão existe | `{token,newPassword}` | 200; token expira em 15m, uso único, revoga todas as sessões existentes | 400 validação, 410 token inválido/expirado/usado, 403 CSRF |
 | I-08 | GET | `/api/v1/csrf` | público | — | 200 `{token}` + `Set-Cookie: XSRF-TOKEN=…` (se usar CookieCsrfTokenRepository) | — |
 
 Notas:
 
 - I-01 e I-03 validam e-mail com `jakarta.validation` e normalizam antes de persistir; senha 8–72, sem log.
-- I-02 aceita POST JSON (API) e GET com query (link do e-mail) — ambos com mesma lógica; GET não muta sem token válido? Muta, mas é idempotente single-use e exige token imprevisível (128-bit).
+- O link do I-01 aponta para `app.identity.verification-url`; URLs com HTTP, query, fragmento pré-existente ou user-info são rejeitadas. O segredo vai somente no fragmento `#token=...`, que o browser não envia na requisição; o frontend extrai o token e chama I-02 por POST.
+- O SMTP tem timeouts finitos. Se o envio falhar, I-01 retorna 503 e a transação desfaz a conta e o token.
 - I-03 rota de login não exige CSRF quando ainda não há sessão; mas se houver sessão, exige (evita login CSRF).
 - Paginação não aplicável; `Idempotency-Key` não exigido aqui (aplicável a checkout/payments).
 - Eventos: `AccountCreated` (após I-01), `EmailVerified` (I-02), `PasswordReset` (I-07) publicados via `eventing` Outbox quando o módulo for integrado em C15 — fora desta spec o contrato de evento é só referência; não afirmar entrega Kafka nesta etapa.
@@ -205,16 +207,16 @@ Checklist API-E-TESTES D63 por operação: propósito, permissões, parâmetros 
 |---|---|---|---|
 | IDN-001 | Registro cria conta UNVERIFIED e login estabelece sessão com cookie protegido | `AccountValidationTest.registerAndLogin` + `IdentityPersistenceIT` | relatório `verify` + SHA + `Set-Cookie` com `HttpOnly; Secure; SameSite=Lax` |
 | IDN-002 | E-mail duplicado case-insensitive nega com 409 | `AccountValidationTest.duplicateEmail` | relatório + resposta Problem Details IDENTITY_002 |
-| IDN-003 | Verificação com token válido marca VERIFIED e é single-use | `IdentityPersistenceIT.emailVerification` | relatório IT PG real + segunda tentativa 410 |
-| IDN-004 | Token expirado retorna 410 | `IdentityPersistenceIT.expiredToken` | relatório (Clock fixo) |
+| IDN-003 | Verificação com token válido marca VERIFIED e é single-use | `IdentityMailIT.registrationSendsHashedSingleUseVerificationTokenAndKeepsCustomerRole` | relatório IT PostgreSQL + hash persistido + segunda tentativa 410 |
+| IDN-004 | Token expirado retorna 410 | `IdentityMailIT.expiredVerificationTokenCannotVerifyAccount` | relatório IT PostgreSQL; conta permanece não verificada |
 | IDN-005 | Senha incorreta retorna 401 sem Set-Cookie | `SessionSecurityTest.wrongPassword` | relatório slice |
 | IDN-006 | Acesso sem sessão retorna 401 | `SessionSecurityTest.noSession` | relatório |
 | IDN-007 | Mutação sem CSRF retorna 403 | `SessionSecurityTest.csrfMissing` | relatório |
 | IDN-008 | Papel CUSTOMER sem ADMIN não acessa rota admin | `SessionSecurityTest.adminGuard` | relatório 403 IDENTITY_008 |
 | IDN-009 | Logout invalida sessão (subsequente 401) | `SessionSecurityTest.logoutInvalidates` | relatório IT session JDBC |
-| IDN-010 | Recuperação single-use: 202 sempre, reset 200 primeira, 410 reuse | `IdentityPersistenceIT.passwordReset` | relatório + Mailpit `http://localhost:8025` |
+| IDN-010 | Recuperação: 202 sem enumeração, token inválido/expirado/reutilizado 410, apenas um reset concorrente aceito, sessões revogadas | `IdentityMailIT.recoveryIsNonEnumerableSingleUseAndRevokesEveryExistingSession`, `IdentityMailIT.invalidAndExpiredRecoveryTokensReturnGone`, `IdentityMailIT.concurrentRecoveryResetsForDifferentTokensAllowOnlyOnePasswordChange` | relatório IT PostgreSQL |
 | IDN-011 | Histórico isolado: GUEST sem token 401/403; com token correto 200 só daquele pedido; sessão de outro e-mail não lista alheio | `SessionSecurityTest.guestIsolation` (preparado para C76) | relatório (quando orders existir; nesta spec só contrato) |
-| IDN-012 | Rate limit login 5/15m retorna 429 com Retry-After | `SessionSecurityTest.loginRateLimit` | relatório |
+| IDN-012 | Recovery: 3 solicitações/hora por IP+e-mail; 4ª retorna 429 com Retry-After | `IdentityMailIT.recoveryLimitIsThreePerHourForCombinedIpAndEmail` | relatório IT; limite login 5/15m segue pendente |
 | IDN-013 | `RouteContractCoverageTest` passa: rotas de identity documentadas em `contracts/openapi/v1.yaml` | `RouteContractCoverageTest` + `contracts:check` | CI 7/7 verde |
 
 Evidência final: `docs/evidence/c14/` com `verify` + `contracts:check` + link para PR aprovado. Licença/destino de releases e remetente de e-mail seguem em pendências gerais (`docs/decisions.md:103`).
