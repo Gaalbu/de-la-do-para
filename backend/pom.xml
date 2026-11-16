@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.1.1</version>
+    <version>4.1.2</version>
     <relativePath/>
   </parent>
 
@@ -19,18 +19,18 @@
 
   <properties>
     <java.version>25</java.version>
-    <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>3.11.0</spotless-maven-plugin.version>
     <palantir-java-format.version>2.98.0</palantir-java-format.version>
     <archunit-junit5.version>1.5.1</archunit-junit5.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <testcontainers-bom.version>2.0.5</testcontainers-bom.version>
-    <json-schema-validator.version>3.0.8</json-schema-validator.version>
-    <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+    <json-schema-validator.version>3.0.9</json-schema-validator.version>
+    <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
     <!-- Correções de segurança (osv-scanner): remover quando o Boot/Kafka gerenciarem versão igual ou maior. -->
     <!-- Tomcat 11.0.24 do Boot 4.1.1: GHSA-9xv2-5v5q-p794, GHSA-gcx9-497g-6cp6, GHSA-h3x4-894j-xpx5. -->
     <tomcat.version>11.0.26</tomcat.version>
     <!-- lz4-java 1.10.1 do kafka-clients 4.2.1: GHSA-xx22-p4ch-683r. -->
-    <lz4-java.version>1.12.0</lz4-java.version>
+    <lz4-java.version>1.14.0</lz4-java.version>
     <!-- snappy-java 1.1.10.7 do kafka-clients: GHSA-gwq9-9ffj-mvrv, GHSA-q233-g92q-qxp6, GHSA-xqrx-qh46-34m7. -->
     <snappy-java.version>1.1.10.9</snappy-java.version>
     <!-- opentelemetry-api 1.62.0 do Boot: GHSA-ccrj-gw8r-854m. -->
