@@ -115,6 +115,11 @@ public class CheckoutController {
         return problem(HttpStatus.GONE, "CHECKOUT_005", "cotação de entrega expirada");
     }
 
+    @ExceptionHandler(br.com.deladopara.shipping.application.ShippingAdapterException.class)
+    ResponseEntity<Problem> shippingUnavailable() {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "CHECKOUT_007", "cotação de frete temporariamente indisponível");
+    }
+
     @ExceptionHandler(PickupOptionsService.PickupSelectionConflictException.class)
     ResponseEntity<Problem> pickupSelectionConflict() {
         return problem(HttpStatus.CONFLICT, "CHECKOUT_006", "opção de retirada não pertence à seleção atual");

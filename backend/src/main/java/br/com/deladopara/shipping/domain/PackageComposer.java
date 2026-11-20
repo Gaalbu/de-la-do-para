@@ -9,9 +9,9 @@ import java.util.UUID;
 public final class PackageComposer {
 
     private static final List<Box> BOXES = List.of(
-            new Box("P", 240, 180, 120, 2_000, 150),
-            new Box("M", 300, 260, 200, 5_000, 250),
-            new Box("G", 400, 320, 300, 10_000, 400));
+            new Box("P", 240, 180, 120, 250, 190, 130, 2_000, 150),
+            new Box("M", 300, 260, 200, 310, 270, 210, 5_000, 250),
+            new Box("G", 400, 320, 300, 410, 330, 310, 10_000, 400));
 
     private PackageComposer() {}
 
@@ -82,9 +82,7 @@ public final class PackageComposer {
         private final boolean fragile;
         private final List<Line> lines = new ArrayList<>();
         private int weightGrams;
-        private int lengthMm;
-        private int widthMm;
-        private int heightMm;
+        private int protectionWeightGrams;
         private Box box;
 
         private PackagePlan(int sequence, Category category, boolean fragile, Line first) {
@@ -95,15 +93,16 @@ public final class PackageComposer {
         }
 
         private void add(Line line) {
+            var oldWeight = weightGrams;
+            var oldProtectionWeight = protectionWeightGrams;
             lines.add(line);
             weightGrams += line.grossWeightGrams();
-            lengthMm = Math.max(lengthMm, protectedLength(line));
-            widthMm = Math.max(widthMm, protectedWidth(line));
-            heightMm = Math.max(heightMm, protectedHeight(line));
+            protectionWeightGrams += line.fragile() ? 100 : (lines.size() == 1 ? 50 : 0);
             box = smallestBox();
             if (box == null) {
                 lines.remove(lines.size() - 1);
-                weightGrams -= line.grossWeightGrams();
+                weightGrams = oldWeight;
+                protectionWeightGrams = oldProtectionWeight;
                 throw new IllegalArgumentException("snapshot line exceeds available package sizes");
             }
         }
@@ -113,41 +112,127 @@ public final class PackageComposer {
                 return false;
             }
             var oldWeight = weightGrams;
-            var oldLength = lengthMm;
-            var oldWidth = widthMm;
-            var oldHeight = heightMm;
+            lines.add(line);
             weightGrams += line.grossWeightGrams();
-            lengthMm = Math.max(lengthMm, protectedLength(line));
-            widthMm = Math.max(widthMm, protectedWidth(line));
-            heightMm = Math.max(heightMm, protectedHeight(line));
             var fits = smallestBox() != null;
+            lines.remove(lines.size() - 1);
             weightGrams = oldWeight;
-            lengthMm = oldLength;
-            widthMm = oldWidth;
-            heightMm = oldHeight;
             return fits;
         }
 
         private Box smallestBox() {
             return BOXES.stream()
-                    .filter(candidate -> weightGrams + candidate.tareGrams() <= candidate.maxWeightGrams())
-                    .filter(candidate -> lengthMm <= candidate.lengthMm()
-                            && widthMm <= candidate.widthMm()
-                            && heightMm <= candidate.heightMm())
+                    .filter(candidate ->
+                            weightGrams + protectionWeightGrams + candidate.tareGrams() <= candidate.maxWeightGrams())
+                    .filter(candidate -> fits(lines, candidate))
                     .findFirst()
                     .orElse(null);
         }
 
-        private int protectedLength(Line line) {
-            return line.fragile() ? line.lengthMm() + 60 : line.lengthMm() + 10;
+        private static boolean fits(List<Line> lines, Box box) {
+            if (lines.size() > 64) {
+                return false;
+            }
+            var items = lines.stream()
+                    .map(line -> new PackItem(
+                            line.skuId(),
+                            line.fragile() ? line.lengthMm() + 60 : line.lengthMm() + 20,
+                            line.fragile() ? line.widthMm() + 60 : line.widthMm() + 20,
+                            line.fragile() ? line.heightMm() + 60 : line.heightMm() + 20))
+                    .sorted(Comparator.comparingLong(PackItem::volume)
+                            .reversed()
+                            .thenComparing(item -> item.skuId().toString()))
+                    .toList();
+            return place(
+                    0,
+                    items,
+                    List.of(new Position(0, 0, 0)),
+                    new ArrayList<>(),
+                    new int[] {20_000},
+                    box.innerLengthMm(),
+                    box.innerWidthMm(),
+                    box.innerHeightMm());
         }
 
-        private int protectedWidth(Line line) {
-            return line.fragile() ? line.widthMm() + 60 : line.widthMm() + 10;
+        private static boolean place(
+                int itemIndex,
+                List<PackItem> items,
+                List<Position> positions,
+                List<PlacedItem> placed,
+                int[] searchBudget,
+                int maxLength,
+                int maxWidth,
+                int maxHeight) {
+            if (itemIndex == items.size()) {
+                return true;
+            }
+            var item = items.get(itemIndex);
+            var orderedPositions = positions.stream()
+                    .distinct()
+                    .sorted(Comparator.comparingInt(Position::z)
+                            .thenComparingInt(Position::y)
+                            .thenComparingInt(Position::x))
+                    .toList();
+            for (var position : orderedPositions) {
+                for (var rotation : rotations(item)) {
+                    if (--searchBudget[0] < 0) {
+                        return false;
+                    }
+                    if (position.x() + rotation.length() > maxLength
+                            || position.y() + rotation.width() > maxWidth
+                            || position.z() + rotation.height() > maxHeight) {
+                        continue;
+                    }
+                    var candidate = new PlacedItem(position, rotation);
+                    if (placed.stream().anyMatch(existing -> overlaps(candidate, existing))) {
+                        continue;
+                    }
+                    placed.add(candidate);
+                    var nextPositions = new ArrayList<>(positions);
+                    nextPositions.add(new Position(position.x() + rotation.length(), position.y(), position.z()));
+                    nextPositions.add(new Position(position.x(), position.y() + rotation.width(), position.z()));
+                    nextPositions.add(new Position(position.x(), position.y(), position.z() + rotation.height()));
+                    if (place(
+                            itemIndex + 1,
+                            items,
+                            nextPositions,
+                            placed,
+                            searchBudget,
+                            maxLength,
+                            maxWidth,
+                            maxHeight)) {
+                        return true;
+                    }
+                    placed.remove(placed.size() - 1);
+                }
+            }
+            return false;
         }
 
-        private int protectedHeight(Line line) {
-            return line.fragile() ? line.heightMm() + 60 : line.heightMm() + 10;
+        private static List<Dimensions> rotations(PackItem item) {
+            var candidates = List.of(
+                    new Dimensions(item.lengthMm(), item.widthMm(), item.heightMm()),
+                    new Dimensions(item.lengthMm(), item.heightMm(), item.widthMm()),
+                    new Dimensions(item.widthMm(), item.lengthMm(), item.heightMm()),
+                    new Dimensions(item.widthMm(), item.heightMm(), item.lengthMm()),
+                    new Dimensions(item.heightMm(), item.lengthMm(), item.widthMm()),
+                    new Dimensions(item.heightMm(), item.widthMm(), item.lengthMm()));
+            return candidates.stream().distinct().toList();
+        }
+
+        private static boolean overlaps(PlacedItem first, PlacedItem second) {
+            return first.position().x()
+                            < second.position().x() + second.dimensions().length()
+                    && first.position().x() + first.dimensions().length()
+                            > second.position().x()
+                    && first.position().y()
+                            < second.position().y() + second.dimensions().width()
+                    && first.position().y() + first.dimensions().width()
+                            > second.position().y()
+                    && first.position().z()
+                            < second.position().z() + second.dimensions().height()
+                    && first.position().z() + first.dimensions().height()
+                            > second.position().z();
         }
 
         public int sequence() {
@@ -171,21 +256,42 @@ public final class PackageComposer {
         }
 
         public int totalWeightGrams() {
-            return weightGrams + box.tareGrams();
+            return weightGrams + protectionWeightGrams + box.tareGrams();
         }
 
         public int lengthMm() {
-            return lengthMm;
+            return box.outerLengthMm();
         }
 
         public int widthMm() {
-            return widthMm;
+            return box.outerWidthMm();
         }
 
         public int heightMm() {
-            return heightMm;
+            return box.outerHeightMm();
         }
     }
 
-    private record Box(String code, int lengthMm, int widthMm, int heightMm, int maxWeightGrams, int tareGrams) {}
+    private record Box(
+            String code,
+            int innerLengthMm,
+            int innerWidthMm,
+            int innerHeightMm,
+            int outerLengthMm,
+            int outerWidthMm,
+            int outerHeightMm,
+            int maxWeightGrams,
+            int tareGrams) {}
+
+    private record PackItem(UUID skuId, int lengthMm, int widthMm, int heightMm) {
+        long volume() {
+            return (long) lengthMm * widthMm * heightMm;
+        }
+    }
+
+    private record Dimensions(int length, int width, int height) {}
+
+    private record Position(int x, int y, int z) {}
+
+    private record PlacedItem(Position position, Dimensions dimensions) {}
 }

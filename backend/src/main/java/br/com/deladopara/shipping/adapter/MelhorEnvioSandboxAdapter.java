@@ -7,68 +7,143 @@ import br.com.deladopara.shipping.application.ShippingQuoteRequest;
 import br.com.deladopara.shipping.domain.PackageComposer.PackagePlan;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClient;
 
-/** Parses the sanitized sandbox contract; it deliberately performs no network call. */
+/** Parses Melhor Envio's documented freight calculation response. */
 public final class MelhorEnvioSandboxAdapter implements FreightQuoteAdapter {
 
     private final ObjectMapper objectMapper;
+    private final RestClient client;
+    private final ShippingAdapterProperties properties;
 
-    public MelhorEnvioSandboxAdapter(ObjectMapper objectMapper) {
+    public MelhorEnvioSandboxAdapter(
+            RestClient.Builder builder, ObjectMapper objectMapper, ShippingAdapterProperties properties) {
         this.objectMapper = objectMapper;
+        this.properties = properties;
+        this.client = builder.baseUrl(properties.baseUrl() + "/api/v2/me")
+                .defaultHeader("Authorization", "Bearer " + properties.credential())
+                .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("User-Agent", properties.userAgent())
+                .build();
     }
 
     @Override
-    public CarrierQuote quote(ShippingQuoteRequest request, String sandboxPayload, Instant now) {
-        if (sandboxPayload == null || sandboxPayload.isBlank()) {
-            throw new ShippingAdapterException("sandbox response is empty");
-        }
+    public List<CarrierQuote> quote(ShippingQuoteRequest request, Instant now) {
         try {
+            var sandboxPayload = client.post()
+                    .uri("/shipment/calculate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "from", Map.of("postal_code", properties.originPostalCode()),
+                            "to",
+                                    Map.of(
+                                            "postal_code",
+                                            request.destinationPostalCode().replace("-", "")),
+                            "volumes",
+                                    request.packages().stream()
+                                            .map(p -> Map.of(
+                                                    "length",
+                                                    p.lengthMm() / 10.0,
+                                                    "width",
+                                                    p.widthMm() / 10.0,
+                                                    "height",
+                                                    p.heightMm() / 10.0,
+                                                    "weight",
+                                                    p.totalWeightGrams() / 1000.0,
+                                                    "insurance",
+                                                    request.insuranceValueCentsByPackage()
+                                                                    .get(p.sequence())
+                                                            / 100.0))
+                                            .toList(),
+                            "options", Map.of("receipt", false, "own_hand", false)))
+                    .retrieve()
+                    .body(String.class);
+            if (sandboxPayload == null || sandboxPayload.isBlank()) {
+                throw new ShippingAdapterException("carrier response is empty");
+            }
             var root = objectMapper.readTree(sandboxPayload);
-            var quote = root.path("quote");
-            var packageSequences = quote.path("package_sequences");
-            var sequences = parseSequences(packageSequences);
-            validateCoverage(request.packages(), sequences);
-            var expiresAt = Instant.parse(requiredText(quote, "expires_at"));
-            if (!expiresAt.isAfter(now)) {
-                throw new ShippingAdapterException("carrier quote is expired");
+            if (!root.isArray()) {
+                throw new ShippingAdapterException("carrier response is not an options array");
             }
-            var priceCents = quote.path("price_cents").asLong(-1);
-            var deliveryDays = quote.path("delivery_days").asInt(-1);
-            if (priceCents < 0 || deliveryDays < 1) {
-                throw new ShippingAdapterException("carrier quote cost or deadline is invalid");
+            var quotes = new ArrayList<CarrierQuote>();
+            for (var option : root) {
+                var packages = option.path("packages");
+                if (!packages.isArray() || packages.isEmpty()) {
+                    continue;
+                }
+                validatePackageCoverage(request, packages);
+                var serviceId = requiredText(option, "id");
+                var serviceName = requiredText(option, "name");
+                var priceCents = moneyToCents(requiredText(option, "custom_price"));
+                var deliveryDays = option.path("custom_delivery_time").asInt(-1);
+                if (priceCents <= 0 || deliveryDays < 1) {
+                    continue;
+                }
+                quotes.add(new CarrierQuote(
+                        serviceId,
+                        serviceName,
+                        priceCents,
+                        deliveryDays,
+                        now.plus(properties.quoteValidity()),
+                        request.packages().stream().map(PackagePlan::sequence).toList()));
             }
-            return new CarrierQuote(
-                    requiredText(quote, "service_id"),
-                    requiredText(quote, "service_name"),
-                    priceCents,
-                    deliveryDays,
-                    expiresAt,
-                    sequences);
+            return List.copyOf(quotes);
         } catch (ShippingAdapterException exception) {
             throw exception;
+        } catch (org.springframework.web.client.RestClientException exception) {
+            throw new ShippingAdapterException("carrier quote request failed");
         } catch (Exception exception) {
             throw new ShippingAdapterException("carrier response is invalid");
         }
     }
 
-    private static List<Integer> parseSequences(JsonNode node) {
-        if (!node.isArray() || node.isEmpty()) {
-            throw new ShippingAdapterException("carrier package coverage is missing");
+    private static void validatePackageCoverage(ShippingQuoteRequest request, JsonNode actual) {
+        var expected = request.packages();
+        if (actual.size() != expected.size()) {
+            throw new ShippingAdapterException("carrier package coverage is incomplete");
         }
-        var sequences = new java.util.ArrayList<Integer>();
-        node.forEach(value -> sequences.add(value.asInt(-1)));
-        return List.copyOf(sequences);
+        var expectedShapes = expected.stream()
+                .map(p -> List.of(
+                        p.lengthMm(),
+                        p.widthMm(),
+                        p.heightMm(),
+                        p.totalWeightGrams(),
+                        Math.toIntExact(request.insuranceValueCentsByPackage().get(p.sequence()))))
+                .sorted(java.util.Comparator.comparing(Object::toString))
+                .toList();
+        var actualShapes = new ArrayList<List<Integer>>();
+        actual.forEach(p -> {
+            var dims = p.path("dimensions");
+            actualShapes.add(List.of(
+                    (int) Math.round(dims.path("length").asDouble(-1) * 10),
+                    (int) Math.round(dims.path("width").asDouble(-1) * 10),
+                    (int) Math.round(dims.path("height").asDouble(-1) * 10),
+                    (int) Math.round(new BigDecimal(p.path("weight").asText("-1")).doubleValue() * 1000),
+                    (int) Math.round(new BigDecimal(p.path("insurance_value").asText("0")).doubleValue() * 100)));
+        });
+        var sortedActual = actualShapes.stream()
+                .sorted(java.util.Comparator.comparing(Object::toString))
+                .toList();
+        if (!expectedShapes.equals(sortedActual)) {
+            throw new ShippingAdapterException("carrier package data does not match request");
+        }
     }
 
-    private static void validateCoverage(List<PackagePlan> packages, List<Integer> sequences) {
-        var expected = packages.stream().map(PackagePlan::sequence).toList();
-        if (sequences.size() != expected.size()
-                || !new HashSet<>(sequences).equals(new HashSet<>(expected))
-                || new HashSet<>(sequences).size() != sequences.size()) {
-            throw new ShippingAdapterException("carrier package coverage is incomplete");
+    private static long moneyToCents(String amount) {
+        try {
+            return new BigDecimal(amount)
+                    .movePointRight(2)
+                    .setScale(0, RoundingMode.UNNECESSARY)
+                    .longValueExact();
+        } catch (ArithmeticException | NumberFormatException exception) {
+            throw new ShippingAdapterException("carrier quote price is invalid");
         }
     }
 

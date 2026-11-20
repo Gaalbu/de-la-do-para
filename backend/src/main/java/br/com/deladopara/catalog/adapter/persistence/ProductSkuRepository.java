@@ -14,6 +14,8 @@ public interface ProductSkuRepository extends Repository<ProductSku, UUID> {
 
     Optional<ProductSku> findById(UUID id);
 
+    List<ProductSku> findAllByIdIn(List<UUID> ids);
+
     Optional<ProductSku> findBySkuCode(String skuCode);
 
     List<ProductSku> findAllByProductIdOrderBySkuCode(UUID productId);

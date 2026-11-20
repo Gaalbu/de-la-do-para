@@ -229,6 +229,10 @@ public class ProductSku {
         return fragile;
     }
 
+    public Product.Category getProductCategory() {
+        return productCategory;
+    }
+
     public int getLengthMm() {
         return lengthMm;
     }
